@@ -281,6 +281,7 @@ export class Workspace extends React.Component {
         items: [
           ...items,
           {
+            name: `${component_info.name} #${next_id}`,
             id: next_id,
             type: type,
             x: canvas.width / 2,
@@ -366,6 +367,13 @@ export class Workspace extends React.Component {
               height: canvas.height,
               position: 'relative',
             }}
+            onClick={(e) => {
+              // Only reset selected_item if the click is **only** on the canvas,
+              // and not actually on one of the divs inside
+              if (e.target === e.currentTarget) {
+                this.setState({ selected_item: null })
+              }
+            }}
           >
             {items.map((item) => {
               let component_info = component_map[item.type];
@@ -449,6 +457,23 @@ export class Workspace extends React.Component {
               </div>
             );
           })}
+
+          <div style={{ height: 50 }} />
+
+          <div>
+            {items.map(item =>
+              <div onClick={() => {
+                this.setState({ selected_item: item.id })
+              }}
+              style={{
+                backgroundColor: item.id === selected_item ? 'rgba(255,255,255,.8)' : 'transparent',
+                padding: 16,
+              }}
+              >
+                {item.name}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
