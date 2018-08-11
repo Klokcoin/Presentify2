@@ -60,7 +60,7 @@ let vector = {
 
 class CanvasItem extends React.Component {
   state = {
-    movement_vectors: null,
+    movement_state: null,
   };
 
   render() {
@@ -69,55 +69,70 @@ class CanvasItem extends React.Component {
 
     let act_like_selected = selected || movement_state != null;
 
-    // Positions: // TODO Not sure if this is helpful
+    let with_defaults = {
+      y: 0,
+      x: 0,
+      width: 0,
+      height: 0,
+      rotation: item.rotation,
+      ...movement_state,
+    };
+
+    let current_item = {
+      y: item.y + with_defaults.y,
+      x: item.x + with_defaults.x,
+      width: item.width + with_defaults.width,
+      height: item.height + with_defaults.height,
+      rotation: with_defaults.rotation,
+    }
+
+    // Positions:
     // -1,-1 -----  1,-1
     //   |           |
     // -1, 1 -----  1, 1
-    let width_height_movement = (position, movement_state) => {
+    // let width_height_movement = (direction, movement_state) => {
+    //   let [x, y] = vector.rotate(
+    //     [movement_state.x, movement_state.y],
+    //     -item.rotation
+    //   );
+    //   let with_rotation = vector.rotate([x / 2, y / 2], item.rotation);
+    //   return {
+    //     width: direction[0] * x,
+    //     x: with_rotation[0],
+    //     height: direction[1] * y,
+    //     y: with_rotation[1],
+    //   };
+    // };
+
+    let width_height_movement = (direction, movement_state) => {
       let [x, y] = vector.rotate(
         [movement_state.x, movement_state.y],
-        item.rotation
+        -item.rotation
       );
-      let [pos_x, pos_y] = vector.rotate(position, -item.rotation);
-      // console.log(`movement_state.x:`, movement_state.x);
-      // console.log(`movement_state.y:`, movement_state.y);
-      // console.log(`x, y:`, x, y);
+      let with_rotation = vector.rotate([x / 2, y / 2], item.rotation);
       return {
-        width: pos_x * x,
-        x: movement_state.x / 2,
-        height: pos_y * y,
-        y: movement_state.y / 2,
+        width: direction[0] * x,
+        x: with_rotation[0],
+        height: direction[1] * y,
+        y: with_rotation[1],
       };
     };
 
     return (
       <Absolute
-        top={
-          item.y + (movement_state && movement_state.y ? movement_state.y : 0)
-        }
-        left={
-          item.x + (movement_state && movement_state.x ? movement_state.x : 0)
-        }
+        top={current_item.y}
+        left={current_item.x}
       >
         <div
           onMouseDown={() => {
             onSelect();
           }}
           style={{
-            height:
-              item.height +
-              (movement_state && movement_state.height
-                ? movement_state.height
-                : 0),
-            width:
-              item.width +
-              (movement_state && movement_state.width
-                ? movement_state.width
-                : 0),
+            height: current_item.height,
+            width: current_item.width,
             position: 'relative',
             transformOrigin: 'center',
-            transform: `translateX(-50%) translateY(-50%) rotate(${(movement_state && movement_state.rotation) ||
-              item.rotation}rad)`,
+            transform: `translateX(-50%) translateY(-50%) rotate(${(current_item.rotation)}rad)`,
           }}
         >
           {act_like_selected && (
@@ -435,7 +450,7 @@ export class Workspace extends React.Component {
               item.options
             );
             return (
-              <div>
+              <div style={{ overflowY: 'auto' }}>
                 {component_info.ConfigScreen &&
                   <component_info.ConfigScreen
                     value={item.options}
@@ -475,7 +490,7 @@ export class Workspace extends React.Component {
 
           <div style={{ height: 50 }} />
 
-          <div>
+          <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
             {items.map(item =>
               <div onClick={() => {
                 this.setState({ selected_item: item.id })
