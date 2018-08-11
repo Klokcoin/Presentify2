@@ -72,21 +72,21 @@ class CanvasItem extends React.Component {
     // Positions: // TODO Not sure if this is helpful
     // -1,-1 -----  1,-1
     //   |           |
-    //  -1, 1 -----  1, 1
+    // -1, 1 -----  1, 1
     let width_height_movement = (position, movement_state) => {
       let [x, y] = vector.rotate(
         [movement_state.x, movement_state.y],
         item.rotation
       );
-      let [pos_x, pos_y] = vector.rotate(position, item.rotation);
+      let [pos_x, pos_y] = vector.rotate(position, -item.rotation);
       // console.log(`movement_state.x:`, movement_state.x);
       // console.log(`movement_state.y:`, movement_state.y);
       // console.log(`x, y:`, x, y);
       return {
         width: pos_x * x,
-        x: pos_x < 0 ? movement_state.x : 0,
+        x: movement_state.x / 2,
         height: pos_y * y,
-        y: pos_y < 0 ? movement_state.y : 0,
+        y: movement_state.y / 2,
       };
     };
 
@@ -115,7 +115,8 @@ class CanvasItem extends React.Component {
                 ? movement_state.width
                 : 0),
             position: 'relative',
-            transform: `rotate(${(movement_state && movement_state.rotation) ||
+            transformOrigin: 'center',
+            transform: `translateX(-50%) translateY(-50%) rotate(${(movement_state && movement_state.rotation) ||
               item.rotation}rad)`,
           }}
         >
@@ -357,14 +358,15 @@ export class Workspace extends React.Component {
             alignItems: 'center',
             justifyContent: 'center',
             flex: 1,
+            overflow: 'hidden',
           }}
         >
           <div
             style={{
-              backgroundColor: 'rgb(255, 255, 255)',
-              boxShadow: '0px 3px 20px black',
-              width: canvas.width,
-              height: canvas.height,
+              // backgroundColor: 'rgb(255, 255, 255)',
+              // boxShadow: '0px 3px 20px black',
+              // width: canvas.width,
+              // height: canvas.height,
               position: 'relative',
             }}
             onClick={(e) => {
@@ -390,7 +392,7 @@ export class Workspace extends React.Component {
                   }}
                 >
                   <Absolute top={0} left={0} bottom={0} right={0}
-                    style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none', overflow: 'hidden' }}
+                    style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none' }}
                   >
                     <component_info.Component
                       size={item}
@@ -434,6 +436,19 @@ export class Workspace extends React.Component {
             );
             return (
               <div>
+                {component_info.ConfigScreen &&
+                  <component_info.ConfigScreen
+                    value={item.options}
+                    onChange={(options) => {
+                      change_item(item.id, {
+                        options: {
+                          ...item.options,
+                          ...options,
+                        },
+                      })
+                    }}
+                  />
+                }
                 <textarea
                   style={{
                     width: `100%`,
