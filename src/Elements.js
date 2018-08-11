@@ -57,6 +57,8 @@ export class Draggable extends React.Component {
                 onMove({
                   y: e.pageY - dragging_state.start_mouse_y,
                   x: e.pageX - dragging_state.start_mouse_x,
+                  absolute_y: e.pageY,
+                  absolute_x: e.pageX,
                 });
               }
             }}
@@ -71,12 +73,17 @@ export class Draggable extends React.Component {
               onMoveEnd({
                 y: e.pageY - dragging_state.start_mouse_y,
                 x: e.pageX - dragging_state.start_mouse_x,
+                // absolute_y: e.pageY,
+                // absolute_x: e.pageX,
               });
             }}
           />
         )}
 
         <div
+          // ref={ref => {
+          //   this.container = ref;
+          // }}
           onMouseDown={(e) => {
             this.setState({
               dragging_state: {
