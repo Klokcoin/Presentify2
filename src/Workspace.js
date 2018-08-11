@@ -1,21 +1,21 @@
-import React from 'react';
-import { isEqual } from 'lodash';
-import JSON6 from 'json-6';
+import React from "react";
+import { isEqual } from "lodash";
+import JSON6 from "json-6";
 
-import { DocumentEvent, Draggable } from './Elements';
+import { DocumentEvent, Draggable } from "./Elements";
 
-import { component_map } from './Components';
+import { component_map } from "./Components";
 
 let Absolute = ({ left, right, top, bottom, children, style }) => {
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         left,
         right,
         top,
         bottom,
-        ...style,
+        ...style
       }}
       children={children}
     />
@@ -26,13 +26,13 @@ let DraggingCircle = () => {
   return (
     <div
       style={{
-        cursor: 'pointer',
+        cursor: "pointer",
         margin: -4,
-        border: 'solid 2px black',
-        backgroundColor: 'white',
+        border: "solid 2px black",
+        backgroundColor: "white",
         height: 8,
         width: 8,
-        borderRadius: '50%',
+        borderRadius: "50%"
       }}
     />
   );
@@ -49,7 +49,7 @@ let vector = {
 
   add: ([x1, y1], [x2, y2]) => {
     return [x1 + x2, y1 + y2];
-  },
+  }
 };
 
 // let DEFAULT_MOVEMENT_VECTORS = {
@@ -60,7 +60,7 @@ let vector = {
 
 class CanvasItem extends React.Component {
   state = {
-    movement_state: null,
+    movement_state: null
   };
 
   render() {
@@ -75,7 +75,7 @@ class CanvasItem extends React.Component {
       width: 0,
       height: 0,
       rotation: item.rotation,
-      ...movement_state,
+      ...movement_state
     };
 
     let current_item = {
@@ -83,8 +83,8 @@ class CanvasItem extends React.Component {
       x: item.x + with_defaults.x,
       width: item.width + with_defaults.width,
       height: item.height + with_defaults.height,
-      rotation: with_defaults.rotation,
-    }
+      rotation: with_defaults.rotation
+    };
 
     // Positions:
     // -1,-1 -----  1,-1
@@ -114,15 +114,12 @@ class CanvasItem extends React.Component {
         width: direction[0] * x,
         x: with_rotation[0],
         height: direction[1] * y,
-        y: with_rotation[1],
+        y: with_rotation[1]
       };
     };
 
     return (
-      <Absolute
-        top={current_item.y}
-        left={current_item.x}
-      >
+      <Absolute top={current_item.y} left={current_item.x}>
         <div
           onMouseDown={() => {
             onSelect();
@@ -130,9 +127,11 @@ class CanvasItem extends React.Component {
           style={{
             height: current_item.height,
             width: current_item.width,
-            position: 'relative',
-            transformOrigin: 'center',
-            transform: `translateX(-50%) translateY(-50%) rotate(${(current_item.rotation)}rad)`,
+            position: "relative",
+            transformOrigin: "center",
+            transform: `translateX(-50%) translateY(-50%) rotate(${
+              current_item.rotation
+            }rad)`
           }}
         >
           {act_like_selected && (
@@ -143,15 +142,15 @@ class CanvasItem extends React.Component {
               bottom={-1}
               style={{
                 border: act_like_selected
-                  ? '1px black dotted'
-                  : `1px transparent solid`,
+                  ? "1px black dotted"
+                  : `1px transparent solid`
               }}
             >
               <Draggable
                 onMove={(movement_state) => {
                   let current_to_start_vector = [
                     -movement_state.x,
-                    -movement_state.y,
+                    -movement_state.y
                   ];
                   let start_to_center_vector = vector.rotate(
                     [0, item.height / 2 + 50],
@@ -167,14 +166,14 @@ class CanvasItem extends React.Component {
                             current_to_start_vector,
                             start_to_center_vector
                           )
-                        ) - straight_angle,
-                    },
+                        ) - straight_angle
+                    }
                   });
                 }}
                 onMoveEnd={(movement_state) => {
                   let current_to_start_vector = [
                     -movement_state.x,
-                    -movement_state.y,
+                    -movement_state.y
                   ];
                   let start_to_center_vector = vector.rotate(
                     [0, item.height / 2 + 50],
@@ -189,10 +188,10 @@ class CanvasItem extends React.Component {
                           current_to_start_vector,
                           start_to_center_vector
                         )
-                      ) - straight_angle,
+                      ) - straight_angle
                   });
                   this.setState({
-                    movement_state: null,
+                    movement_state: null
                   });
                 }}
               >
@@ -209,10 +208,7 @@ class CanvasItem extends React.Component {
                 <Draggable
                   onMove={(movement_state) => {
                     this.setState({
-                      movement_state: width_height_movement(
-                        pos,
-                        movement_state
-                      ),
+                      movement_state: width_height_movement(pos, movement_state)
                     });
                   }}
                   onMoveEnd={(movement_state) => {
@@ -221,10 +217,10 @@ class CanvasItem extends React.Component {
                       width: item.width + change.width,
                       x: item.x + change.x,
                       height: item.height + change.height,
-                      y: item.y + change.y,
+                      y: item.y + change.y
                     });
                     this.setState({
-                      movement_state: null,
+                      movement_state: null
                     });
                   }}
                 >
@@ -249,10 +245,10 @@ class CanvasItem extends React.Component {
             onMoveEnd={(movement_state) => {
               onChange({
                 y: item.y + movement_state.y,
-                x: item.x + movement_state.x,
+                x: item.x + movement_state.x
               });
               this.setState({
-                movement_state: null,
+                movement_state: null
               });
             }}
           >
@@ -280,10 +276,10 @@ export class Workspace extends React.Component {
     items: [],
     canvas: {
       height: 500,
-      width: 500,
+      width: 500
     },
     selected_item: null,
-    is_pressing_cmd: false,
+    is_pressing_cmd: false
   };
 
   render() {
@@ -306,9 +302,9 @@ export class Workspace extends React.Component {
             height: 100,
             width: 100,
 
-            options: component_info.default_options || {},
-          },
-        ],
+            options: component_info.default_options || {}
+          }
+        ]
       });
     };
 
@@ -318,27 +314,27 @@ export class Workspace extends React.Component {
           if (x.id === id) {
             let unsanitized = {
               ...x,
-              ...change,
+              ...change
             };
             return unsanitized;
           } else {
             return x;
           }
-        }),
+        })
       });
     };
 
     return (
       <div
         style={{
-          backgroundColor: 'rgb(131, 117, 180)',
-          position: 'fixed',
+          backgroundColor: "rgb(131, 117, 180)",
+          position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          display: 'flex',
-          flexDirection: 'row',
+          display: "flex",
+          flexDirection: "row"
         }}
       >
         <DocumentEvent
@@ -346,7 +342,7 @@ export class Workspace extends React.Component {
           handler={(e) => {
             if (e.which === 17 || e.which === 91) {
               this.setState({
-                is_pressing_cmd: true,
+                is_pressing_cmd: true
               });
             }
           }}
@@ -360,7 +356,7 @@ export class Workspace extends React.Component {
             // .... Well.. don't do that
             if (e.which === 17 || e.which === 91) {
               this.setState({
-                is_pressing_cmd: false,
+                is_pressing_cmd: false
               });
             }
           }}
@@ -369,11 +365,11 @@ export class Workspace extends React.Component {
 
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             flex: 1,
-            overflow: 'hidden',
+            overflow: "hidden"
           }}
         >
           <div
@@ -382,13 +378,13 @@ export class Workspace extends React.Component {
               // boxShadow: '0px 3px 20px black',
               // width: canvas.width,
               // height: canvas.height,
-              position: 'relative',
+              position: "relative"
             }}
             onClick={(e) => {
               // Only reset selected_item if the click is **only** on the canvas,
               // and not actually on one of the divs inside
               if (e.target === e.currentTarget) {
-                this.setState({ selected_item: null })
+                this.setState({ selected_item: null });
               }
             }}
           >
@@ -406,8 +402,12 @@ export class Workspace extends React.Component {
                     change_item(item.id, next_item);
                   }}
                 >
-                  <Absolute top={0} left={0} bottom={0} right={0}
-                    style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none' }}
+                  <Absolute
+                    top={0}
+                    left={0}
+                    bottom={0}
+                    right={0}
+                    style={{ pointerEvents: is_pressing_cmd ? "all" : "none" }}
                   >
                     <component_info.Component
                       size={item}
@@ -422,9 +422,9 @@ export class Workspace extends React.Component {
         <div
           style={{
             width: 250,
-            backgroundColor: 'rgb(245, 212, 126)',
-            display: 'flex',
-            flexDirection: 'column',
+            backgroundColor: "rgb(245, 212, 126)",
+            display: "flex",
+            flexDirection: "column"
           }}
         >
           {Object.entries(component_map).map(([key, comp]) => (
@@ -450,37 +450,37 @@ export class Workspace extends React.Component {
               item.options
             );
             return (
-              <div style={{ overflowY: 'auto' }}>
-                {component_info.ConfigScreen &&
+              <div style={{ overflowY: "auto" }}>
+                {component_info.ConfigScreen && (
                   <component_info.ConfigScreen
                     value={item.options}
                     onChange={(options) => {
                       change_item(item.id, {
                         options: {
                           ...item.options,
-                          ...options,
-                        },
-                      })
+                          ...options
+                        }
+                      });
                     }}
                   />
-                }
+                )}
                 <textarea
                   style={{
                     width: `100%`,
-                    boxSizing: 'border-box',
-                    border: 'none',
+                    boxSizing: "border-box",
+                    border: "none",
                     padding: 16,
-                    backgroundColor: 'crimson',
-                    color: 'white',
+                    backgroundColor: "crimson",
+                    color: "white",
                     fontSize: 12,
-                    height: 400,
+                    height: 400
                   }}
                   value={unsaved}
                   onChange={(e) => {
                     let [err, obj] = JSON_parse_safe(e.target.value);
                     change_item(item.id, {
                       options: err ? item.options : obj,
-                      options_unsaved: e.target.value,
+                      options_unsaved: e.target.value
                     });
                   }}
                 />
@@ -490,19 +490,23 @@ export class Workspace extends React.Component {
 
           <div style={{ height: 50 }} />
 
-          <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
-            {items.map(item =>
-              <div onClick={() => {
-                this.setState({ selected_item: item.id })
-              }}
-              style={{
-                backgroundColor: item.id === selected_item ? 'rgba(255,255,255,.8)' : 'transparent',
-                padding: 16,
-              }}
+          <div style={{ maxHeight: "30%", overflowY: "auto" }}>
+            {items.map((item) => (
+              <div
+                onClick={() => {
+                  this.setState({ selected_item: item.id });
+                }}
+                style={{
+                  backgroundColor:
+                    item.id === selected_item
+                      ? "rgba(255,255,255,.8)"
+                      : "transparent",
+                  padding: 16
+                }}
               >
                 {item.name}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
