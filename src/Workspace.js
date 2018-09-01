@@ -102,7 +102,7 @@ class CanvasItem extends React.Component {
     //     height: direction[1] * y,
     //     y: with_rotation[1],
     //   };
-    // };
+    // }; 
 
     let width_height_movement = (direction, movement_state) => {
       let [x, y] = vector.rotate(
@@ -110,6 +110,7 @@ class CanvasItem extends React.Component {
         -item.rotation
       );
       let with_rotation = vector.rotate([x / 2, y / 2], item.rotation);
+
       return {
         width: direction[0] * x,
         x: with_rotation[0],
@@ -207,11 +208,23 @@ class CanvasItem extends React.Component {
               {[[-1, -1], [-1, 1], [1, 1], [1, -1]].map((pos) => (
                 <Draggable
                   onMove={(movement_state) => {
+                   
+                    let next_movement = width_height_movement(
+                      pos,
+                      movement_state
+                    )
+                    console.log(next_movement, current_item.width)
+
+                    if (next_movement.height + item.height < 0) {
+
+                      return;
+                    }
+                    if ( next_movement.width + item.width < 0) {
+                      return;
+                    }
+
                     this.setState({
-                      movement_state: width_height_movement(
-                        pos,
-                        movement_state
-                      ),
+                      movement_state: next_movement,
                     });
                   }}
                   onMoveEnd={(movement_state) => {
@@ -330,7 +343,7 @@ export class Workspace extends React.Component {
     return (
       <div
         style={{
-          backgroundColor: 'rgb(131, 117, 180)',
+          backgroundColor: 'rgb(162, 162, 204)',
           position: 'fixed',
           top: 0,
           left: 0,
