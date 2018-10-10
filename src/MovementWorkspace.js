@@ -2,30 +2,6 @@ import React, { Component, Fragment } from 'react'
 
 const isWhole = number => number % 1 === 0
 
-const components = [
-  <div
-    style={{
-      height: 40,
-      width: 40,
-      borderRadius: 80,
-      position: 'absolute',
-      backgroundColor: 'red',
-      top: 40,
-      left: 40,
-    }}
-  />,
-  <div
-    style={{
-      height: 40,
-      width: 80,
-      position: 'absolute',
-      backgroundColor: 'blue',
-      top: 90,
-      left: 60,
-    }}
-  />,
-]
-
 /*
   Matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
   [a c e]
@@ -198,11 +174,12 @@ class MovementWorkspace extends Component {
 
   render() {
     const { transform } = this.state
+    const { children } = this.props
     return (
       <div
         style={{
-          height: '100vh',
-          width: '100vw',
+          height: '100%',
+          width: '100%',
         }}
         onWheel={this.onWheel}
       >
@@ -210,12 +187,18 @@ class MovementWorkspace extends Component {
           style={{
             height: '100%',
             width: '100%',
-            backgroundColor: 'gray',
             transform: transform.toString(),
             transformOrigin: '0% 0%'
           }}
         >
-          {components}
+          {
+            React.Children.map(children, child =>
+              React.cloneElement(
+                child,
+                { inverseCoords: transform.inverse().applyToCoords }
+              )
+            )
+          }
         </div>
       </div>
     )
