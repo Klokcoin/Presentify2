@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 
 const isWhole = number => number % 1 === 0
 
@@ -74,7 +74,7 @@ class Matrix {
   }
 }
 
-class MovementWorkspace extends Component {
+class Canvas extends Component {
   static defaultProps = {
     maxTranslation: {
       // I don't yet see a reason to limit this...
@@ -104,7 +104,7 @@ class MovementWorkspace extends Component {
     }
 
     if (
-      translation.x === newTranslation.x && translation.y === newTranslation.y
+      (translation.x === newTranslation.x && translation.y === newTranslation.y)
         || Math.abs(newTranslation.x) > max.x
         || Math.abs(newTranslation.y) > max.y
     ) {
@@ -171,22 +171,31 @@ class MovementWorkspace extends Component {
   }
 
   render() {
+    const { select_item, children } = this.props
     const { transform } = this.state
-    const { children } = this.props
+
     return (
       <div
         style={{
+          overflow: 'hidden',
           height: '100%',
           width: '100%',
+          backgroundColor: 'rgb(162, 162, 204)',
         }}
         onWheel={this.onWheel}
       >
         <div
           style={{
-            height: '100%',
-            width: '100%',
+            
             transform: transform.toString(),
             transformOrigin: '0% 0%'
+          }}
+          onClick={(e) => {
+            // Only reset selected_item if the click is **only** on the canvas,
+            // and not actually on one of the divs inside
+            if (e.target === e.currentTarget) {
+              select_item(null)
+            }
           }}
         >
           {
@@ -207,4 +216,4 @@ class MovementWorkspace extends Component {
   }
 }
 
-export default MovementWorkspace
+export default Canvas

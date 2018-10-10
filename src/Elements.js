@@ -13,6 +13,7 @@ type T_documentevent_props = {
   name: string,
   passive?: boolean,
 };
+
 export class DocumentEvent extends React.Component<T_documentevent_props> {
   unbind: () => void;
 
@@ -99,3 +100,35 @@ export class Draggable extends React.Component {
     );
   }
 }
+
+export let Absolute = ({ left, right, top, bottom, children, style }) => {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left,
+        right,
+        top,
+        bottom,
+        ...style,
+      }}
+      children={children}
+    />
+  );
+};
+
+export let DraggingCircle = () => {
+  return (
+    <div
+      style={{
+        cursor: 'pointer',
+        margin: -4,
+        border: 'solid 2px black',
+        backgroundColor: 'white',
+        height: 8,
+        width: 8,
+        borderRadius: '50%',
+      }}
+    />
+  );
+};
