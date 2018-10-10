@@ -164,10 +164,8 @@ class MovementWorkspace extends Component {
     const { doTranslation, doZoom } = this
 
     if (isWhole(deltaX) && isWhole(deltaY)) {
-      // translation
       doTranslation(event)
     } else {
-      // zoom
       doZoom(event)
     }
   }
@@ -192,6 +190,10 @@ class MovementWorkspace extends Component {
           }}
         >
           {
+            /*
+              Provide our children with a method that inverses the current transform,
+              useful for accurate pointer events
+            */
             React.Children.map(children, child =>
               React.cloneElement(
                 child,
