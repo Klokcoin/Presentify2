@@ -28,7 +28,7 @@ class CanvasItem extends Component {
 
   render() {
     let { movement_state } = this.state
-    let { item, selected, onSelect, onChange, children } = this.props
+    let { item, selected, onSelect, onChange, inverseScale, children } = this.props
 
     let act_like_selected = selected || movement_state != null
 
@@ -106,7 +106,7 @@ class CanvasItem extends Component {
               bottom={-1}
               style={{
                 border: act_like_selected
-                  ? '1px black dotted'
+                  ? `1px black dotted`
                   : `1px transparent solid`,
               }}
             >
@@ -158,13 +158,14 @@ class CanvasItem extends Component {
                     movement_state: null,
                   })
                 }}
+                inverseScale={inverseScale}
               >
                 <Absolute
                   right="50%"
                   top={-50}
                   style={{ transform: `translateX(50%)` }}
                 >
-                  <DraggingCircle />
+                  <DraggingCircle inverseScale={inverseScale}/>
                 </Absolute>
               </Draggable>
 
@@ -202,6 +203,7 @@ class CanvasItem extends Component {
                       movement_state: null,
                     })
                   }}
+                  inverseScale={inverseScale}
                 >
                   <Absolute
                     left={pos[0] === -1 ? -10 : null}
@@ -209,7 +211,7 @@ class CanvasItem extends Component {
                     top={pos[1] === -1 ? -10 : null}
                     bottom={pos[1] === 1 ? -10 : null}
                   >
-                    <DraggingCircle />
+                    <DraggingCircle inverseScale={inverseScale}/>
                   </Absolute>
                 </Draggable>
               ))}
@@ -230,6 +232,7 @@ class CanvasItem extends Component {
                 movement_state: null,
               })
             }}
+            inverseScale={inverseScale}
           >
             <Absolute right={0} top={0} left={0} bottom={0}>
               {children}
