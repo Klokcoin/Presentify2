@@ -1,30 +1,6 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 
 const isWhole = number => number % 1 === 0
-
-const components = [
-  <div
-    style={{
-      height: 40,
-      width: 40,
-      borderRadius: 80,
-      position: 'absolute',
-      backgroundColor: 'red',
-      top: 40,
-      left: 40,
-    }}
-  />,
-  <div
-    style={{
-      height: 40,
-      width: 80,
-      position: 'absolute',
-      backgroundColor: 'blue',
-      top: 90,
-      left: 60,
-    }}
-  />,
-]
 
 /*
   Matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
@@ -98,7 +74,7 @@ class Matrix {
   }
 }
 
-class MovementWorkspace extends Component {
+class Canvas extends Component {
   static defaultProps = {
     maxTranslation: {
       // I don't yet see a reason to limit this...
@@ -128,7 +104,7 @@ class MovementWorkspace extends Component {
     }
 
     if (
-      translation.x === newTranslation.x && translation.y === newTranslation.y
+      (translation.x === newTranslation.x && translation.y === newTranslation.y)
         || Math.abs(newTranslation.x) > max.x
         || Math.abs(newTranslation.y) > max.y
     ) {
@@ -188,38 +164,56 @@ class MovementWorkspace extends Component {
     const { doTranslation, doZoom } = this
 
     if (isWhole(deltaX) && isWhole(deltaY)) {
-      // translation
       doTranslation(event)
     } else {
-      // zoom
       doZoom(event)
     }
   }
 
   render() {
+    const { select_item, children } = this.props
     const { transform } = this.state
+
     return (
       <div
         style={{
-          height: '100vh',
-          width: '100vw',
+          overflow: 'hidden',
+          height: '100%',
+          width: '100%',
+          backgroundColor: 'rgb(162, 162, 204)',
         }}
         onWheel={this.onWheel}
       >
         <div
           style={{
-            height: '100%',
-            width: '100%',
-            backgroundColor: 'gray',
+            
             transform: transform.toString(),
             transformOrigin: '0% 0%'
           }}
+          onClick={(e) => {
+            // Only reset selected_item if the click is **only** on the canvas,
+            // and not actually on one of the divs inside
+            if (e.target === e.currentTarget) {
+              select_item(null)
+            }
+          }}
         >
-          {components}
+          {
+            /*
+              Provide our children with a method that inverses the current transform,
+              useful for accurate pointer events
+            */
+            React.Children.map(children, child =>
+              React.cloneElement(
+                child,
+                { inverseCoords: transform.inverse().applyToCoords }
+              )
+            )
+          }
         </div>
       </div>
     )
   }
 }
 
-export default MovementWorkspace
+export default Canvas
