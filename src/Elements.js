@@ -46,7 +46,7 @@ export class Draggable extends React.Component {
 
   render() {
     let { dragging_state } = this.state;
-    let { onMove, onMoveEnd, children } = this.props;
+    let { onMove, onMoveEnd, inverseScale, children } = this.props;
 
     return (
       <React.Fragment>
@@ -55,11 +55,24 @@ export class Draggable extends React.Component {
             name="mousemove"
             handler={(e) => {
               if (dragging_state != null) {
-                onMove({
-                  y: e.pageY - dragging_state.start_mouse_y,
+                // inversing the scale transform
+                // if you want, you can do this in CanvasItem & put it directly
+                // in onMove, onChange, onMoveEnd...
+                const { x, y } = inverseScale({
                   x: e.pageX - dragging_state.start_mouse_x,
-                  absolute_y: e.pageY,
-                  absolute_x: e.pageX,
+                  y: e.pageY - dragging_state.start_mouse_y
+                })
+
+                const { x: absolute_x, y: absolute_y } = inverseScale({
+                  x: e.pageX,
+                  y: e.pageY
+                })
+              
+                onMove({
+                  y,
+                  x,
+                  absolute_y,
+                  absolute_x,
                 });
               }
             }}
@@ -71,9 +84,14 @@ export class Draggable extends React.Component {
             name="mouseup"
             handler={(e) => {
               this.setState({ dragging_state: null });
-              onMoveEnd({
-                y: e.pageY - dragging_state.start_mouse_y,
+              const { x, y } = inverseScale({
                 x: e.pageX - dragging_state.start_mouse_x,
+                y: e.pageY - dragging_state.start_mouse_y
+              })
+
+              onMoveEnd({
+                x,
+                y,
                 // absolute_y: e.pageY,
                 // absolute_x: e.pageX,
               });
@@ -86,6 +104,7 @@ export class Draggable extends React.Component {
           //   this.container = ref;
           // }}
           onMouseDown={(e) => {
+            // DON'T apply the inverseScale here! it does weird stuff
             this.setState({
               dragging_state: {
                 start_mouse_x: e.pageX,
@@ -117,13 +136,19 @@ export let Absolute = ({ left, right, top, bottom, children, style }) => {
   );
 };
 
-export let DraggingCircle = () => {
+export let DraggingCircle = ({ inverseScale }) => {
+  // scaleX = scaleY right now, but maybe in the future we'd like
+  // to skew (uneven scale, scaleX =/= scaleY)
+  const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 })
+
   return (
     <div
       style={{
+        transformOrigin: '50% 50%',
+        transform: `scale(${scaleX}, ${scaleY})`,
         cursor: 'pointer',
         margin: -4,
-        border: 'solid 2px black',
+        border: `solid 1px black`,
         backgroundColor: 'white',
         height: 8,
         width: 8,

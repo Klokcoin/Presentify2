@@ -64,6 +64,15 @@ class Matrix {
     })
   }
 
+  // Inversing only the scale
+  inverseScale = () => {
+    const { a, b, c, d, e, f } = this
+    return new Matrix({
+      a: 1/a,
+      d: 1/d,
+    })
+  }
+
   // Applying the matrix transformation to x and y coordinates
   applyToCoords = ({ x, y }) => {
     const { a, b, c, d, e, f } = this
@@ -95,12 +104,19 @@ class Canvas extends Component {
   }
 
   doTranslation = ({ deltaX, deltaY }) => {
-    const { translation } = this.state
+    const { translation, transform } = this.state
     const { maxTranslation: max } = this.props
 
+    // 'Normalize' the translation speed, we multiply our deltas by the current scale,
+    // so we pan slower at close zooms & faster at far zooms
+    const { x: relativeDeltaX, y: relativeDeltaY } = transform.inverseScale().applyToCoords({
+      x: deltaX,
+      y: deltaY
+    })
+
     const newTranslation = {
-      x: translation.x - deltaX,
-      y: translation.y - deltaY
+      x: translation.x - relativeDeltaX,
+      y: translation.y - relativeDeltaY
     }
 
     if (
@@ -116,8 +132,8 @@ class Canvas extends Component {
         new Matrix({
           a: 1,
           d: 1,
-          e: -deltaX,
-          f: -deltaY
+          e: -relativeDeltaX,
+          f: -relativeDeltaY
         })
       ),
       translation: newTranslation,
@@ -186,7 +202,6 @@ class Canvas extends Component {
       >
         <div
           style={{
-            
             transform: transform.toString(),
             transformOrigin: '0% 0%'
           }}
@@ -200,13 +215,13 @@ class Canvas extends Component {
         >
           {
             /*
-              Provide our children with a method that inverses the current transform,
+              Provide our children with a method that inverses the current scale,
               useful for accurate pointer events
             */
             React.Children.map(children, child =>
               React.cloneElement(
                 child,
-                { inverseCoords: transform.inverse().applyToCoords }
+                { inverseScale: transform.inverseScale().applyToCoords }
               )
             )
           }
