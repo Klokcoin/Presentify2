@@ -80,11 +80,19 @@ class CanvasItem extends Component {
     //   }
     // }
 
-    let width_height_movement = (direction, movement_state) => {
+    let width_height_movement = (direction, movement_state, item) => {
       let [x, y] = vector.rotate(
         [movement_state.x, movement_state.y],
         -item.rotation
       );
+
+      if (y * direction[1] + item.height < 1) {
+        y = -(item.height - 1) / direction[1];
+      }
+      if (x * direction[0] + item.width < 1) {
+        x = -(item.width - 1) / direction[0];
+      }
+
       let with_rotation = vector.rotate([x / 2, y / 2], item.rotation);
 
       return {
@@ -190,28 +198,23 @@ class CanvasItem extends Component {
                   onMove={(movement_state) => {
                     let next_movement = width_height_movement(
                       pos,
-                      movement_state
+                      movement_state,
+                      item,
                     );
-
-                    if (next_movement.height + item.height < 0) {
-                      return;
-                    }
-                    if (next_movement.width + item.width < 0) {
-                      return;
-                    }
 
                     this.setState({
                       movement_state: next_movement,
                     });
                   }}
                   onMoveEnd={(movement_state) => {
-                    let change = width_height_movement(pos, movement_state);
+                    let change = width_height_movement(pos, movement_state, item);
                     onChange({
                       width: item.width + change.width,
                       x: item.x + change.x,
                       height: item.height + change.height,
                       y: item.y + change.y,
                     });
+
                     this.setState({
                       movement_state: null,
                     });
