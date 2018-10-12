@@ -48,7 +48,7 @@ export class Draggable extends React.Component {
 
   render() {
     let { dragging_state } = this.state;
-    let { onMove, onMoveEnd, children } = this.props;
+    let { onMove, onMoveEnd, children, ...props } = this.props;
 
     return (
       <React.Fragment>
@@ -57,9 +57,6 @@ export class Draggable extends React.Component {
             name="mousemove"
             handler={(e) => {
               if (dragging_state != null) {
-                // inversing the scale transform
-                // if you want, you can do this in CanvasItem & put it directly
-                // in onMove, onChange, onMoveEnd...
                 const { x, y } = {
                   x: e.pageX - dragging_state.start_mouse_x,
                   y: e.pageY - dragging_state.start_mouse_y,
@@ -94,17 +91,13 @@ export class Draggable extends React.Component {
               onMoveEnd({
                 x,
                 y,
-                // absolute_y: e.pageY,
-                // absolute_x: e.pageX,
               });
             }}
           />
         )}
 
         <div
-          // ref={ref => {
-          //   this.container = ref;
-          // }}
+          data-what-is-this="Draggable"
           onMouseDown={(e) => {
             // DON'T apply the inverseScale here! it does weird stuff
             this.setState({
@@ -114,6 +107,7 @@ export class Draggable extends React.Component {
               },
             });
           }}
+          {...props}
         >
           {children}
         </div>
@@ -122,7 +116,7 @@ export class Draggable extends React.Component {
   }
 }
 
-export let Absolute = ({ left, right, top, bottom, children, style }) => {
+export let Absolute = ({ left, right, top, bottom, children, style, ...props }) => {
   return (
     <div
       style={{
@@ -134,6 +128,7 @@ export let Absolute = ({ left, right, top, bottom, children, style }) => {
         ...style,
       }}
       children={children}
+      {...props}
     />
   );
 };

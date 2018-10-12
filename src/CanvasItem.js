@@ -23,9 +23,13 @@ let vector = {
 // }
 
 let get_cursor_direction = (angle, pos) => {
-  let new_angle = Math.round(vector.to_rotation(vector.rotate(pos, angle)) / (Math.PI) / 0.25) + 4;
-  return ['ew', 'nwse', 'ns', 'nesw', 'ew', 'nwse', 'ns', 'nesw', 'ew'][new_angle];
-}
+  let new_angle =
+    Math.round(vector.to_rotation(vector.rotate(pos, angle)) / Math.PI / 0.25) +
+    4;
+  return ['ew', 'nwse', 'ns', 'nesw', 'ew', 'nwse', 'ns', 'nesw', 'ew'][
+    new_angle
+  ];
+};
 
 class CanvasItem extends Component {
   state = {
@@ -104,70 +108,82 @@ class CanvasItem extends Component {
     };
 
     return (
-      <Absolute top={current_item.y} left={current_item.x}>
-        <div
-          onMouseDown={() => {
-            onSelect();
+      <Absolute
+        top={current_item.y}
+        left={current_item.x}
+        onMouseDown={() => {
+          onSelect();
+        }}
+        style={{
+          cursor: movement_state ? 'grabbing' : undefined,
+          height: current_item.height,
+          width: current_item.width,
+          transformOrigin: 'center',
+          transform: `translateX(-50%) translateY(-50%) rotate(${
+            current_item.rotation
+          }rad)`,
+        }}
+      >
+        <Draggable
+          onMove={(movement_state) => {
+            console.log(`${item.id} updated!`);
+            this.setState({ movement_state });
           }}
-          style={{
-            cursor: movement_state ? 'grabbing' : undefined,
-            height: current_item.height,
-            width: current_item.width,
-            position: 'relative',
-            transformOrigin: 'center',
-            transform: `translateX(-50%) translateY(-50%) rotate(${
-              current_item.rotation
-            }rad)`,
+          onMoveEnd={(movement_state) => {
+            onChange({
+              y: item.y + movement_state.y,
+              x: item.x + movement_state.x,
+            });
+            this.setState({
+              movement_state: null,
+            });
           }}
         >
-          {act_like_selected && (
+          <Absolute right={0} top={0} left={0} bottom={0}>
+            <Unzoom>
+              {({ scale }) => (
+                <Absolute
+                  top={0}
+                  right={0}
+                  left={0}
+                  bottom={0}
+                  style={{ margin: -16 * scale, padding: 16 * scale }}
+                />
+              )}
+            </Unzoom>
+            {children}
+          </Absolute>
+        </Draggable>
+
+        {act_like_selected && (
+          <React.Fragment>
             <Absolute
               top={-1}
               left={-1}
               right={-1}
               bottom={-1}
               style={{
+                pointerEvents: 'none',
                 border: act_like_selected
                   ? `1px black dotted`
                   : `1px transparent solid`,
               }}
-            >
-              <Draggable
-                onMove={(movement_state) => {
-                  let current_to_start_vector = [
-                    -movement_state.x,
-                    -movement_state.y,
-                  ];
-                  let start_to_center_vector = vector.rotate(
-                    [0, item.height / 2 + 50],
-                    item.rotation
-                  );
+            />
 
-                  let straight_angle = 1 / 2 * Math.PI;
-                  this.setState({
-                    movement_state: {
-                      rotation:
-                        vector.to_rotation(
-                          vector.add(
-                            current_to_start_vector,
-                            start_to_center_vector
-                          )
-                        ) - straight_angle,
-                    },
-                  });
-                }}
-                onMoveEnd={(movement_state) => {
-                  let current_to_start_vector = [
-                    -movement_state.x,
-                    -movement_state.y,
-                  ];
-                  let start_to_center_vector = vector.rotate(
-                    [0, item.height / 2 + 50],
-                    item.rotation
-                  );
+            <Draggable
+              onMove={(movement_state) => {
+                let current_to_start_vector = [
+                  -movement_state.x,
+                  -movement_state.y,
+                ];
+                let start_to_center_vector = vector.rotate(
+                  [0, item.height / 2 + 50],
+                  item.rotation
+                );
 
-                  let straight_angle = 1 / 2 * Math.PI;
-                  onChange({
+                let straight_angle = 1 / 2 * Math.PI;
+                this.setState({
+                  movement_state: {
                     rotation:
                       vector.to_rotation(
                         vector.add(
@@ -175,87 +191,93 @@ class CanvasItem extends Component {
                           start_to_center_vector
                         )
                       ) - straight_angle,
+                  },
+                });
+              }}
+              onMoveEnd={(movement_state) => {
+                let current_to_start_vector = [
+                  -movement_state.x,
+                  -movement_state.y,
+                ];
+                let start_to_center_vector = vector.rotate(
+                  [0, item.height / 2 + 50],
+                  item.rotation
+                );
+
+                let straight_angle = 1 / 2 * Math.PI;
+                onChange({
+                  rotation:
+                    vector.to_rotation(
+                      vector.add(
+                        current_to_start_vector,
+                        start_to_center_vector
+                      )
+                    ) - straight_angle,
+                });
+                this.setState({
+                  movement_state: null,
+                });
+              }}
+            >
+              <Absolute
+                right="50%"
+                top={-50}
+                style={{ transform: `translateX(50%)` }}
+              >
+                <Unzoom>
+                  <DraggingCircle />
+                </Unzoom>
+              </Absolute>
+            </Draggable>
+
+            {[[-1, -1], [-1, 1], [1, 1], [1, -1]].map((pos) => (
+              <Draggable
+                key={pos.join(',')}
+                onMove={(movement_state) => {
+                  let next_movement = width_height_movement(
+                    pos,
+                    movement_state,
+                    item
+                  );
+
+                  this.setState({
+                    movement_state: next_movement,
                   });
+                }}
+                onMoveEnd={(movement_state) => {
+                  let change = width_height_movement(pos, movement_state, item);
+                  onChange({
+                    width: item.width + change.width,
+                    x: item.x + change.x,
+                    height: item.height + change.height,
+                    y: item.y + change.y,
+                  });
+
                   this.setState({
                     movement_state: null,
                   });
                 }}
+                // inverseScale={inverseScale}
               >
                 <Absolute
-                  right="50%"
-                  top={-50}
-                  style={{ transform: `translateX(50%)` }}
+                  left={pos[0] === -1 ? -10 : null}
+                  right={pos[0] === 1 ? -10 : null}
+                  top={pos[1] === -1 ? -10 : null}
+                  bottom={pos[1] === 1 ? -10 : null}
                 >
                   <Unzoom>
-                    <DraggingCircle />
+                    <DraggingCircle
+                      direction={get_cursor_direction(
+                        current_item.rotation,
+                        pos
+                      )}
+                    />
                   </Unzoom>
                 </Absolute>
               </Draggable>
-
-              {[[-1, -1], [-1, 1], [1, 1], [1, -1]].map((pos) => (
-                <Draggable
-                  key={pos.join(',')}
-                  onMove={(movement_state) => {
-                    let next_movement = width_height_movement(
-                      pos,
-                      movement_state,
-                      item,
-                    );
-
-                    this.setState({
-                      movement_state: next_movement,
-                    });
-                  }}
-                  onMoveEnd={(movement_state) => {
-                    let change = width_height_movement(pos, movement_state, item);
-                    onChange({
-                      width: item.width + change.width,
-                      x: item.x + change.x,
-                      height: item.height + change.height,
-                      y: item.y + change.y,
-                    });
-
-                    this.setState({
-                      movement_state: null,
-                    });
-                  }}
-                  // inverseScale={inverseScale}
-                >
-                  <Absolute
-                    left={pos[0] === -1 ? -10 : null}
-                    right={pos[0] === 1 ? -10 : null}
-                    top={pos[1] === -1 ? -10 : null}
-                    bottom={pos[1] === 1 ? -10 : null}
-                  >
-                    <Unzoom>
-                      <DraggingCircle direction={get_cursor_direction(current_item.rotation, pos)} />
-                    </Unzoom>
-                  </Absolute>
-                </Draggable>
-              ))}
-            </Absolute>
-          )}
-
-          <Draggable
-            onMove={(movement_state) => {
-              console.log(`${item.id} updated!`);
-              this.setState({ movement_state });
-            }}
-            onMoveEnd={(movement_state) => {
-              onChange({
-                y: item.y + movement_state.y,
-                x: item.x + movement_state.x,
-              });
-              this.setState({
-                movement_state: null,
-              });
-            }}
-          >
-            <Absolute right={0} top={0} left={0} bottom={0}>
-              {children}
-            </Absolute>
-          </Draggable>
-        </div>
+            ))}
+          </React.Fragment>
+        )}
       </Absolute>
     );
   }

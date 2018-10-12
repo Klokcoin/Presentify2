@@ -128,13 +128,19 @@ class Transformation2DMatrix {
 
 let ZoomContext = React.createContext({ scale: 1 });
 export let Unzoom = ({ children }) => {
-  return (
-    <ZoomContext.Consumer>
-      {({ scale }) => (
-        <div style={{ transform: `scale(${scale})` }} children={children} />
-      )}
-    </ZoomContext.Consumer>
-  );
+  if (typeof children === 'function') {
+    return (
+      <ZoomContext.Consumer children={children} />
+    );
+  } else {
+    return (
+      <ZoomContext.Consumer>
+        {({ scale }) => (
+          <div style={{ transform: `scale(${scale})` }} children={children} />
+        )}
+      </ZoomContext.Consumer>
+    );
+  }
 };
 
 class Canvas extends Component {
@@ -318,6 +324,13 @@ class Canvas extends Component {
                 this.props.initialTranslation.y
               }px) ${transform.toString()}`,
               transformOrigin: '0% 0%',
+            }}
+            onMouseDown={(e) => {
+              // Only reset selected_item if the click is **only** on the canvas,
+              // and not actually on one of the divs inside
+              if (e.target === e.currentTarget) {
+                select_item(null);
+              }
             }}
           >
             <IsolateCoordinatesForElement
