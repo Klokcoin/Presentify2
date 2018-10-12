@@ -3,6 +3,7 @@ import { SketchPicker } from 'react-color';
 
 export let component_map = {
   'dralletje/artboard': {
+    icon: <i className="fas fa-chess-board" />,
     name: 'Canvas',
     Component: ({ size }) => {
       return (
@@ -18,6 +19,7 @@ export let component_map = {
     },
   },
   'dralletje/webview': {
+    icon: <i className="fas fa-globe" />,
     name: 'Webview',
     default_options: {
       url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1',
@@ -37,6 +39,16 @@ export let component_map = {
     },
   },
   'dralletje/rectangle': {
+    icon: (
+      <div
+        style={{
+          height: '1em',
+          width: '1em',
+          backgroundColor: 'black',
+          borderRadius: 3,
+        }}
+      />
+    ),
     name: 'Rectangle',
     default_options: {
       backgroundColor: 'blue',
@@ -47,7 +59,9 @@ export let component_map = {
           <SketchPicker
             color={value.backgroundColor}
             onChangeComplete={({ rgb }) => {
-              onChange({ backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})` });
+              onChange({
+                backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${rgb.a})`,
+              });
             }}
           />
         </div>
@@ -66,6 +80,7 @@ export let component_map = {
     },
   },
   'dralletje/circle': {
+    icon: <i className="fas fa-circle" />,
     name: 'Circle',
     default_options: {
       backgroundColor: 'red',

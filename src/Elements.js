@@ -159,3 +159,16 @@ export let DraggingCircle = () => {
     />
   );
 };
+
+export let Whitespace = ({ height, width }) => {
+  return (
+    <div
+      style={{
+        height: height != null && height,
+        minHeight: height != null && height,
+        width: width != null && width,
+        minWidth: width != null && width,
+      }}
+    />
+  );
+};

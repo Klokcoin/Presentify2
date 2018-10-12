@@ -2,12 +2,27 @@ import React, { Component } from 'react';
 import { isEqual } from 'lodash';
 import JSON6 from 'json-6';
 import Measure from 'react-measure';
+import styled from 'styled-components';
 
-import { DocumentEvent, Absolute } from './Elements';
+import { DocumentEvent, Absolute, Whitespace } from './Elements';
 import Canvas from './Canvas';
 import CanvasItem from './CanvasItem';
 
 import { component_map } from './Components';
+
+let ComponentButton = styled.div`
+  transition: background-color 0.2s;
+  background-color: rgba(255, 255, 255, 0);
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  &:hover {
+    background-color: rgb(255, 108, 240);
+  }
+`;
 
 let JSON_parse_safe = (json) => {
   try {
@@ -179,14 +194,24 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          {Object.entries(component_map).map(([key, comp]) => (
-            <div
-              style={{ paddingLeft: 50, paddingRight: 50, paddingTop: 20 }}
-              onClick={() => add_component({ type: key })}
-            >
-              {comp.name}
-            </div>
-          ))}
+          <Whitespace height={16} />
+          <div style={{ flexShrink: 0 }}>
+            {Object.entries(component_map).map(([key, comp]) => (
+              <ComponentButton
+                style={{
+                  paddingLeft: 50,
+                  paddingRight: 50,
+                  paddingTop: 16,
+                  paddingBottom: 16,
+                }}
+                onClick={() => add_component({ type: key })}
+              >
+                <span>{comp.icon}</span>
+                <div style={{ width: 16 }} />
+                <span>{comp.name}</span>
+              </ComponentButton>
+            ))}
+          </div>
 
           <div style={{ height: 50 }} />
 
