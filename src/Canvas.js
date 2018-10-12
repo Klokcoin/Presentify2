@@ -9,7 +9,7 @@ const isWhole = (number) => number % 1 === 0;
   [0 0 1]
 */
 class Transformation2DMatrix {
-  constructor({ a = 1, b = 0, c = 0, d = 1, e = 0, f = 0 }) {
+  constructor({ a = 1, b = 0, c = 0, d = 1, e = 0, f = 0 } = {}) {
     this.a = a;
     this.b = b;
     this.c = c;
@@ -34,7 +34,7 @@ class Transformation2DMatrix {
     const { a, b, c, d, e, f } = this;
 
     // just linear algebra don't worry if it looks arcane
-    return new Matrix({
+    return new Transformation2DMatrix({
       a: a * a2 + b2 * c,
       b: a2 * b + b2 * d,
       c: a * c2 + c * d2,
@@ -122,14 +122,14 @@ class Canvas extends Component {
         y: translation.y - relativeDeltaY,
       };
 
-      if (
-        (translation.x === newTranslation.x &&
-          translation.y === newTranslation.y) ||
-        Math.abs(newTranslation.x) > max.x ||
-        Math.abs(newTranslation.y) > max.y
-      ) {
-        return;
-      }
+      // if (
+      //   (translation.x === newTranslation.x &&
+      //     translation.y === newTranslation.y) ||
+      //   Math.abs(newTranslation.x) > max.x ||
+      //   Math.abs(newTranslation.y) > max.y
+      // ) {
+      //   return;
+      // }
 
       return {
         transform: transform.multiply(
