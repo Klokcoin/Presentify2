@@ -121,7 +121,10 @@ class Workspace extends Component {
 
         <Measure bounds>
           {({ measureRef, contentRect }) => (
-            <div style={{ width: '100%', height: '100%' }} ref={measureRef}>
+            <div
+              style={{ width: '100%', height: '100%', userSelect: 'none' }}
+              ref={measureRef}
+            >
               {contentRect.bounds.height && (
                 <Canvas
                   select_item={select_item}
