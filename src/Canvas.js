@@ -168,7 +168,6 @@ class Canvas extends Component {
 
   doZoom = ({ clientX, clientY, deltaY }) => {
     this.setState(({ transform, zoom }) => {
-      console.log('xxxx');
       const {
         maxZoom,
         minZoom,
