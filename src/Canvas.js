@@ -8,8 +8,8 @@ const isWhole = (number) => number % 1 === 0;
   |b d f|
   [0 0 1]
 */
-class Matrix {
-  constructor({ a = 0, b = 0, c = 0, d = 0, e = 0, f = 0 }) {
+class Transformation2DMatrix {
+  constructor({ a = 1, b = 0, c = 0, d = 1, e = 0, f = 0 }) {
     this.a = a;
     this.b = b;
     this.c = c;
@@ -26,7 +26,7 @@ class Matrix {
 
   // Multiplying two matrices to get a third matrix, which does both transformations
   multiply = (otherMatrix) => {
-    if (!(otherMatrix instanceof Matrix)) {
+    if (!(otherMatrix instanceof Transformation2DMatrix)) {
       throw new Error("Can't multiply a non-Matrix object!");
     }
 
@@ -54,7 +54,7 @@ class Matrix {
       throw new Error('Matrix is not invertible!');
     }
 
-    return new Matrix({
+    return new Transformation2DMatrix({
       a: d / determinant,
       b: -b / determinant,
       c: -c / determinant,
@@ -67,7 +67,7 @@ class Matrix {
   // Inversing only the scale
   inverseScale = () => {
     const { a, b, c, d, e, f } = this;
-    return new Matrix({
+    return new Transformation2DMatrix({
       a: 1 / a,
       d: 1 / d,
     });
@@ -95,7 +95,7 @@ class Canvas extends Component {
   };
 
   state = {
-    transform: new Matrix({ a: 1, d: 1 }),
+    transform: new Transformation2DMatrix(),
     zoom: 10,
     translation: {
       x: 0,
@@ -133,9 +133,7 @@ class Canvas extends Component {
 
       return {
         transform: transform.multiply(
-          new Matrix({
-            a: 1,
-            d: 1,
+          new Transformation2DMatrix({
             e: -relativeDeltaX,
             f: -relativeDeltaY,
           })
@@ -167,7 +165,7 @@ class Canvas extends Component {
       });
       return {
         transform: transform.multiply(
-          new Matrix({
+          new Transformation2DMatrix({
             a: scale,
             d: scale,
             e: -mouseX * (scale - 1),
