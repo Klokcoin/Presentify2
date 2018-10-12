@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { clamp } from 'lodash';
 
 const isWhole = (number) => number % 1 === 0;
 
@@ -90,8 +91,8 @@ class Canvas extends Component {
       x: 99999,
       y: 99999,
     },
-    minZoom: 5,
-    maxZoom: 19,
+    minZoom: 0.5,
+    maxZoom: 3,
   };
 
   state = {
@@ -145,14 +146,9 @@ class Canvas extends Component {
 
   doZoom = ({ clientX, clientY, deltaY }) => {
     this.setState(({ transform, zoom }) => {
-      const { maxZoom: max, minZoom: min } = this.props;
+      const { maxZoom, minZoom } = this.props;
 
       const scale = 1 - 1 / 110 * deltaY;
-      const newZoom = zoom * Math.sqrt(scale);
-
-      if (newZoom === zoom || newZoom > max || newZoom < min) {
-        return;
-      }
 
       // We need to apply the inverse of the current transformation to the mouse coordinates
       // to get the 'actual' click coordinates
@@ -163,16 +159,45 @@ class Canvas extends Component {
         x: clientX,
         y: clientY,
       });
-      return {
-        transform: transform.multiply(
+
+      let new_transform = transform.multiply(
+        new Transformation2DMatrix({
+          a: scale,
+          d: scale,
+          e: -mouseX * (scale - 1),
+          f: -mouseY * (scale - 1),
+        })
+      )
+
+      let point_zero = new_transform.applyToCoords({ x: 0, y: 0 });
+      let point_one = new_transform.applyToCoords({ x: 1, y: 0 });
+      let zoom_scale = point_one.x - point_zero.x;
+      let zoom_diff = zoom_scale / clamp(zoom_scale, minZoom, maxZoom);
+
+      if (zoom_diff !== 1) {
+        // Out of bounds, but instead of not applying the transformation,
+        // apply it as far as we can.
+        new_transform = new_transform.multiply(
           new Transformation2DMatrix({
-            a: scale,
-            d: scale,
-            e: -mouseX * (scale - 1),
-            f: -mouseY * (scale - 1),
+            a: 1 / zoom_diff,
+            d: 1 / zoom_diff,
+            e: -mouseX * ((1 / zoom_diff) - 1),
+            f: -mouseY * ((1 / zoom_diff) - 1),
           })
-        ),
-        zoom: newZoom,
+        )
+
+        // NOTE When unsure if this tweaking works, uncomment this
+        // let point_zero = new_transform.applyToCoords({ x: 0, y: 0 });
+        // let point_one = new_transform.applyToCoords({ x: 1, y: 0 });
+        // let zoom_scale = point_one.x - point_zero.x;
+        // let zoom_diff2 = zoom_scale / clamp(zoom_scale, minZoom, maxZoom);
+        // if (zoom_diff2 !== 1) {
+        //   throw new Error(`After fix, zoom_diff still is not 1 (it should)`)
+        // }
+      }
+
+      return {
+        transform: new_transform,
       }
     });
   };
@@ -182,10 +207,10 @@ class Canvas extends Component {
     const { deltaX, deltaY } = event;
     const { doTranslation, doZoom } = this;
 
-    if (isWhole(deltaX) && isWhole(deltaY)) {
-      doTranslation(event);
-    } else {
+    if (event.ctrlKey) {
       doZoom(event);
+    } else {
+      doTranslation(event);
     }
   };
 
