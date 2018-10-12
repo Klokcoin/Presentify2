@@ -48,6 +48,9 @@ export class IsolateCoordinatesForElement extends React.Component {
 
   render() {
     let { element, mapCoords } = this.props;
+    let path = (event) => {
+      return event.path || (event.composedPath && event.composedPath());
+    }
     return (
       <React.Fragment>
         <DocumentEvent
@@ -57,7 +60,7 @@ export class IsolateCoordinatesForElement extends React.Component {
           passive
           name="mousedown"
           handler={(e) => {
-            if (e.path.includes(element)) {
+            if (path(e).includes(element)) {
               this.currently_mousedown_in_my_hood = true;
               fixup_react_event(mapCoords, e);
             }
@@ -70,7 +73,7 @@ export class IsolateCoordinatesForElement extends React.Component {
           handler={(e) => {
             if (
               this.currently_mousedown_in_my_hood ||
-              e.path.includes(element)
+              path(e).includes(element)
             ) {
               fixup_react_event(mapCoords, e);
             }
@@ -83,7 +86,7 @@ export class IsolateCoordinatesForElement extends React.Component {
           handler={(e) => {
             if (
               this.currently_mousedown_in_my_hood ||
-              e.path.includes(element)
+              path(e).includes(element)
             ) {
               this.currently_mousedown_in_my_hood = false;
               fixup_react_event(mapCoords, e);

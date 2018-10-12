@@ -48,10 +48,31 @@ export class Draggable extends React.Component {
 
   render() {
     let { dragging_state } = this.state;
-    let { onMove, onMoveEnd, children, ...props } = this.props;
+    let { onMove, onMoveEnd, children, cursor, style, ...props } = this.props;
 
     return (
       <React.Fragment>
+        <div
+          style={{
+            cursor: cursor,
+            ...style,
+          }}
+          data-what-is-this="Draggable"
+          onMouseDown={(e) => {
+            // TODO Make setup/teardown component to do this in
+            document.body.style.cursor = cursor;
+            this.setState({
+              dragging_state: {
+                start_mouse_x: e.pageX,
+                start_mouse_y: e.pageY,
+              },
+            });
+          }}
+          {...props}
+        >
+          {children}
+        </div>
+
         {dragging_state != null && (
           <DocumentEvent
             name="mousemove"
@@ -82,6 +103,7 @@ export class Draggable extends React.Component {
           <DocumentEvent
             name="mouseup"
             handler={(e) => {
+              document.body.style.cursor = null;
               this.setState({ dragging_state: null });
               const { x, y } = {
                 x: e.pageX - dragging_state.start_mouse_x,
@@ -95,28 +117,20 @@ export class Draggable extends React.Component {
             }}
           />
         )}
-
-        <div
-          data-what-is-this="Draggable"
-          onMouseDown={(e) => {
-            // DON'T apply the inverseScale here! it does weird stuff
-            this.setState({
-              dragging_state: {
-                start_mouse_x: e.pageX,
-                start_mouse_y: e.pageY,
-              },
-            });
-          }}
-          {...props}
-        >
-          {children}
-        </div>
       </React.Fragment>
     );
   }
 }
 
-export let Absolute = ({ left, right, top, bottom, children, style, ...props }) => {
+export let Absolute = ({
+  left,
+  right,
+  top,
+  bottom,
+  children,
+  style,
+  ...props
+}) => {
   return (
     <div
       style={{
@@ -134,7 +148,7 @@ export let Absolute = ({ left, right, top, bottom, children, style, ...props }) 
 };
 
 let possible_directions = ['ew', 'ns', 'nesw', 'nwse'];
-export let DraggingCircle = ({ direction }) => {
+export let DraggingCircle = ({ direction, style }) => {
   // scaleX = scaleY right now, but maybe in the future we'd like
   // to skew (uneven scale, scaleX =/= scaleY)
   // const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
@@ -162,6 +176,7 @@ export let DraggingCircle = ({ direction }) => {
           height: 8,
           width: 8,
           borderRadius: '50%',
+          ...style,
         }}
       />
     </div>
