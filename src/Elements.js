@@ -60,14 +60,14 @@ export class Draggable extends React.Component {
                 // in onMove, onChange, onMoveEnd...
                 const { x, y } = inverseScale({
                   x: e.pageX - dragging_state.start_mouse_x,
-                  y: e.pageY - dragging_state.start_mouse_y
-                })
+                  y: e.pageY - dragging_state.start_mouse_y,
+                });
 
                 const { x: absolute_x, y: absolute_y } = inverseScale({
                   x: e.pageX,
-                  y: e.pageY
-                })
-              
+                  y: e.pageY,
+                });
+
                 onMove({
                   y,
                   x,
@@ -86,8 +86,8 @@ export class Draggable extends React.Component {
               this.setState({ dragging_state: null });
               const { x, y } = inverseScale({
                 x: e.pageX - dragging_state.start_mouse_x,
-                y: e.pageY - dragging_state.start_mouse_y
-              })
+                y: e.pageY - dragging_state.start_mouse_y,
+              });
 
               onMoveEnd({
                 x,
@@ -139,7 +139,7 @@ export let Absolute = ({ left, right, top, bottom, children, style }) => {
 export let DraggingCircle = ({ inverseScale }) => {
   // scaleX = scaleY right now, but maybe in the future we'd like
   // to skew (uneven scale, scaleX =/= scaleY)
-  const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 })
+  const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
 
   return (
     <div
