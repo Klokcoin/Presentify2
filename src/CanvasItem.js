@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Draggable, DraggingCircle, Absolute } from './Elements';
+import { Unzoom } from './Canvas';
 
 let vector = {
   rotate: ([x, y], rotation) => {
@@ -177,7 +178,9 @@ class CanvasItem extends Component {
                   top={-50}
                   style={{ transform: `translateX(50%)` }}
                 >
-                  <DraggingCircle />
+                  <Unzoom>
+                    <DraggingCircle />
+                  </Unzoom>
                 </Absolute>
               </Draggable>
 
@@ -221,7 +224,9 @@ class CanvasItem extends Component {
                     top={pos[1] === -1 ? -10 : null}
                     bottom={pos[1] === 1 ? -10 : null}
                   >
-                    <DraggingCircle direction={get_cursor_direction(current_item.rotation, pos)} />
+                    <Unzoom>
+                      <DraggingCircle direction={get_cursor_direction(current_item.rotation, pos)} />
+                    </Unzoom>
                   </Absolute>
                 </Draggable>
               ))}

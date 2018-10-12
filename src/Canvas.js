@@ -126,6 +126,17 @@ class Transformation2DMatrix {
   };
 }
 
+let ZoomContext = React.createContext({ scale: 1 });
+export let Unzoom = ({ children }) => {
+  return (
+    <ZoomContext.Consumer>
+      {({ scale }) => (
+        <div style={{ transform: `scale(${scale})` }} children={children} />
+      )}
+    </ZoomContext.Consumer>
+  );
+};
+
 class Canvas extends Component {
   static defaultProps = {
     maxTranslation: {
@@ -279,79 +290,79 @@ class Canvas extends Component {
     });
 
     let invert = initial_transform.multiply(transform.inverse());
-    // let invert2 = initial_transform.multiply(transform).inverse();
-    // console.log(`invert.equals(invert2):`, invert.equals(invert2))
 
     return (
-      <div
-        style={{
-          overflow: 'hidden',
-          height: '100%',
-          width: '100%',
-          backgroundColor: 'rgb(162, 162, 204)',
-        }}
-        onWheel={this.onWheel}
-        onMouseDown={(e) => {
-          // Only reset selected_item if the click is **only** on the canvas,
-          // and not actually on one of the divs inside
-          if (e.target === e.currentTarget) {
-            select_item(null);
-          }
-        }}
-      >
+      <ZoomContext.Provider value={{ scale: invert.getScale().x }}>
         <div
-          ref={(ref) => (this.isolateRef = ref)}
           style={{
-            transform: `translateX(${
-              this.props.initialTranslation.x
-            }px) translateY(${
-              this.props.initialTranslation.y
-            }px) ${transform.toString()}`,
-            transformOrigin: '0% 0%',
+            overflow: 'hidden',
+            height: '100%',
+            width: '100%',
+            backgroundColor: 'rgb(162, 162, 204)',
+          }}
+          onWheel={this.onWheel}
+          onMouseDown={(e) => {
+            // Only reset selected_item if the click is **only** on the canvas,
+            // and not actually on one of the divs inside
+            if (e.target === e.currentTarget) {
+              select_item(null);
+            }
           }}
         >
-          <IsolateCoordinatesForElement
-            element={this.isolateRef}
-            // NOTE Ik weet dat je het zo hebt gemaakt dat ik in principe
-            // .... mapCoords={invert.applyToCoords}
-            // .... kan doen maar dat vind ik hekka onleesbaar(der)
-            mapCoords={(coords) => invert.applyToCoords(coords)}
-          />
-
-          {/* A gray shape to show the bounds, also just for reference */}
           <div
+            ref={(ref) => (this.isolateRef = ref)}
             style={{
-              pointerEvents: 'none',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              backgroundColor: 'rgba(0,0,0,.3)',
-              borderRadius: 5,
-              transform: `translateX(-50%) translateY(-50%)`,
-              width: this.props.maxTranslation.x * 2,
-              height: this.props.maxTranslation.y * 2,
+              transform: `translateX(${
+                this.props.initialTranslation.x
+              }px) translateY(${
+                this.props.initialTranslation.y
+              }px) ${transform.toString()}`,
+              transformOrigin: '0% 0%',
             }}
-          />
+          >
+            <IsolateCoordinatesForElement
+              element={this.isolateRef}
+              // NOTE Ik weet dat je het zo hebt gemaakt dat ik in principe
+              // .... mapCoords={invert.applyToCoords}
+              // .... kan doen maar dat vind ik hekka onleesbaar(der)
+              mapCoords={(coords) => invert.applyToCoords(coords)}
+            />
 
-          {/* White dot at 0,0 for reference */}
-          <div
-            style={{
-              pointerEvents: 'none',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              backgroundColor: 'white',
-              borderRadius: 5,
-              transform: `translateX(-50%) translateY(-50%)`,
-              width: 10,
-              height: 10,
-            }}
-          />
+            {/* A gray shape to show the bounds, also just for reference */}
+            <div
+              style={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: 'rgba(0,0,0,.3)',
+                borderRadius: 5,
+                transform: `translateX(-50%) translateY(-50%)`,
+                width: this.props.maxTranslation.x * 2,
+                height: this.props.maxTranslation.y * 2,
+              }}
+            />
 
-          {/* Render canvas items or whatever */}
-          {children}
+            {/* White dot at 0,0 for reference */}
+            <div
+              style={{
+                pointerEvents: 'none',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                backgroundColor: 'white',
+                borderRadius: 5,
+                transform: `translateX(-50%) translateY(-50%)`,
+                width: 10,
+                height: 10,
+              }}
+            />
+
+            {/* Render canvas items or whatever */}
+            {children}
+          </div>
         </div>
-      </div>
+      </ZoomContext.Provider>
     );
   }
 }
