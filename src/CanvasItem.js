@@ -188,9 +188,12 @@ class CanvasItem extends Component {
           height: current_item.height,
           width: current_item.width,
           transformOrigin: 'center',
-          transform: `translateX(-50%) translateY(-50%) rotate(${
-            current_item.rotation
-          }rad)`,
+          transform: `
+            translateX(-50%)
+            translateY(-50%)
+            rotate(${current_item.rotation}rad)
+            translateZ(${item.z}px)
+          `,
           userSelect: 'none',
         }}
       >

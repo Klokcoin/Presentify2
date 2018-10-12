@@ -67,6 +67,7 @@ class Workspace extends Component {
             options: component_info.default_options || {},
             ...info,
 
+            z: next_id * 10,
             id: next_id,
           },
         ],

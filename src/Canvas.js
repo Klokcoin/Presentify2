@@ -6,6 +6,64 @@ import { IsolateCoordinatesForElement } from './IsolateCoordinatesForElement';
 
 const isWhole = (number) => number % 1 === 0;
 
+let default3dMatrix = {
+  a: 1,
+  b: 0,
+  c: 0,
+  d: 0,
+  e: 0,
+  f: 1,
+  g: 0,
+  h: 0,
+  i: 0,
+  j: 0,
+  k: 1,
+  l: 0,
+  m: 0,
+  n: 0,
+  o: 0,
+  p: 1,
+}
+class Transformation3DMatrix {
+  constructor(raw) {
+    this.raw = {
+      ...default3dMatrix,
+      ...raw,
+    }
+  }
+
+  // multiply = (otherMatrix) => {
+  //   if (otherMatrix instanceof Transformation2DMatrix) {
+  //     return new Transformation3DMatrix({
+  //
+  //     })
+  //   }
+  //   throw new Error(`Errrr`);
+  // }
+
+  to2DMatrix() {
+    let { a, b, e, f, m, n } = this.raw;
+    return new Transformation2DMatrix({
+      a: a,
+      b: b,
+      c: e,
+      d: f,
+      e: m,
+      f: n,
+    });
+  }
+
+  toString = () => {
+    const { a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p } = this.raw;
+    return `matrix3d(
+      ${a}, ${b}, ${c}, ${d},
+      ${e}, ${f}, ${g}, ${h},
+      ${i}, ${j}, ${k}, ${l},
+      ${m}, ${n}, ${o}, ${p}
+    )`;
+  };
+}
+
 /*
   Matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
   [a c e]
@@ -20,6 +78,27 @@ class Transformation2DMatrix {
     this.d = d;
     this.e = e;
     this.f = f;
+  }
+
+  toMatrix3D() {
+    return new Transformation3DMatrix({
+      a: this.a,
+      b: this.b,
+      // c: 0,
+      // d: 0,
+      e: this.c,
+      f: this.d,
+      // g: 0,
+      // h: 0,
+      // i: 0,
+      // j: 0,
+      // k: 1,
+      // l: 0,
+      m: this.e,
+      n: this.f,
+      // o: 0,
+      // p: 1,
+    });
   }
 
   // String for transform style prop
@@ -39,12 +118,12 @@ class Transformation2DMatrix {
 
     // just linear algebra don't worry if it looks arcane
     return new Transformation2DMatrix({
-      a: a * a2 + b2 * c,
-      b: a2 * b + b2 * d,
-      c: a * c2 + c * d2,
-      d: b * c2 + d * d2,
-      e: a * e2 + c * f2 + e,
-      f: b * e2 + d * f2 + f,
+      a: (a * a2) + (c * b2),
+      b: (b * a2) + (d * b2),
+      c: (a * c2) + (c * d2),
+      d: (b * c2) + (d * d2),
+      e: (a * e2) + (c * f2) + e,
+      f: (b * e2) + (d * f2) + f,
     });
   };
 
@@ -129,9 +208,7 @@ class Transformation2DMatrix {
 let ZoomContext = React.createContext({ scale: 1 });
 export let Unzoom = ({ children }) => {
   if (typeof children === 'function') {
-    return (
-      <ZoomContext.Consumer children={children} />
-    );
+    return <ZoomContext.Consumer children={children} />;
   } else {
     return (
       <ZoomContext.Consumer>
@@ -151,7 +228,7 @@ class Canvas extends Component {
       y: 300,
     },
     minZoom: 0.5,
-    maxZoom: 3,
+    maxZoom: 20,
     initialTranslation: {
       x: 0,
       y: 0,
@@ -318,11 +395,11 @@ class Canvas extends Component {
           <div
             ref={(ref) => (this.isolateRef = ref)}
             style={{
-              transform: `translateX(${
-                this.props.initialTranslation.x
-              }px) translateY(${
-                this.props.initialTranslation.y
-              }px) ${transform.toString()}`,
+              transform: `
+                ${initial_transform.inverse().toString()}
+                ${transform.toMatrix3D().toString()}
+              `,
+              transformStyle: `preserve-3d`,
               transformOrigin: '0% 0%',
             }}
             onMouseDown={(e) => {

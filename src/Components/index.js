@@ -96,7 +96,7 @@ export let component_map = {
     icon: <i className="fas fa-circle" />,
     name: 'Circle',
     default_options: {
-      backgroundColor: 'red',
+      backgroundColor: '#B50004',
     },
     Component: ({ size, options }) => {
       return (
