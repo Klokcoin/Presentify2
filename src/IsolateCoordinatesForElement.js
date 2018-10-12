@@ -54,6 +54,7 @@ export class IsolateCoordinatesForElement extends React.Component {
           // So `capture` makes it so this event is taken before it is even really an event
           // https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/05/1495534508eventflow.svg
           capture
+          passive
           name="mousedown"
           handler={(e) => {
             if (e.path.includes(element)) {
@@ -64,6 +65,7 @@ export class IsolateCoordinatesForElement extends React.Component {
         />
         <DocumentEvent
           capture
+          passive
           name="mousemove"
           handler={(e) => {
             if (
@@ -76,6 +78,7 @@ export class IsolateCoordinatesForElement extends React.Component {
         />
         <DocumentEvent
           capture
+          passive
           name="mouseup"
           handler={(e) => {
             if (
