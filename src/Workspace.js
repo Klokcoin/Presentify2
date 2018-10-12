@@ -42,9 +42,12 @@ class Workspace extends Component {
     },
     selected_item: null,
     is_pressing_cmd: false,
+
+    // Just keeping in mind that clipboard history is awesome
+    clipboard: [],
   };
 
-  add_component = ({ type }) => {
+  add_component = ({ type, ...info }, callback) => {
     let component_info = component_map[type];
 
     this.setState(({ items, next_id, canvas }) => {
@@ -55,15 +58,16 @@ class Workspace extends Component {
           ...items,
           {
             name: `${component_info.name} #${next_id}`,
-            id: next_id,
             type: type,
             x: 0,
             y: 0,
             rotation: 0,
             height: 100,
             width: 100,
-
             options: component_info.default_options || {},
+            ...info,
+
+            id: next_id,
           },
         ],
       };
@@ -93,7 +97,7 @@ class Workspace extends Component {
   };
 
   render() {
-    let { selected_item, items, is_pressing_cmd } = this.state;
+    let { selected_item, items, is_pressing_cmd, clipboard } = this.state;
     let { add_component, change_item, select_item } = this;
 
     return (
@@ -111,7 +115,10 @@ class Workspace extends Component {
         <DocumentEvent
           name="keydown"
           handler={(e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            if (
+              e.target.tagName === 'INPUT' ||
+              e.target.tagName === 'TEXTAREA'
+            ) {
               return;
             }
 
@@ -130,8 +137,35 @@ class Workspace extends Component {
             if (e.key === 'Backspace' || e.key === 'Delete') {
               if (selected_item != null) {
                 this.setState({
-                  items: items.filter(x => x.id !== selected_item),
+                  items: items.filter((x) => x.id !== selected_item),
                 });
+              }
+            }
+
+            if (e.key === 'c' && (e.metaKey || e.ctrlKey)) {
+              let item =
+                selected_item && items.find((x) => x.id === selected_item);
+              if (item) {
+                this.setState({
+                  // TODO Maybe later, append?
+                  clipboard: [{ ...item, id: null }],
+                });
+              }
+            }
+
+            if (e.key === 'v' && (e.metaKey || e.ctrlKey)) {
+              if (clipboard.length !== 0) {
+                let next_element = {
+                  ...clipboard[0],
+                  x: clipboard[0].x + clipboard[0].width / 2,
+                  y: clipboard[0].y + clipboard[0].height / 2,
+                  name: `${clipboard[0].name} Copy`,
+                };
+                add_component(next_element);
+                this.setState({
+                  // NOTE This should never attempt, but always overwrite
+                  clipboard: [next_element],
+                })
               }
             }
           }}
