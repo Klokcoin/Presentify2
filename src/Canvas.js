@@ -220,7 +220,8 @@ class Canvas extends Component {
           {/*
               Provide our children with a method that inverses the current scale,
               useful for accurate pointer events
-            */
+          */}
+          {
            children({
             inverseScale: transform.inverseScale().applyToCoords
            })
