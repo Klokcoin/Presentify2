@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import { clamp } from 'lodash';
+import memoizeOne from 'memoize-one';
+
+import { IsolateCoordinatesForElement } from './IsolateCoordinatesForElement';
 
 const isWhole = (number) => number % 1 === 0;
 
@@ -92,9 +95,16 @@ class Transformation2DMatrix {
     };
   };
 
-  clampScale = ({ x, y }) => {
-
-  }
+  equals = (otherMatrix) => {
+    return (
+      this.a === otherMatrix.a &&
+      this.b === otherMatrix.b &&
+      this.c === otherMatrix.c &&
+      this.d === otherMatrix.d &&
+      this.e === otherMatrix.e &&
+      this.f === otherMatrix.f
+    );
+  };
 
   clampTranslation = ({ x, y }) => {
     let revertscale = this.inverseScale();
@@ -134,6 +144,8 @@ class Canvas extends Component {
   state = {
     transform: new Transformation2DMatrix(),
   };
+
+  isolateRef = null;
 
   doTranslation = ({ deltaX, deltaY }) => {
     this.setState(({ transform }) => {
@@ -244,6 +256,12 @@ class Canvas extends Component {
     const { deltaX, deltaY } = event;
     const { doTranslation, doZoom } = this;
 
+    // NOTE It might actually be that this `isWhole` thing makes
+    // .... For a more uniform experience for laptops that don't have
+    // .... propper touchpads (like we do 👩🏿‍💻 (Yes that is a black women in tech LOOK I AM SO PROGRESSIVE (VIRTUE SIGNALLING +10)))
+    // .... So we might have to try that out
+    // let is_pinch = !(isWhole(deltaX) && isWhole(deltaY));
+    let is_pinch = event.ctrlKey
     if (event.ctrlKey) {
       doZoom(event);
     } else {
@@ -252,8 +270,17 @@ class Canvas extends Component {
   };
 
   render() {
-    const { select_item, children } = this.props;
+    const { select_item, children, initialTranslation } = this.props;
     const { transform } = this.state;
+
+    let initial_transform = new Transformation2DMatrix({
+      e: -initialTranslation.x,
+      f: -initialTranslation.y,
+    });
+
+    let invert = initial_transform.multiply(transform.inverse());
+    // let invert2 = initial_transform.multiply(transform).inverse();
+    // console.log(`invert.equals(invert2):`, invert.equals(invert2))
 
     return (
       <div
@@ -266,6 +293,7 @@ class Canvas extends Component {
         onWheel={this.onWheel}
       >
         <div
+          ref={ref => this.isolateRef = ref}
           style={{
             transform: `translateX(${
               this.props.initialTranslation.x
@@ -282,10 +310,15 @@ class Canvas extends Component {
             }
           }}
         >
-          {/*
-              Provide our children with a method that inverses the current scale,
-              useful for accurate pointer events
-          */}
+          <IsolateCoordinatesForElement
+            element={this.isolateRef}
+            // NOTE Ik weet dat je het zo hebt gemaakt dat ik in principe
+            // .... mapCoords={invert.applyToCoords}
+            // .... kan doen maar dat vind ik hekka onleesbaar(der)
+            mapCoords={(coords) => invert.applyToCoords(coords)}
+          />
+
+          {/* A gray shape to show the bounds, also just for reference */}
           <div
             style={{
               position: 'absolute',
@@ -298,9 +331,23 @@ class Canvas extends Component {
               height: this.props.maxTranslation.y * 2,
             }}
           />
-          {children({
-            inverseScale: transform.inverseScale().applyToCoords,
-          })}
+
+          {/* White dot at 0,0 for reference */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              backgroundColor: 'white',
+              borderRadius: 5,
+              transform: `translateX(-50%) translateY(-50%)`,
+              width: 10,
+              height: 10,
+            }}
+          />
+
+          {/* Render canvas items or whatever */}
+          {children}
         </div>
       </div>
     );

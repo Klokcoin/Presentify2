@@ -33,7 +33,7 @@ class CanvasItem extends Component {
       selected,
       onSelect,
       onChange,
-      inverseScale,
+      // inverseScale,
       children,
     } = this.props;
 
@@ -165,14 +165,16 @@ class CanvasItem extends Component {
                     movement_state: null,
                   });
                 }}
-                inverseScale={inverseScale}
+                // inverseScale={inverseScale}
               >
                 <Absolute
                   right="50%"
                   top={-50}
                   style={{ transform: `translateX(50%)` }}
                 >
-                  <DraggingCircle inverseScale={inverseScale} />
+                  <DraggingCircle
+                    // inverseScale={inverseScale}
+                  />
                 </Absolute>
               </Draggable>
 
@@ -183,7 +185,6 @@ class CanvasItem extends Component {
                       pos,
                       movement_state
                     );
-                    console.log(next_movement, current_item.width);
 
                     if (next_movement.height + item.height < 0) {
                       return;
@@ -208,7 +209,7 @@ class CanvasItem extends Component {
                       movement_state: null,
                     });
                   }}
-                  inverseScale={inverseScale}
+                  // inverseScale={inverseScale}
                 >
                   <Absolute
                     left={pos[0] === -1 ? -10 : null}
@@ -216,7 +217,9 @@ class CanvasItem extends Component {
                     top={pos[1] === -1 ? -10 : null}
                     bottom={pos[1] === 1 ? -10 : null}
                   >
-                    <DraggingCircle inverseScale={inverseScale} />
+                    <DraggingCircle
+                      // inverseScale={inverseScale}
+                    />
                   </Absolute>
                 </Draggable>
               ))}
@@ -237,7 +240,7 @@ class CanvasItem extends Component {
                 movement_state: null,
               });
             }}
-            inverseScale={inverseScale}
+            // inverseScale={inverseScale}
           >
             <Absolute right={0} top={0} left={0} bottom={0}>
               {children}

@@ -22,7 +22,9 @@ export class DocumentEvent extends React.Component<T_documentevent_props> {
       if (!this.props.passive) e.preventDefault();
       this.props.handler(e);
     };
-    document.addEventListener(this.props.name, fn);
+    document.addEventListener(this.props.name, fn, {
+      capture: this.props.capture,
+    });
     this.unbind = () => {
       document.removeEventListener(this.props.name, fn);
     };
@@ -46,7 +48,7 @@ export class Draggable extends React.Component {
 
   render() {
     let { dragging_state } = this.state;
-    let { onMove, onMoveEnd, inverseScale, children } = this.props;
+    let { onMove, onMoveEnd, children } = this.props;
 
     return (
       <React.Fragment>
@@ -58,15 +60,15 @@ export class Draggable extends React.Component {
                 // inversing the scale transform
                 // if you want, you can do this in CanvasItem & put it directly
                 // in onMove, onChange, onMoveEnd...
-                const { x, y } = inverseScale({
+                const { x, y } = {
                   x: e.pageX - dragging_state.start_mouse_x,
                   y: e.pageY - dragging_state.start_mouse_y,
-                });
+                };
 
-                const { x: absolute_x, y: absolute_y } = inverseScale({
+                const { x: absolute_x, y: absolute_y } = {
                   x: e.pageX,
                   y: e.pageY,
-                });
+                };
 
                 onMove({
                   y,
@@ -84,10 +86,10 @@ export class Draggable extends React.Component {
             name="mouseup"
             handler={(e) => {
               this.setState({ dragging_state: null });
-              const { x, y } = inverseScale({
+              const { x, y } = {
                 x: e.pageX - dragging_state.start_mouse_x,
                 y: e.pageY - dragging_state.start_mouse_y,
-              });
+              };
 
               onMoveEnd({
                 x,
@@ -136,16 +138,16 @@ export let Absolute = ({ left, right, top, bottom, children, style }) => {
   );
 };
 
-export let DraggingCircle = ({ inverseScale }) => {
+export let DraggingCircle = () => {
   // scaleX = scaleY right now, but maybe in the future we'd like
   // to skew (uneven scale, scaleX =/= scaleY)
-  const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
+  // const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
 
   return (
     <div
       style={{
         transformOrigin: '50% 50%',
-        transform: `scale(${scaleX}, ${scaleY})`,
+        // transform: `scale(${scaleX}, ${scaleY})`,
         cursor: 'pointer',
         margin: -4,
         border: `solid 1px black`,
