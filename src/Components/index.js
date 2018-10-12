@@ -1,5 +1,16 @@
 import React from 'react';
 import { SketchPicker } from 'react-color';
+import styled from 'styled-components';
+
+let WebviewIconFrame = styled.div`
+  border: solid 2px black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: calc(1em - 4px);
+`
 
 export let component_map = {
   'dralletje/artboard': {
@@ -19,7 +30,7 @@ export let component_map = {
     },
   },
   'dralletje/webview': {
-    icon: <i className="fas fa-globe" />,
+    icon: <WebviewIconFrame><i className="fas fa-globe" /></WebviewIconFrame>,
     name: 'Webview',
     default_options: {
       url: 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1',
