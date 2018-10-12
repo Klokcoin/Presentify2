@@ -111,10 +111,28 @@ class Workspace extends Component {
         <DocumentEvent
           name="keydown"
           handler={(e) => {
-            if (e.which === 17 || e.which === 91) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+              return;
+            }
+
+            if (e.key === 'Control' || e.which === 'Meta') {
               this.setState({
                 is_pressing_cmd: true,
               });
+            }
+
+            if (e.key === 'Escape') {
+              this.setState({
+                selected_item: null,
+              });
+            }
+
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+              if (selected_item != null) {
+                this.setState({
+                  items: items.filter(x => x.id !== selected_item),
+                });
+              }
             }
           }}
           passive
@@ -125,7 +143,7 @@ class Workspace extends Component {
             // TODO Yeah yeah I hear you thinking
             // .... "but what if I press both of them and then release only one?!"
             // .... Well.. don't do that
-            if (e.which === 17 || e.which === 91) {
+            if (e.key === 'Control' || e.which === 'Meta') {
               this.setState({
                 is_pressing_cmd: false,
               });
@@ -146,8 +164,6 @@ class Workspace extends Component {
                   initialTranslation={{
                     x: contentRect.bounds.width / 2,
                     y: contentRect.bounds.height / 2,
-                    // x: 0,
-                    // y: 0,
                   }}
                 >
                   {items.map((item) => {
@@ -256,7 +272,7 @@ class Workspace extends Component {
                   onChange={(e) => {
                     let [err, obj] = JSON_parse_safe(e.target.value);
                     change_item(item.id, {
-                      options: err ? item.options : obj,
+                      options: err || !obj ? item.options : obj,
                       options_unsaved: e.target.value,
                     });
                   }}

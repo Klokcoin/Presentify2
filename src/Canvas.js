@@ -261,7 +261,7 @@ class Canvas extends Component {
     // .... propper touchpads (like we do 👩🏿‍💻 (Yes that is a black women in tech LOOK I AM SO PROGRESSIVE (VIRTUE SIGNALLING +10)))
     // .... So we might have to try that out
     // let is_pinch = !(isWhole(deltaX) && isWhole(deltaY));
-    let is_pinch = event.ctrlKey
+    let is_pinch = event.ctrlKey;
     if (event.ctrlKey) {
       doZoom(event);
     } else {
@@ -291,9 +291,16 @@ class Canvas extends Component {
           backgroundColor: 'rgb(162, 162, 204)',
         }}
         onWheel={this.onWheel}
+        onMouseDown={(e) => {
+          // Only reset selected_item if the click is **only** on the canvas,
+          // and not actually on one of the divs inside
+          if (e.target === e.currentTarget) {
+            select_item(null);
+          }
+        }}
       >
         <div
-          ref={ref => this.isolateRef = ref}
+          ref={(ref) => (this.isolateRef = ref)}
           style={{
             transform: `translateX(${
               this.props.initialTranslation.x
@@ -301,13 +308,6 @@ class Canvas extends Component {
               this.props.initialTranslation.y
             }px) ${transform.toString()}`,
             transformOrigin: '0% 0%',
-          }}
-          onClick={(e) => {
-            // Only reset selected_item if the click is **only** on the canvas,
-            // and not actually on one of the divs inside
-            if (e.target === e.currentTarget) {
-              select_item(null);
-            }
           }}
         >
           <IsolateCoordinatesForElement
@@ -321,6 +321,7 @@ class Canvas extends Component {
           {/* A gray shape to show the bounds, also just for reference */}
           <div
             style={{
+              pointerEvents: 'none',
               position: 'absolute',
               top: 0,
               left: 0,
@@ -335,6 +336,7 @@ class Canvas extends Component {
           {/* White dot at 0,0 for reference */}
           <div
             style={{
+              pointerEvents: 'none',
               position: 'absolute',
               top: 0,
               left: 0,

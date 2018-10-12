@@ -138,25 +138,38 @@ export let Absolute = ({ left, right, top, bottom, children, style }) => {
   );
 };
 
-export let DraggingCircle = () => {
+let possible_directions = ['ew', 'ns', 'nesw', 'nwse'];
+export let DraggingCircle = ({ direction }) => {
   // scaleX = scaleY right now, but maybe in the future we'd like
   // to skew (uneven scale, scaleX =/= scaleY)
   // const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
 
+  if (direction != null) {
+    if (!possible_directions.includes(direction)) {
+      console.warn(`Unknown cursor direction '${direction}'`);
+      direction = null;
+    }
+  }
+
   return (
     <div
       style={{
-        transformOrigin: '50% 50%',
-        // transform: `scale(${scaleX}, ${scaleY})`,
-        cursor: 'pointer',
-        margin: -4,
-        border: `solid 1px black`,
-        backgroundColor: 'white',
-        height: 8,
-        width: 8,
-        borderRadius: '50%',
+        padding: 16,
+        margin: -16,
+        cursor: direction ? `${direction}-resize` : 'pointer',
       }}
-    />
+    >
+      <div
+        style={{
+          margin: -4,
+          border: `solid 1px black`,
+          backgroundColor: 'white',
+          height: 8,
+          width: 8,
+          borderRadius: '50%',
+        }}
+      />
+    </div>
   );
 };
 

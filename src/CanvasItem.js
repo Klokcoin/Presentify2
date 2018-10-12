@@ -21,6 +21,11 @@ let vector = {
 //   rotation:
 // }
 
+let get_cursor_direction = (angle, pos) => {
+  let new_angle = Math.round(vector.to_rotation(vector.rotate(pos, angle)) / (Math.PI) / 0.25) + 4;
+  return ['ew', 'nwse', 'ns', 'nesw', 'ew', 'nwse', 'ns', 'nesw', 'ew'][new_angle];
+}
+
 class CanvasItem extends Component {
   state = {
     movement_state: null,
@@ -96,6 +101,7 @@ class CanvasItem extends Component {
             onSelect();
           }}
           style={{
+            cursor: movement_state ? 'grabbing' : undefined,
             height: current_item.height,
             width: current_item.width,
             position: 'relative',
@@ -165,21 +171,19 @@ class CanvasItem extends Component {
                     movement_state: null,
                   });
                 }}
-                // inverseScale={inverseScale}
               >
                 <Absolute
                   right="50%"
                   top={-50}
                   style={{ transform: `translateX(50%)` }}
                 >
-                  <DraggingCircle
-                    // inverseScale={inverseScale}
-                  />
+                  <DraggingCircle />
                 </Absolute>
               </Draggable>
 
               {[[-1, -1], [-1, 1], [1, 1], [1, -1]].map((pos) => (
                 <Draggable
+                  key={pos.join(',')}
                   onMove={(movement_state) => {
                     let next_movement = width_height_movement(
                       pos,
@@ -217,9 +221,7 @@ class CanvasItem extends Component {
                     top={pos[1] === -1 ? -10 : null}
                     bottom={pos[1] === 1 ? -10 : null}
                   >
-                    <DraggingCircle
-                      // inverseScale={inverseScale}
-                    />
+                    <DraggingCircle direction={get_cursor_direction(current_item.rotation, pos)} />
                   </Absolute>
                 </Draggable>
               ))}
@@ -240,7 +242,6 @@ class CanvasItem extends Component {
                 movement_state: null,
               });
             }}
-            // inverseScale={inverseScale}
           >
             <Absolute right={0} top={0} left={0} bottom={0}>
               {children}

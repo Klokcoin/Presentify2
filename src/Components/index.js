@@ -63,6 +63,7 @@ export let component_map = {
     name: 'Rectangle',
     default_options: {
       backgroundColor: 'blue',
+      borderRadius: 0,
     },
     ConfigScreen: ({ value, onChange }) => {
       return (
@@ -85,6 +86,7 @@ export let component_map = {
             height: '100%',
             width: '100%',
             backgroundColor: options.backgroundColor || 'rgb(127, 146, 245)',
+            borderRadius: options.borderRadius || 0,
           }}
         />
       );
