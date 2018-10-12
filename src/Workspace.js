@@ -119,31 +119,36 @@ class Workspace extends Component {
         />
 
         <Canvas select_item={select_item}>
-          {items.map((item) => {
-            let component_info = component_map[item.type];
-            return (
-              <CanvasItem
-                key={item.id}
-                item={item}
-                selected={selected_item === item.id}
-                onSelect={() => select_item(item.id)}
-                onChange={(next_item) => change_item(item.id, next_item)}
-              >
-                <Absolute
-                  top={0}
-                  left={0}
-                  bottom={0}
-                  right={0}
-                  style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none' }}
+        {
+          ({ inverseScale }) => (
+            items.map(item => {
+              let component_info = component_map[item.type]
+              return (
+                <CanvasItem
+                  key={item.id}
+                  item={item}
+                  selected={selected_item === item.id}
+                  onSelect={() => select_item(item.id)}
+                  onChange={(next_item) => change_item(item.id, next_item)}
+                  inverseScale={inverseScale}
                 >
-                  <component_info.Component
-                    size={item}
-                    options={item.options || {}}
-                  />
-                </Absolute>
-              </CanvasItem>
-            );
-          })}
+                  <Absolute
+                    top={0}
+                    left={0}
+                    bottom={0}
+                    right={0}
+                    style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none' }}
+                  >
+                    <component_info.Component
+                      size={item}
+                      options={item.options || {}}
+                    />
+                  </Absolute>
+                </CanvasItem>
+              )
+            })
+          )
+        }
         </Canvas>
 
         <div

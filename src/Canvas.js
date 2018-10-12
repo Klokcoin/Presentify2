@@ -221,11 +221,10 @@ class Canvas extends Component {
               Provide our children with a method that inverses the current scale,
               useful for accurate pointer events
             */
-          React.Children.map(children, (child) =>
-            React.cloneElement(child, {
-              inverseScale: transform.inverseScale().applyToCoords,
-            })
-          )}
+           children({
+            inverseScale: transform.inverseScale().applyToCoords
+           })
+          }
         </div>
       </div>
     );
