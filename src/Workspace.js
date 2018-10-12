@@ -188,7 +188,8 @@ class Workspace extends Component {
 
         <div
           style={{
-            width: 250,
+            width: 220,
+            flexShrink: 0,
             backgroundColor: 'rgb(245, 212, 126)',
             display: 'flex',
             flexDirection: 'column',
