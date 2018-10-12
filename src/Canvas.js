@@ -104,78 +104,79 @@ class Canvas extends Component {
   };
 
   doTranslation = ({ deltaX, deltaY }) => {
-    const { translation, transform } = this.state;
-    const { maxTranslation: max } = this.props;
+    this.setState(({ transform, translation}) => {
+      const { maxTranslation: max } = this.props;
 
-    // 'Normalize' the translation speed, we multiply our deltas by the current scale,
-    // so we pan slower at close zooms & faster at far zooms
-    const {
-      x: relativeDeltaX,
-      y: relativeDeltaY,
-    } = transform.inverseScale().applyToCoords({
-      x: deltaX,
-      y: deltaY,
+      // 'Normalize' the translation speed, we multiply our deltas by the current scale,
+      // so we pan slower at close zooms & faster at far zooms
+      const {
+        x: relativeDeltaX,
+        y: relativeDeltaY,
+      } = transform.inverseScale().applyToCoords({
+        x: deltaX,
+        y: deltaY,
+      });
+
+      const newTranslation = {
+        x: translation.x - relativeDeltaX,
+        y: translation.y - relativeDeltaY,
+      };
+
+      if (
+        (translation.x === newTranslation.x &&
+          translation.y === newTranslation.y) ||
+        Math.abs(newTranslation.x) > max.x ||
+        Math.abs(newTranslation.y) > max.y
+      ) {
+        return;
+      }
+
+      return {
+        transform: transform.multiply(
+          new Matrix({
+            a: 1,
+            d: 1,
+            e: -relativeDeltaX,
+            f: -relativeDeltaY,
+          })
+        ),
+        translation: newTranslation,
+      };
     });
-
-    const newTranslation = {
-      x: translation.x - relativeDeltaX,
-      y: translation.y - relativeDeltaY,
-    };
-
-    if (
-      (translation.x === newTranslation.x &&
-        translation.y === newTranslation.y) ||
-      Math.abs(newTranslation.x) > max.x ||
-      Math.abs(newTranslation.y) > max.y
-    ) {
-      return;
-    }
-
-    this.setState((prev) => ({
-      transform: prev.transform.multiply(
-        new Matrix({
-          a: 1,
-          d: 1,
-          e: -relativeDeltaX,
-          f: -relativeDeltaY,
-        })
-      ),
-      translation: newTranslation,
-    }));
   };
 
   doZoom = ({ clientX, clientY, deltaY }) => {
-    const { zoom } = this.state;
-    const { maxZoom: max, minZoom: min } = this.props;
+    this.setState(({ transform, zoom }) => {
+      const { maxZoom: max, minZoom: min } = this.props;
 
-    const scale = 1 - 1 / 110 * deltaY;
-    const newZoom = zoom * Math.sqrt(scale);
+      const scale = 1 - 1 / 110 * deltaY;
+      const newZoom = zoom * Math.sqrt(scale);
 
-    if (newZoom === zoom || newZoom > max || newZoom < min) {
-      return;
-    }
+      if (newZoom === zoom || newZoom > max || newZoom < min) {
+        return;
+      }
 
-    // We need to apply the inverse of the current transformation to the mouse coordinates
-    // to get the 'actual' click coordinates
-    const {
-      x: mouseX,
-      y: mouseY,
-    } = this.state.transform.inverse().applyToCoords({
-      x: clientX,
-      y: clientY,
+      // We need to apply the inverse of the current transformation to the mouse coordinates
+      // to get the 'actual' click coordinates
+      const {
+        x: mouseX,
+        y: mouseY,
+      } = transform.inverse().applyToCoords({
+        x: clientX,
+        y: clientY,
+      });
+      return {
+        transform: transform.multiply(
+          new Matrix({
+            a: scale,
+            d: scale,
+            e: -mouseX * (scale - 1),
+            f: -mouseY * (scale - 1),
+          })
+        ),
+        zoom: newZoom,
+      }
     });
-
-    this.setState((prev) => ({
-      transform: prev.transform.multiply(
-        new Matrix({
-          a: scale,
-          d: scale,
-          e: -mouseX * (scale - 1),
-          f: -mouseY * (scale - 1),
-        })
-      ),
-      zoom: newZoom,
-    }));
   };
 
   onWheel = (event) => {
