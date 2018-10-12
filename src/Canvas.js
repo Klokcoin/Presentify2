@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 
-const isWhole = number => number % 1 === 0
+const isWhole = (number) => number % 1 === 0;
 
 /*
   Matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
@@ -9,78 +9,78 @@ const isWhole = number => number % 1 === 0
   [0 0 1]
 */
 class Matrix {
-  constructor ({ a = 0, b = 0, c = 0, d = 0, e = 0, f = 0 }) {
-    this.a = a
-    this.b = b
-    this.c = c
-    this.d = d
-    this.e = e
-    this.f = f
+  constructor({ a = 0, b = 0, c = 0, d = 0, e = 0, f = 0 }) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.d = d;
+    this.e = e;
+    this.f = f;
   }
 
   // String for transform style prop
   toString = () => {
-    const { a, b, c, d, e, f } = this
-    return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`
-  }
+    const { a, b, c, d, e, f } = this;
+    return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
+  };
 
   // Multiplying two matrices to get a third matrix, which does both transformations
-  multiply = otherMatrix => {
+  multiply = (otherMatrix) => {
     if (!(otherMatrix instanceof Matrix)) {
-      throw new Error('Can\'t multiply a non-Matrix object!')
+      throw new Error("Can't multiply a non-Matrix object!");
     }
-  
-    const { a: a2, b: b2, c: c2, d: d2, e: e2, f: f2 } = otherMatrix
-    const { a, b, c, d, e, f } = this
-    
+
+    const { a: a2, b: b2, c: c2, d: d2, e: e2, f: f2 } = otherMatrix;
+    const { a, b, c, d, e, f } = this;
+
     // just linear algebra don't worry if it looks arcane
     return new Matrix({
-      a: a*a2 + b2*c,
-      b: a2*b + b2*d,
-      c: a*c2 + c*d2,
-      d: b*c2 + d*d2,
-      e: a*e2 + c*f2 + e,
-      f: b*e2 + d*f2 + f,
-    })
-  }
+      a: a * a2 + b2 * c,
+      b: a2 * b + b2 * d,
+      c: a * c2 + c * d2,
+      d: b * c2 + d * d2,
+      e: a * e2 + c * f2 + e,
+      f: b * e2 + d * f2 + f,
+    });
+  };
 
   // Computing the inverse of a matrix
   inverse = () => {
-    const { a, b, c, d, e, f } = this
-    const determinant = a*d - c*b
-    
+    const { a, b, c, d, e, f } = this;
+    const determinant = a * d - c * b;
+
     // Not an invertible matrix!
     if (determinant === 0) {
-      throw new Error('Matrix is not invertible!')
+      throw new Error('Matrix is not invertible!');
     }
-  
+
     return new Matrix({
-      a: d/determinant,
-      b: -b/determinant,
-      c: -c/determinant,
-      d: a/determinant,
-      e: (c*f -e*d)/determinant,
-      f: (e*b - a*f)/determinant
-    })
-  }
+      a: d / determinant,
+      b: -b / determinant,
+      c: -c / determinant,
+      d: a / determinant,
+      e: (c * f - e * d) / determinant,
+      f: (e * b - a * f) / determinant,
+    });
+  };
 
   // Inversing only the scale
   inverseScale = () => {
-    const { a, b, c, d, e, f } = this
+    const { a, b, c, d, e, f } = this;
     return new Matrix({
-      a: 1/a,
-      d: 1/d,
-    })
-  }
+      a: 1 / a,
+      d: 1 / d,
+    });
+  };
 
   // Applying the matrix transformation to x and y coordinates
   applyToCoords = ({ x, y }) => {
-    const { a, b, c, d, e, f } = this
+    const { a, b, c, d, e, f } = this;
     return {
-      x: a*x + c*y + e,
-      y: b*x + d*y + f,
-    }
-  }
+      x: a * x + c * y + e,
+      y: b * x + d * y + f,
+    };
+  };
 }
 
 class Canvas extends Component {
@@ -92,7 +92,7 @@ class Canvas extends Component {
     },
     minZoom: 5,
     maxZoom: 19,
-  }
+  };
 
   state = {
     transform: new Matrix({ a: 1, d: 1 }),
@@ -100,95 +100,99 @@ class Canvas extends Component {
     translation: {
       x: 0,
       y: 0,
-    }
-  }
+    },
+  };
 
   doTranslation = ({ deltaX, deltaY }) => {
-    const { translation, transform } = this.state
-    const { maxTranslation: max } = this.props
+    const { translation, transform } = this.state;
+    const { maxTranslation: max } = this.props;
 
     // 'Normalize' the translation speed, we multiply our deltas by the current scale,
     // so we pan slower at close zooms & faster at far zooms
-    const { x: relativeDeltaX, y: relativeDeltaY } = transform.inverseScale().applyToCoords({
+    const {
+      x: relativeDeltaX,
+      y: relativeDeltaY,
+    } = transform.inverseScale().applyToCoords({
       x: deltaX,
-      y: deltaY
-    })
+      y: deltaY,
+    });
 
     const newTranslation = {
       x: translation.x - relativeDeltaX,
-      y: translation.y - relativeDeltaY
-    }
+      y: translation.y - relativeDeltaY,
+    };
 
     if (
-      (translation.x === newTranslation.x && translation.y === newTranslation.y)
-        || Math.abs(newTranslation.x) > max.x
-        || Math.abs(newTranslation.y) > max.y
+      (translation.x === newTranslation.x &&
+        translation.y === newTranslation.y) ||
+      Math.abs(newTranslation.x) > max.x ||
+      Math.abs(newTranslation.y) > max.y
     ) {
-      return
+      return;
     }
-  
-    this.setState(prev => ({
+
+    this.setState((prev) => ({
       transform: prev.transform.multiply(
         new Matrix({
           a: 1,
           d: 1,
           e: -relativeDeltaX,
-          f: -relativeDeltaY
+          f: -relativeDeltaY,
         })
       ),
       translation: newTranslation,
-    }))
-  }
-  
-  doZoom = ({ clientX, clientY, deltaY }) => {
-    const { zoom } = this.state
-    const { maxZoom: max, minZoom: min } = this.props
+    }));
+  };
 
-    const scale = 1 - (1/110 * deltaY)
-    const newZoom = zoom*Math.sqrt(scale)
+  doZoom = ({ clientX, clientY, deltaY }) => {
+    const { zoom } = this.state;
+    const { maxZoom: max, minZoom: min } = this.props;
+
+    const scale = 1 - 1 / 110 * deltaY;
+    const newZoom = zoom * Math.sqrt(scale);
 
     if (newZoom === zoom || newZoom > max || newZoom < min) {
-      return
+      return;
     }
 
     // We need to apply the inverse of the current transformation to the mouse coordinates
     // to get the 'actual' click coordinates
     const {
       x: mouseX,
-      y: mouseY
+      y: mouseY,
     } = this.state.transform.inverse().applyToCoords({
       x: clientX,
-      y: clientY
-    })
+      y: clientY,
+    });
 
-    this.setState(prev => ({
+    this.setState((prev) => ({
       transform: prev.transform.multiply(
         new Matrix({
           a: scale,
           d: scale,
-          e: -mouseX*(scale - 1),
-          f: -mouseY*(scale - 1)
+          e: -mouseX * (scale - 1),
+          f: -mouseY * (scale - 1),
         })
       ),
       zoom: newZoom,
-    }))
-  }
+    }));
+  };
 
-  onWheel = event => {
-    event.preventDefault()
-    const { deltaX, deltaY  } = event
-    const { doTranslation, doZoom } = this
+  onWheel = (event) => {
+    event.preventDefault();
+    const { deltaX, deltaY } = event;
+    const { doTranslation, doZoom } = this;
 
     if (isWhole(deltaX) && isWhole(deltaY)) {
-      doTranslation(event)
+      doTranslation(event);
     } else {
-      doZoom(event)
+      doZoom(event);
     }
-  }
+  };
 
   render() {
-    const { select_item, children } = this.props
-    const { transform } = this.state
+    const { select_item, children } = this.props;
+    const { transform } = this.state;
 
     return (
       <div
@@ -203,18 +207,17 @@ class Canvas extends Component {
         <div
           style={{
             transform: transform.toString(),
-            transformOrigin: '0% 0%'
+            transformOrigin: '0% 0%',
           }}
           onClick={(e) => {
             // Only reset selected_item if the click is **only** on the canvas,
             // and not actually on one of the divs inside
             if (e.target === e.currentTarget) {
-              select_item(null)
+              select_item(null);
             }
           }}
         >
-          {
-            /*
+          {/*
               Provide our children with a method that inverses the current scale,
               useful for accurate pointer events
             */
@@ -224,8 +227,8 @@ class Canvas extends Component {
           }
         </div>
       </div>
-    )
+    );
   }
 }
 
-export default Canvas
+export default Canvas;
