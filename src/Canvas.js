@@ -82,32 +82,62 @@ class Transformation2DMatrix {
       y: b * x + d * y + f,
     };
   };
+
+  getScale = () => {
+    let point_zero = this.applyToCoords({ x: 0, y: 0 });
+    let point_one = this.applyToCoords({ x: 1, y: 1 });
+    return {
+      x: point_one.x - point_zero.x,
+      y: point_one.y - point_zero.y,
+    };
+  };
+
+  clampScale = ({ x, y }) => {
+
+  }
+
+  clampTranslation = ({ x, y }) => {
+    let revertscale = this.inverseScale();
+    let point_zero = revertscale.applyToCoords(
+      this.applyToCoords({ x: 0, y: 0 })
+    );
+    // NOTE I was totally expecting this, to do the same as the above...
+    // .... @Jelmar any idea why it doesn't?!
+    // let point_zero = new_transform.multiply(revertscale).applyToCoords({ x: 0, y: 0 })));
+
+    let x_overhead = clamp(point_zero.x, x[0], x[1]) - point_zero.x;
+    let y_overhead = clamp(point_zero.y, y[0], y[1]) - point_zero.y;
+    return this.multiply(
+      new Transformation2DMatrix({
+        e: x_overhead,
+        f: y_overhead,
+      })
+    );
+  };
 }
 
 class Canvas extends Component {
   static defaultProps = {
     maxTranslation: {
       // I don't yet see a reason to limit this...
-      x: 99999,
-      y: 99999,
+      x: 300,
+      y: 300,
     },
     minZoom: 0.5,
     maxZoom: 3,
-  };
-
-  state = {
-    transform: new Transformation2DMatrix(),
-    zoom: 10,
-    translation: {
+    initialTranslation: {
       x: 0,
       y: 0,
     },
   };
 
-  doTranslation = ({ deltaX, deltaY }) => {
-    this.setState(({ transform, translation}) => {
-      const { maxTranslation: max } = this.props;
+  state = {
+    transform: new Transformation2DMatrix(),
+  };
 
+  doTranslation = ({ deltaX, deltaY }) => {
+    this.setState(({ transform }) => {
+      const { maxTranslation: max, initialTranslation } = this.props;
       // 'Normalize' the translation speed, we multiply our deltas by the current scale,
       // so we pan slower at close zooms & faster at far zooms
       const {
@@ -118,47 +148,49 @@ class Canvas extends Component {
         y: deltaY,
       });
 
-      const newTranslation = {
-        x: translation.x - relativeDeltaX,
-        y: translation.y - relativeDeltaY,
-      };
-
-      // if (
-      //   (translation.x === newTranslation.x &&
-      //     translation.y === newTranslation.y) ||
-      //   Math.abs(newTranslation.x) > max.x ||
-      //   Math.abs(newTranslation.y) > max.y
-      // ) {
-      //   return;
-      // }
-
-      return {
-        transform: transform.multiply(
+      let new_transform = transform
+        .multiply(
           new Transformation2DMatrix({
             e: -relativeDeltaX,
             f: -relativeDeltaY,
           })
-        ),
-        translation: newTranslation,
+        )
+        .clampTranslation({
+          x: [-max.x, max.x],
+          y: [-max.y, max.y],
+        });
+
+      return {
+        transform: new_transform,
       };
     });
   };
 
   doZoom = ({ clientX, clientY, deltaY }) => {
     this.setState(({ transform, zoom }) => {
-      const { maxZoom, minZoom } = this.props;
+      console.log('xxxx');
+      const {
+        maxZoom,
+        minZoom,
+        maxTranslation,
+        initialTranslation,
+      } = this.props;
+      let initial_transform = new Transformation2DMatrix({
+        e: -initialTranslation.x,
+        f: -initialTranslation.y,
+      });
 
       const scale = 1 - 1 / 110 * deltaY;
 
       // We need to apply the inverse of the current transformation to the mouse coordinates
       // to get the 'actual' click coordinates
-      const {
-        x: mouseX,
-        y: mouseY,
-      } = transform.inverse().applyToCoords({
-        x: clientX,
-        y: clientY,
-      });
+      const { x: mouseX, y: mouseY } = transform
+        .inverse()
+        .multiply(initial_transform)
+        .applyToCoords({
+          x: clientX,
+          y: clientY,
+        });
 
       let new_transform = transform.multiply(
         new Transformation2DMatrix({
@@ -167,24 +199,24 @@ class Canvas extends Component {
           e: -mouseX * (scale - 1),
           f: -mouseY * (scale - 1),
         })
-      )
+      );
 
-      let point_zero = new_transform.applyToCoords({ x: 0, y: 0 });
-      let point_one = new_transform.applyToCoords({ x: 1, y: 0 });
-      let zoom_scale = point_one.x - point_zero.x;
+      // Check if we are inside the zoom bounds
+      let zoom_scale = new_transform.getScale().x;
       let zoom_diff = zoom_scale / clamp(zoom_scale, minZoom, maxZoom);
-
       if (zoom_diff !== 1) {
         // Out of bounds, but instead of not applying the transformation,
         // apply it as far as we can.
+        // NOTE Not sure if I need mouseX or mouseY here but I like it
+        // .... (This is also why I can not move this to `matrix.clampScale`)
         new_transform = new_transform.multiply(
           new Transformation2DMatrix({
             a: 1 / zoom_diff,
             d: 1 / zoom_diff,
-            e: -mouseX * ((1 / zoom_diff) - 1),
-            f: -mouseY * ((1 / zoom_diff) - 1),
+            e: -mouseX * (1 / zoom_diff - 1),
+            f: -mouseY * (1 / zoom_diff - 1),
           })
-        )
+        );
 
         // NOTE When unsure if this tweaking works, uncomment this
         // let point_zero = new_transform.applyToCoords({ x: 0, y: 0 });
@@ -196,9 +228,15 @@ class Canvas extends Component {
         // }
       }
 
+      // After zoom fix, we check if we happen to go over the translation bounds still
+      new_transform = new_transform.clampTranslation({
+        x: [-maxTranslation.x, maxTranslation.x],
+        y: [-maxTranslation.y, maxTranslation.y],
+      });
+
       return {
         transform: new_transform,
-      }
+      };
     });
   };
 
@@ -230,7 +268,11 @@ class Canvas extends Component {
       >
         <div
           style={{
-            transform: transform.toString(),
+            transform: `translateX(${
+              this.props.initialTranslation.x
+            }px) translateY(${
+              this.props.initialTranslation.y
+            }px) ${transform.toString()}`,
             transformOrigin: '0% 0%',
           }}
           onClick={(e) => {
@@ -245,11 +287,21 @@ class Canvas extends Component {
               Provide our children with a method that inverses the current scale,
               useful for accurate pointer events
           */}
-          {
-           children({
-            inverseScale: transform.inverseScale().applyToCoords
-           })
-          }
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              backgroundColor: 'rgba(0,0,0,.3)',
+              borderRadius: 5,
+              transform: `translateX(-50%) translateY(-50%)`,
+              width: this.props.maxTranslation.x * 2,
+              height: this.props.maxTranslation.y * 2,
+            }}
+          />
+          {children({
+            inverseScale: transform.inverseScale().applyToCoords,
+          })}
         </div>
       </div>
     );

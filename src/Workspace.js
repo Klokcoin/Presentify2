@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { isEqual } from 'lodash';
 import JSON6 from 'json-6';
+import Measure from 'react-measure';
 
 import { DocumentEvent, Absolute } from './Elements';
 import Canvas from './Canvas';
@@ -41,8 +42,8 @@ class Workspace extends Component {
             name: `${component_info.name} #${next_id}`,
             id: next_id,
             type: type,
-            x: canvas.width / 2,
-            y: canvas.height / 2,
+            x: 0,
+            y: 0,
             rotation: 0,
             height: 100,
             width: 100,
@@ -118,38 +119,56 @@ class Workspace extends Component {
           passive
         />
 
-        <Canvas select_item={select_item}>
-        {
-          ({ inverseScale }) => (
-            items.map(item => {
-              let component_info = component_map[item.type]
-              return (
-                <CanvasItem
-                  key={item.id}
-                  item={item}
-                  selected={selected_item === item.id}
-                  onSelect={() => select_item(item.id)}
-                  onChange={(next_item) => change_item(item.id, next_item)}
-                  inverseScale={inverseScale}
+        <Measure bounds>
+          {({ measureRef, contentRect }) => (
+            <div style={{ width: '100%', height: '100%' }} ref={measureRef}>
+              {contentRect.bounds.height && (
+                <Canvas
+                  select_item={select_item}
+                  initialTranslation={{
+                    x: contentRect.bounds.width / 2,
+                    y: contentRect.bounds.height / 2,
+                    // x: 0,
+                    // y: 0,
+                  }}
                 >
-                  <Absolute
-                    top={0}
-                    left={0}
-                    bottom={0}
-                    right={0}
-                    style={{ pointerEvents: is_pressing_cmd ? 'all' : 'none' }}
-                  >
-                    <component_info.Component
-                      size={item}
-                      options={item.options || {}}
-                    />
-                  </Absolute>
-                </CanvasItem>
-              )
-            })
-          )
-        }
-        </Canvas>
+                  {({ inverseScale }) =>
+                    items.map((item) => {
+                      let component_info = component_map[item.type];
+                      return (
+                        <CanvasItem
+                          key={item.id}
+                          item={item}
+                          selected={selected_item === item.id}
+                          onSelect={() => select_item(item.id)}
+                          onChange={(next_item) =>
+                            change_item(item.id, next_item)
+                          }
+                          inverseScale={inverseScale}
+                        >
+                          <Absolute
+                            top={0}
+                            left={0}
+                            bottom={0}
+                            right={0}
+                            style={{
+                              pointerEvents: is_pressing_cmd ? 'all' : 'none',
+                            }}
+                          >
+                            <component_info.Component
+                              size={item}
+                              options={item.options || {}}
+                            />
+                          </Absolute>
+                        </CanvasItem>
+                      );
+                    })
+                  }
+                </Canvas>
+              )}
+            </div>
+          )}
+        </Measure>
 
         <div
           style={{
