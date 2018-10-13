@@ -39,6 +39,29 @@ export class DocumentEvent extends React.Component<T_documentevent_props> {
   }
 }
 
+export class ComponentComponent extends React.Component {
+  componentDidMount() {
+    if (this.props.didMount) {
+      let teardown = this.props.didMount();
+      this.teardown = teardown;
+    };
+  }
+
+  componentWillUnmount() {
+    if (this.teardown) {
+      this.teardown();
+    }
+    if (this.props.willUnmount) {
+      this.props.willUnmount();
+    }
+  }
+
+  render() {
+    return null; // Even this I could make dynamic?
+  }
+}
+
+
 export class Draggable extends React.Component {
   state = {
     dragging_state: null,
@@ -52,6 +75,18 @@ export class Draggable extends React.Component {
 
     return (
       <React.Fragment>
+        {dragging_state && cursor && <ComponentComponent
+          key={cursor} // So it re-mounts on cursor change
+          didMount={() => {
+            let previous_cursor =  document.body.style.cursor
+            document.body.style.cursor = cursor;
+
+            return () => {
+              document.body.style.cursor = previous_cursor;
+            }
+          }}
+        />
+      }
         <div
           style={{
             cursor: cursor,
@@ -59,8 +94,7 @@ export class Draggable extends React.Component {
           }}
           data-what-is-this="Draggable"
           onMouseDown={(e) => {
-            // TODO Make setup/teardown component to do this in
-            document.body.style.cursor = cursor;
+
             this.setState({
               dragging_state: {
                 start_mouse_x: e.pageX,
@@ -147,25 +181,12 @@ export let Absolute = ({
   );
 };
 
-let possible_directions = ['ew', 'ns', 'nesw', 'nwse'];
-export let DraggingCircle = ({ direction, style }) => {
-  // scaleX = scaleY right now, but maybe in the future we'd like
-  // to skew (uneven scale, scaleX =/= scaleY)
-  // const { x: scaleX, y: scaleY } = inverseScale({ x: 1, y: 1 });
-
-  if (direction != null) {
-    if (!possible_directions.includes(direction)) {
-      console.warn(`Unknown cursor direction '${direction}'`);
-      direction = null;
-    }
-  }
-
+export let DraggingCircle = ({ style }) => {
   return (
     <div
       style={{
         padding: 16,
         margin: -16,
-        cursor: direction ? `${direction}-resize` : 'pointer',
       }}
     >
       <div
