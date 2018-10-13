@@ -198,8 +198,8 @@ class CanvasItem extends Component {
         }}
       >
         <div>{children}</div>
-        <Unzoom>
-          {({ scale }) => (
+        <Unzoom rotation_button_offset={50}>
+          {({ scale, rotation_button_offset }) => (
             <React.Fragment>
               <div
                 style={{
@@ -212,15 +212,15 @@ class CanvasItem extends Component {
                   // TODO Scale these 16px's with the zoom, to keep them big when everything gets small?
                   gridTemplate: act_like_selected
                     ? `
-                    "        ↖        ↑        ↗     "   ${16 * scale}px
-                    "        ←        🧠       →     "   1fr
-                    "        ↙        ↓        ↘     "   ${16 * scale}px
-                  / ${16 * scale}px  1fr  ${16 * scale}px
+                      "        ↖        ↑        ↗        " ${16 * scale}px
+                      "        ←        🧠       →        " 1fr
+                      "        ↙        ↓        ↘        " ${16 * scale}px
+                    / ${16 * scale}px  1fr  ${16 * scale}px
                   `
-                    : `
-                  "🧠" 1fr
-                / 1fr
-                `,
+                      : `
+                      "🧠" 1fr
+                    / 1fr
+                  `,
                   border: act_like_selected ? `${1 * scale}px dashed white` : 'none',
                 }}
               >
@@ -328,7 +328,7 @@ class CanvasItem extends Component {
                       -movement_state.y,
                     ];
                     let start_to_center_vector = vector.rotate(
-                      [0, item.height / 2 + 50],
+                      [0, item.height / 2 + rotation_button_offset],
                       item.rotation
                     );
 
@@ -351,7 +351,7 @@ class CanvasItem extends Component {
                       -movement_state.y,
                     ];
                     let start_to_center_vector = vector.rotate(
-                      [0, item.height / 2 + 50],
+                      [0, item.height / 2 + rotation_button_offset],
                       item.rotation
                     );
 
@@ -372,7 +372,7 @@ class CanvasItem extends Component {
                 >
                   <Absolute
                     right="50%"
-                    top={-50}
+                    top={-rotation_button_offset}
                     style={{ transform: `translateX(50%)` }}
                   >
                     <Unzoom>

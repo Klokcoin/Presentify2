@@ -4,6 +4,7 @@ import JSON6 from 'json-6';
 import Measure from 'react-measure';
 import styled from 'styled-components';
 
+import { Transformation2DMatrix } from './TransformationMatrix.js';
 import { DocumentEvent, Absolute, Whitespace } from './Elements';
 import Canvas from './Canvas';
 import CanvasItem from './CanvasItem';
@@ -34,6 +35,7 @@ let JSON_parse_safe = (json) => {
 
 class Workspace extends Component {
   state = {
+    transform: new Transformation2DMatrix(),
     next_id: 1,
     items: [],
     canvas: {
@@ -50,7 +52,9 @@ class Workspace extends Component {
   add_component = ({ type, ...info }, callback) => {
     let component_info = component_map[type];
 
-    this.setState(({ items, next_id, canvas }) => {
+    this.setState(({ items, next_id, canvas, transform }) => {
+      let result = transform.inverse().applyToCoords({ x: 0, y: 0 });
+      let scale = transform.inverse().getScale().x;
       return {
         next_id: next_id + 1,
         selected_item: next_id,
@@ -59,11 +63,11 @@ class Workspace extends Component {
           {
             name: `${component_info.name} #${next_id}`,
             type: type,
-            x: 0,
-            y: 0,
+            x: result.x,
+            y: result.y,
             rotation: 0,
-            height: 100,
-            width: 100,
+            height: 100 * scale,
+            width: 100 * scale,
             options: component_info.default_options || {},
             ...info,
 
@@ -98,7 +102,7 @@ class Workspace extends Component {
   };
 
   render() {
-    let { selected_item, items, is_pressing_cmd, clipboard } = this.state;
+    let { selected_item, items, is_pressing_cmd, clipboard, transform } = this.state;
     let { add_component, change_item, select_item } = this;
 
     return (
@@ -195,6 +199,17 @@ class Workspace extends Component {
             >
               {contentRect.bounds.height && (
                 <Canvas
+                  transform={transform}
+                  onTransformChange={change => {
+                    this.setState((state) => {
+                      let x = change({ transform: state.transform });
+                      if (x != null) {
+                        return {
+                          transform: x.transform,
+                        }
+                      }
+                    })
+                  }}
                   select_item={select_item}
                   initialTranslation={{
                     x: contentRect.bounds.width / 2,
@@ -212,7 +227,6 @@ class Workspace extends Component {
                         onChange={(next_item) =>
                           change_item(item.id, next_item)
                         }
-                        // inverseScale={inverseScale}
                       >
                         <Absolute
                           top={0}
