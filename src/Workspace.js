@@ -11,6 +11,14 @@ import CanvasItem from './CanvasItem';
 
 import { component_map } from './Components';
 
+let SidebarTitle = styled.div`
+  margin-top: 16px;
+  margin-left: 16px;
+  text-transform: capitalize;
+  font-family: fantasy;
+  font-weight: bold;
+`;
+
 let ComponentButton = styled.div`
   transition: background-color 0.2s;
   background-color: rgba(255, 255, 255, 0);
@@ -29,7 +37,7 @@ let JSON_parse_safe = (json) => {
   try {
     return [null, yaml.safeLoad(json)];
   } catch (err) {
-    console.log(`err:`, err)
+    console.log(`err:`, err);
     return [err, null];
   }
 };
@@ -103,7 +111,13 @@ class Workspace extends Component {
   };
 
   render() {
-    let { selected_item, items, is_pressing_cmd, clipboard, transform } = this.state;
+    let {
+      selected_item,
+      items,
+      is_pressing_cmd,
+      clipboard,
+      transform,
+    } = this.state;
     let { add_component, change_item, select_item } = this;
 
     return (
@@ -171,7 +185,7 @@ class Workspace extends Component {
                 this.setState({
                   // NOTE This should never attempt, but always overwrite
                   clipboard: [next_element],
-                })
+                });
               }
             }
           }}
@@ -192,9 +206,8 @@ class Workspace extends Component {
           passive
         />
 
-        
         <div
-          id='layerPanel'
+          id="layerPanel"
           style={{
             width: 250,
             backgroundColor: 'rgb(245, 212, 126)',
@@ -202,8 +215,8 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-        add layer
-        <Whitespace height={16} />
+          <SidebarTitle>add layer</SidebarTitle>
+          <Whitespace height={16} />
           <div style={{ flexShrink: 0 }}>
             {Object.entries(component_map).map(([key, comp]) => (
               <ComponentButton
@@ -222,12 +235,14 @@ class Workspace extends Component {
             ))}
           </div>
 
-          <div style={{ height: 50 }} />
+          <div style={{ height: 16 }} />
 
-         <hr style={{width: '100%', borderWidth: '1px', borderStyle: 'inset'}}/>
-         layer list
-        
-         <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
+          <div
+            style={{ width: 'calc(100% - 16px - 16px)', marginLeft: '16px', marginRight: '16px', border: 'solid 1px black' }}
+          />
+
+          <SidebarTitle>layer list</SidebarTitle>
+          <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
             {items.map((item) => (
               <div
                 onClick={() => select_item(item.id)}
@@ -243,8 +258,7 @@ class Workspace extends Component {
               </div>
             ))}
           </div>
-
-          </div>
+        </div>
 
         <Measure bounds>
           {({ measureRef, contentRect }) => (
@@ -255,15 +269,15 @@ class Workspace extends Component {
               {contentRect.bounds.height && (
                 <Canvas
                   transform={transform}
-                  onTransformChange={change => {
+                  onTransformChange={(change) => {
                     this.setState((state) => {
                       let x = change({ transform: state.transform });
                       if (x != null) {
                         return {
                           transform: x.transform,
-                        }
+                        };
                       }
-                    })
+                    });
                   }}
                   select_item={select_item}
                   initialTranslation={{
@@ -307,7 +321,7 @@ class Workspace extends Component {
         </Measure>
 
         <div
-        id='formatPanel'
+          id="formatPanel"
           style={{
             width: 220,
             flexShrink: 0,
@@ -316,8 +330,7 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          
-          format panel / edit layer
+          <SidebarTitle>format panel / edit layer</SidebarTitle>
 
           <div style={{ height: 50 }} />
 
@@ -371,8 +384,6 @@ class Workspace extends Component {
           })}
 
           <div style={{ height: 50 }} />
-
-          
         </div>
       </div>
     );
