@@ -191,6 +191,60 @@ class Workspace extends Component {
           passive
         />
 
+        
+        <div
+          id='layerPanel'
+          style={{
+            width: 250,
+            backgroundColor: 'rgb(245, 212, 126)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+        add layer
+        <Whitespace height={16} />
+          <div style={{ flexShrink: 0 }}>
+            {Object.entries(component_map).map(([key, comp]) => (
+              <ComponentButton
+                style={{
+                  paddingLeft: 50,
+                  paddingRight: 50,
+                  paddingTop: 16,
+                  paddingBottom: 16,
+                }}
+                onClick={() => add_component({ type: key })}
+              >
+                <span>{comp.icon}</span>
+                <div style={{ width: 16 }} />
+                <span>{comp.name}</span>
+              </ComponentButton>
+            ))}
+          </div>
+
+          <div style={{ height: 50 }} />
+
+         <hr style={{width: '100%', borderWidth: '1px', borderStyle: 'inset'}}/>
+         layer list
+        
+         <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
+            {items.map((item) => (
+              <div
+                onClick={() => select_item(item.id)}
+                style={{
+                  backgroundColor:
+                    item.id === selected_item
+                      ? 'rgba(255,255,255,.8)'
+                      : 'transparent',
+                  padding: 16,
+                }}
+              >
+                {item.name}
+              </div>
+            ))}
+          </div>
+
+          </div>
+
         <Measure bounds>
           {({ measureRef, contentRect }) => (
             <div
@@ -252,6 +306,7 @@ class Workspace extends Component {
         </Measure>
 
         <div
+        id='formatPanel'
           style={{
             width: 220,
             flexShrink: 0,
@@ -260,24 +315,8 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          <Whitespace height={16} />
-          <div style={{ flexShrink: 0 }}>
-            {Object.entries(component_map).map(([key, comp]) => (
-              <ComponentButton
-                style={{
-                  paddingLeft: 50,
-                  paddingRight: 50,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                }}
-                onClick={() => add_component({ type: key })}
-              >
-                <span>{comp.icon}</span>
-                <div style={{ width: 16 }} />
-                <span>{comp.name}</span>
-              </ComponentButton>
-            ))}
-          </div>
+          
+          format panel / edit layer
 
           <div style={{ height: 50 }} />
 
@@ -332,22 +371,7 @@ class Workspace extends Component {
 
           <div style={{ height: 50 }} />
 
-          <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
-            {items.map((item) => (
-              <div
-                onClick={() => select_item(item.id)}
-                style={{
-                  backgroundColor:
-                    item.id === selected_item
-                      ? 'rgba(255,255,255,.8)'
-                      : 'transparent',
-                  padding: 16,
-                }}
-              >
-                {item.name}
-              </div>
-            ))}
-          </div>
+          
         </div>
       </div>
     );
