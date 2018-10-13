@@ -56,7 +56,6 @@ export let LoadFile = ({ url, children }) => {
     return (
       <FilesContext.Consumer>{({ getFile }) =>{
         let file = getFile(local_match[1]);
-        console.log(`file:`, file)
         return children({ url: file.blobUrl })
       }}</FilesContext.Consumer>
     )
@@ -118,6 +117,57 @@ class Workspace extends Component {
       };
     });
   };
+
+  add_file = async (file) => {
+    let { files } = this.state;
+
+    let dataurl = await Dataurl.from_file(file);
+    let bloburl = await URL.createObjectURL(file);
+
+    let samesize_files = files.filter(x => x.size === file.size);
+    if (samesize_files.length !== 0) {
+      let md5_hash = md5(dataurl);
+      // Find *possibly* the matching file
+      let matching_md5 = samesize_files.find(x => {
+        if (x.md5_hash == null) {
+          x.md5_hash = md5(x.dataurl);
+        }
+        return x.md5_hash === md5_hash
+      });
+      if (matching_md5 != null) {
+        return matching_md5;
+      }
+    }
+
+    let image_info = await get_image_info(dataurl);
+    let { width, height } = Dimensions.contain({
+      dimensions: image_info,
+      bounds: {
+        width: 200,
+        height: 200,
+      },
+    });
+
+    let new_file = {
+      id: uuid(),
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      blobUrl: bloburl,
+      dataurl: dataurl,
+      image: {
+        width: width,
+        height: height,
+      },
+    }
+    this.setState({
+      files: [
+        ...this.state.files,
+        new_file,
+      ],
+    });
+    return new_file;
+  }
 
   change_item = (id, change) => {
     this.setState(({ items }) => {
@@ -182,52 +232,18 @@ class Workspace extends Component {
         onDrop={async (e) => {
           e.preventDefault();
           let file = e.dataTransfer.items[0].getAsFile();
-          let dataurl = await Dataurl.from_file(file);
-          let md5_hash = md5(dataurl);
-          let bloburl = await URL.createObjectURL(file);
+          let canvas_file = await this.add_file(file);
 
-          console.log(`md5_hash:`, md5_hash);
-          let existing_file = this.state.files.find(x => x.md5_hash = md5_hash);
-
-          let new_file = existing_file;
-          if (new_file == null) {
-            let image_info = await get_image_info(dataurl);
-            let { width, height } = Dimensions.contain({
-              dimensions: image_info,
-              bounds: {
-                width: 200,
-                height: 200,
-              },
-            });
-
-            new_file = {
-              id: uuid(),
-              blobUrl: bloburl,
-              dataurl: dataurl,
-              image: {
-                width: width,
-                height: height,
-              },
-            }
-            this.setState({
-              files: [
-                ...this.state.files,
-                new_file,
-              ],
-            })
-          }
-
-          console.log(`new_file.image:`, new_file.image)
           add_component(
             {
               type: 'dralletje/image',
               options: {
-                url: `canvas-local://${new_file.id}`,
+                url: `canvas-local://${canvas_file.id}`,
               },
             },
             {
-              viewportWidth: new_file.image.width,
-              viewportHeight: new_file.image.height,
+              viewportWidth: canvas_file.image.width,
+              viewportHeight: canvas_file.image.height,
             }
           );
         }}
