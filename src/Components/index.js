@@ -2,6 +2,8 @@ import React from 'react';
 import { SketchPicker } from 'react-color';
 import styled from 'styled-components';
 
+import { LoadFile } from '../Workspace.js';
+
 let WebviewIconFrame = styled.div`
   border: solid 2px black;
   display: flex;
@@ -26,6 +28,29 @@ export let component_map = {
             height: '100%',
           }}
         />
+      );
+    },
+  },
+  'dralletje/image': {
+    icon: <i className="fas fa-image" />,
+    name: 'Image',
+    default_options: {
+      url: 'https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png',
+    },
+    Component: ({ size, options }) => {
+      return (
+        <LoadFile url={options.url}>{({ url }) =>
+          <div
+            style={{
+              // backgroundColor: 'rgb(255, 255, 255)',
+              backgroundImage: `url(${url})`,
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              width: '100%',
+              height: '100%',
+            }}
+          />
+        }</LoadFile>
       );
     },
   },

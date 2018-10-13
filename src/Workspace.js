@@ -1,13 +1,16 @@
 import React, { Component } from 'react';
-import { isEqual } from 'lodash';
+import { isEqual, debounce } from 'lodash';
 import yaml from 'js-yaml';
 import Measure from 'react-measure';
 import styled from 'styled-components';
+import uuid from 'uuid/v1';
+import md5 from 'md5';
 
 import { Transformation2DMatrix } from './TransformationMatrix.js';
-import { DocumentEvent, Absolute, Whitespace } from './Elements';
-import Canvas from './Canvas';
-import CanvasItem from './CanvasItem';
+import { DocumentEvent, Absolute, Whitespace } from './Elements.js';
+import Canvas from './Canvas.js';
+import CanvasItem from './CanvasItem.js';
+import { Dataurl, Dimensions, Bloburl, get_image_info } from './GetFile.js';
 
 import { component_map } from './Components';
 
@@ -42,6 +45,26 @@ let JSON_parse_safe = (json) => {
   }
 };
 
+export let FilesContext = React.createContext({
+  getFile: () => {
+    throw new Error(`Need a provider for FilesContext.Consumer`);
+  },
+});
+export let LoadFile = ({ url, children }) => {
+  let local_match = url.match(/canvas-local:\/\/(.*)/);
+  if (local_match) {
+    return (
+      <FilesContext.Consumer>{({ getFile }) =>{
+        let file = getFile(local_match[1]);
+        console.log(`file:`, file)
+        return children({ url: file.blobUrl })
+      }}</FilesContext.Consumer>
+    )
+  } else {
+    return children({ url });
+  }
+}
+
 class Workspace extends Component {
   state = {
     transform: new Transformation2DMatrix(),
@@ -53,12 +76,20 @@ class Workspace extends Component {
     },
     selected_item: null,
     is_pressing_cmd: false,
+    is_dragging: false,
 
     // Just keeping in mind that clipboard history is awesome
     clipboard: [],
+
+    // Keep these separate from the canvas, so they can be used multiple times for example
+    // TODO We also need ways to check these both ways (canvas item -> files, but also file -> canvas items)
+    files: [],
   };
 
-  add_component = ({ type, ...info }, callback) => {
+  add_component = (
+    { type, ...info },
+    { viewportWidth = 100, viewportHeight = 100 } = {}
+  ) => {
     let component_info = component_map[type];
 
     this.setState(({ items, next_id, canvas, transform }) => {
@@ -75,8 +106,8 @@ class Workspace extends Component {
             x: result.x,
             y: result.y,
             rotation: 0,
-            height: 100 * scale,
-            width: 100 * scale,
+            height: viewportHeight * scale,
+            width: viewportWidth * scale,
             options: component_info.default_options || {},
             ...info,
 
@@ -110,6 +141,10 @@ class Workspace extends Component {
     this.setState({ selected_item: id });
   };
 
+  dragleave_debounce = debounce((fn) => {
+    return fn();
+  }, 100);
+
   render() {
     let {
       selected_item,
@@ -117,6 +152,7 @@ class Workspace extends Component {
       is_pressing_cmd,
       clipboard,
       transform,
+      is_dragging,
     } = this.state;
     let { add_component, change_item, select_item } = this;
 
@@ -131,7 +167,99 @@ class Workspace extends Component {
           display: 'flex',
           flexDirection: 'row',
         }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (this.state.is_dragging === false) {
+            this.setState({ is_dragging: true });
+          } else {
+            this.dragleave_debounce(() => {
+              this.setState({ is_dragging: false });
+            });
+          }
+        }}
+        onDrop={async (e) => {
+          e.preventDefault();
+          let file = e.dataTransfer.items[0].getAsFile();
+          let dataurl = await Dataurl.from_file(file);
+          let md5_hash = md5(dataurl);
+          let bloburl = await URL.createObjectURL(file);
+
+          console.log(`md5_hash:`, md5_hash);
+          let existing_file = this.state.files.find(x => x.md5_hash = md5_hash);
+
+          let new_file = existing_file;
+          if (new_file == null) {
+            let image_info = await get_image_info(dataurl);
+            let { width, height } = Dimensions.contain({
+              dimensions: image_info,
+              bounds: {
+                width: 200,
+                height: 200,
+              },
+            });
+
+            new_file = {
+              id: uuid(),
+              blobUrl: bloburl,
+              dataurl: dataurl,
+              image: {
+                width: width,
+                height: height,
+              },
+            }
+            this.setState({
+              files: [
+                ...this.state.files,
+                new_file,
+              ],
+            })
+          }
+
+          console.log(`new_file.image:`, new_file.image)
+          add_component(
+            {
+              type: 'dralletje/image',
+              options: {
+                url: `canvas-local://${new_file.id}`,
+              },
+            },
+            {
+              viewportWidth: new_file.image.width,
+              viewportHeight: new_file.image.height,
+            }
+          );
+        }}
       >
+        <Absolute
+          top={0}
+          bottom={0}
+          right={0}
+          left={0}
+          style={{
+            zIndex: 10,
+            backgroundColor: 'rgba(138, 245, 129, 0.8)',
+            color: 'black',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            transition: 'opacity .2s',
+            opacity: is_dragging ? 1 : 0,
+            pointerEvents: is_dragging ? 'all' : 'none',
+          }}
+        >
+          <div
+            style={{
+              padding: 32,
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: 5,
+            }}
+          >
+            Add image to your canvas
+          </div>
+        </Absolute>
+
         <DocumentEvent
           name="keydown"
           handler={(e) => {
@@ -207,7 +335,6 @@ class Workspace extends Component {
         />
 
         <div
-          id="layerPanel"
           style={{
             width: 250,
             backgroundColor: 'rgb(245, 212, 126)',
@@ -238,7 +365,12 @@ class Workspace extends Component {
           <div style={{ height: 16 }} />
 
           <div
-            style={{ width: 'calc(100% - 16px - 16px)', marginLeft: '16px', marginRight: '16px', border: 'solid 1px black' }}
+            style={{
+              width: 'calc(100% - 16px - 16px)',
+              marginLeft: '16px',
+              marginRight: '16px',
+              border: 'solid 1px black',
+            }}
           />
 
           <SidebarTitle>layer list</SidebarTitle>
@@ -260,68 +392,80 @@ class Workspace extends Component {
           </div>
         </div>
 
-        <Measure bounds>
-          {({ measureRef, contentRect }) => (
-            <div
-              style={{ width: '100%', height: '100%', userSelect: 'none' }}
-              ref={measureRef}
-            >
-              {contentRect.bounds.height && (
-                <Canvas
-                  transform={transform}
-                  onTransformChange={(change) => {
-                    this.setState((state) => {
-                      let x = change({ transform: state.transform });
-                      if (x != null) {
-                        return {
-                          transform: x.transform,
-                        };
-                      }
-                    });
-                  }}
-                  select_item={select_item}
-                  initialTranslation={{
-                    x: contentRect.bounds.width / 2,
-                    y: contentRect.bounds.height / 2,
-                  }}
-                >
-                  {items.map((item) => {
-                    let component_info = component_map[item.type];
-                    return (
-                      <CanvasItem
-                        key={item.id}
-                        item={item}
-                        selected={selected_item === item.id}
-                        onSelect={() => select_item(item.id)}
-                        onChange={(next_item) =>
-                          change_item(item.id, next_item)
+        <FilesContext.Provider
+          value={{
+            getFile: (file_id) => {
+              // TODO Need way to load in the file into blob when loading
+              let file = this.state.files.find((x) => x.id === file_id);
+              if (file == null) {
+                throw new Error(`No file found for id '${file_id}'`);
+              }
+              return file;
+            },
+          }}
+        >
+          <Measure bounds>
+            {({ measureRef, contentRect }) => (
+              <div
+                style={{ width: '100%', height: '100%', userSelect: 'none' }}
+                ref={measureRef}
+              >
+                {contentRect.bounds.height && (
+                  <Canvas
+                    transform={transform}
+                    onTransformChange={(change) => {
+                      this.setState((state) => {
+                        let x = change({ transform: state.transform });
+                        if (x != null) {
+                          return {
+                            transform: x.transform,
+                          };
                         }
-                      >
-                        <Absolute
-                          top={0}
-                          left={0}
-                          bottom={0}
-                          right={0}
-                          style={{
-                            pointerEvents: is_pressing_cmd ? 'all' : 'none',
-                          }}
+                      });
+                    }}
+                    select_item={select_item}
+                    initialTranslation={{
+                      x: contentRect.bounds.width / 2,
+                      y: contentRect.bounds.height / 2,
+                    }}
+                  >
+                    {items.map((item) => {
+                      let component_info = component_map[item.type];
+                      return (
+                        <CanvasItem
+                          key={item.id}
+                          item={item}
+                          selected={selected_item === item.id}
+                          onSelect={() => select_item(item.id)}
+                          onChange={(next_item) =>
+                            change_item(item.id, next_item)
+                          }
                         >
-                          <component_info.Component
-                            size={item}
-                            options={item.options || {}}
-                          />
-                        </Absolute>
-                      </CanvasItem>
-                    );
-                  })}
-                </Canvas>
-              )}
-            </div>
-          )}
-        </Measure>
+                          <Absolute
+                            top={0}
+                            left={0}
+                            bottom={0}
+                            right={0}
+                            style={{
+                              pointerEvents: is_pressing_cmd ? 'all' : 'none',
+                            }}
+                          >
+                            <component_info.Component
+                              size={item}
+                              options={item.options || {}}
+                            />
+                          </Absolute>
+                        </CanvasItem>
+                      );
+                    })}
+                  </Canvas>
+                )}
+              </div>
+            )}
+          </Measure>
+        </FilesContext.Provider>
 
         <div
-          id="formatPanel"
           style={{
             width: 220,
             flexShrink: 0,
