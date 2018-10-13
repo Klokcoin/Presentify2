@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.4.1",
+    "html2canvas": "^1.0.0-alpha.12",
     "json-6": "^1.0.2",
     "memoize-one": "^4.0.2",
     "react": "^16.4.0",
