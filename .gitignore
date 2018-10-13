@@ -1,2 +1,4 @@
 node_modules
 .flowconfig
+build/
+.DS_Store

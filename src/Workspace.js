@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { isEqual } from 'lodash';
-import JSON6 from 'json-6';
+import yaml from 'js-yaml';
 import Measure from 'react-measure';
 import styled from 'styled-components';
 
@@ -27,8 +27,9 @@ let ComponentButton = styled.div`
 
 let JSON_parse_safe = (json) => {
   try {
-    return [null, JSON6.parse(json)];
+    return [null, yaml.safeLoad(json)];
   } catch (err) {
+    console.log(`err:`, err)
     return [err, null];
   }
 };
