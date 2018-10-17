@@ -44,7 +44,7 @@ export class ComponentComponent extends React.Component {
     if (this.props.didMount) {
       let teardown = this.props.didMount();
       this.teardown = teardown;
-    };
+    }
   }
 
   componentWillUnmount() {
@@ -61,7 +61,6 @@ export class ComponentComponent extends React.Component {
   }
 }
 
-
 export class Draggable extends React.Component {
   state = {
     dragging_state: null,
@@ -75,18 +74,20 @@ export class Draggable extends React.Component {
 
     return (
       <React.Fragment>
-        {dragging_state && cursor && <ComponentComponent
-          key={cursor} // So it re-mounts on cursor change
-          didMount={() => {
-            let previous_cursor =  document.body.style.cursor
-            document.body.style.cursor = cursor;
+        {dragging_state &&
+          cursor && (
+            <ComponentComponent
+              key={cursor} // So it re-mounts on cursor change
+              didMount={() => {
+                let previous_cursor = document.body.style.cursor;
+                document.body.style.cursor = cursor;
 
-            return () => {
-              document.body.style.cursor = previous_cursor;
-            }
-          }}
-        />
-      }
+                return () => {
+                  document.body.style.cursor = previous_cursor;
+                };
+              }}
+            />
+          )}
         <div
           style={{
             cursor: cursor,
@@ -94,7 +95,6 @@ export class Draggable extends React.Component {
           }}
           data-what-is-this="Draggable"
           onMouseDown={(e) => {
-
             this.setState({
               dragging_state: {
                 start_mouse_x: e.pageX,
@@ -213,6 +213,19 @@ export let Whitespace = ({ height, width }) => {
         width: width != null && width,
         minWidth: width != null && width,
       }}
+    />
+  );
+};
+
+export let Layer = ({ style, children }) => {
+  return (
+    <Absolute
+      top={0}
+      bottom={0}
+      right={0}
+      left={0}
+      style={style}
+      children={children}
     />
   );
 };
