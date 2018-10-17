@@ -74,7 +74,6 @@ class Workspace extends Component {
       width: 500,
     },
     selected_id: null,
-    is_pressing_cmd: false,
     is_dragging: false,
 
     // Just keeping in mind that clipboard history is awesome
@@ -199,7 +198,6 @@ class Workspace extends Component {
     let {
       selected_id,
       items,
-      is_pressing_cmd,
       clipboard,
       transform,
       is_dragging,
@@ -286,12 +284,6 @@ class Workspace extends Component {
               return;
             }
 
-            if (e.key === 'Control' || e.which === 'Meta') {
-              this.setState({
-                is_pressing_cmd: true,
-              });
-            }
-
             if (e.key === 'Escape') {
               this.setState({
                 selected_id: null,
@@ -331,20 +323,6 @@ class Workspace extends Component {
                   clipboard: [next_element],
                 });
               }
-            }
-          }}
-          passive
-        />
-        <DocumentEvent
-          name="keyup"
-          handler={(e) => {
-            // TODO Yeah yeah I hear you thinking
-            // .... "but what if I press both of them and then release only one?!"
-            // .... Well.. don't do that
-            if (e.key === 'Control' || e.which === 'Meta') {
-              this.setState({
-                is_pressing_cmd: false,
-              });
             }
           }}
           passive
@@ -465,7 +443,7 @@ class Workspace extends Component {
                             bottom={0}
                             right={0}
                             style={{
-                              pointerEvents: is_pressing_cmd ? 'all' : 'none',
+                              pointerEvents: 'none',
                             }}
                           >
                             <component_info.Component
