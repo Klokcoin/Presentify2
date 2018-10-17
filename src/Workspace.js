@@ -85,13 +85,14 @@ class Workspace extends Component {
   };
 
   add_component = (
-    { type, viewportWidth = 100, viewportHeight = 100, ...info },
+    { type, ...info },
+    { viewportWidth = 100, viewportHeight = 100 } = {}
   ) => {
     let component_info = component_map[type];
 
     this.setState(({ items, next_id, canvas, transform }) => {
-      // let result = transform.inverse().applyToCoords({ x: 0, y: 0 });
-      // let scale = transform.inverse().getScale().x;
+      let result = transform.inverse().applyToCoords({ x: 0, y: 0 });
+      let scale = transform.inverse().getScale().x;
       return {
         next_id: next_id + 1,
         selected_id: next_id,
@@ -100,15 +101,14 @@ class Workspace extends Component {
           {
             name: `${component_info.name} #${next_id}`,
             type: type,
-            // x: result.x,
-            // y: result.y,
-            // rotation: 0,
-            // height: viewportHeight * scale,
-            // width: viewportWidth * scale,
-            viewportHeight,
-            viewportWidth,
+            x: result.x,
+            y: result.y,
+            rotation: 0,
+            height: viewportHeight * scale,
+            width: viewportWidth * scale,
             options: component_info.default_options || {},
             ...info,
+
             z: next_id * 10,
             id: next_id,
           },
@@ -238,6 +238,8 @@ class Workspace extends Component {
               options: {
                 url: `canvas-local://${canvas_file.id}`,
               },
+            },
+            {
               viewportWidth: canvas_file.image.width,
               viewportHeight: canvas_file.image.height,
             }
@@ -431,18 +433,9 @@ class Workspace extends Component {
                           item={item}
                           selected={selected_id === item.id}
                           onSelect={() => select_item(item.id)}
-                          getInitialState={() => {
-                            let { x, y } = transform.inverse().applyToCoords({ x: 0, y: 0 })
-                            let scale = transform.inverse().getScale().x
-
-                            return {
-                              x,
-                              y,
-                              rotation: 0,
-                              height: item.viewportHeight * scale,
-                              width: item.viewportWidth * scale,
-                            }
-                          }}
+                          onChange={(next_item) =>
+                            change_item(item.id, next_item)
+                          }
                         >
                           <Absolute
                             top={0}
