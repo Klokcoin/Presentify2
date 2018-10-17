@@ -73,7 +73,7 @@ class Workspace extends Component {
       height: 500,
       width: 500,
     },
-    selected_item: null,
+    selected_id: null,
     is_pressing_cmd: false,
     is_dragging: false,
 
@@ -96,7 +96,7 @@ class Workspace extends Component {
       let scale = transform.inverse().getScale().x;
       return {
         next_id: next_id + 1,
-        selected_item: next_id,
+        selected_id: next_id,
         items: [
           ...items,
           {
@@ -188,7 +188,7 @@ class Workspace extends Component {
   };
 
   select_item = (id) => {
-    this.setState({ selected_item: id });
+    this.setState({ selected_id: id });
   };
 
   dragleave_debounce = debounce((fn) => {
@@ -197,7 +197,7 @@ class Workspace extends Component {
 
   render() {
     let {
-      selected_item,
+      selected_id,
       items,
       is_pressing_cmd,
       clipboard,
@@ -294,21 +294,21 @@ class Workspace extends Component {
 
             if (e.key === 'Escape') {
               this.setState({
-                selected_item: null,
+                selected_id: null,
               });
             }
 
             if (e.key === 'Backspace' || e.key === 'Delete') {
-              if (selected_item != null) {
+              if (selected_id != null) {
                 this.setState({
-                  items: items.filter((x) => x.id !== selected_item),
+                  items: items.filter((x) => x.id !== selected_id),
                 });
               }
             }
 
             if (e.key === 'c' && (e.metaKey || e.ctrlKey)) {
               let item =
-                selected_item && items.find((x) => x.id === selected_item);
+                selected_id && items.find((x) => x.id === selected_id);
               if (item) {
                 this.setState({
                   // TODO Maybe later, append?
@@ -350,6 +350,7 @@ class Workspace extends Component {
           passive
         />
 
+        {/* Left sidebar */}
         <div
           style={{
             width: 250,
@@ -358,7 +359,8 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          <SidebarTitle>add layer</SidebarTitle>
+          {/* Adding layers */}
+          <SidebarTitle> Add layer </SidebarTitle>
           <Whitespace height={16} />
           <div style={{ flexShrink: 0 }}>
             {Object.entries(component_map).map(([key, comp]) => (
@@ -377,9 +379,9 @@ class Workspace extends Component {
               </ComponentButton>
             ))}
           </div>
+          <Whitespace height={16}/>
 
-          <div style={{ height: 16 }} />
-
+          {/* Layer list */}
           <div
             style={{
               width: 'calc(100% - 16px - 16px)',
@@ -388,15 +390,14 @@ class Workspace extends Component {
               border: 'solid 1px black',
             }}
           />
-
-          <SidebarTitle>layer list</SidebarTitle>
+          <SidebarTitle> Layer list </SidebarTitle>
           <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
             {items.map((item) => (
               <div
                 onClick={() => select_item(item.id)}
                 style={{
                   backgroundColor:
-                    item.id === selected_item
+                    item.id === selected_id
                       ? 'rgba(255,255,255,.8)'
                       : 'transparent',
                   padding: 16,
@@ -408,6 +409,7 @@ class Workspace extends Component {
           </div>
         </div>
 
+        {/* Canvas */}
         <FilesContext.Provider
           value={{
             getFile: (file_id) => {
@@ -451,7 +453,7 @@ class Workspace extends Component {
                         <CanvasItem
                           key={item.id}
                           item={item}
-                          selected={selected_item === item.id}
+                          selected={selected_id === item.id}
                           onSelect={() => select_item(item.id)}
                           onChange={(next_item) =>
                             change_item(item.id, next_item)
@@ -481,6 +483,7 @@ class Workspace extends Component {
           </Measure>
         </FilesContext.Provider>
 
+        {/* Right sidebar */}
         <div
           style={{
             width: 220,
@@ -490,11 +493,10 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          <SidebarTitle>format panel / edit layer</SidebarTitle>
-
-          <div style={{ height: 50 }} />
-
-          {items.filter((x) => x.id === selected_item).map((item) => {
+          {/* Edit layer */}
+          <SidebarTitle> Edit layer </SidebarTitle>
+          <Whitespace height={50} />
+          {items.filter((x) => x.id === selected_id).map((item) => {
             let component_info = component_map[item.type];
 
             let unsaved =
@@ -542,8 +544,7 @@ class Workspace extends Component {
               </div>
             );
           })}
-
-          <div style={{ height: 50 }} />
+          <Whitespace height={50} />
         </div>
       </div>
     );
