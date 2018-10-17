@@ -143,20 +143,33 @@ let render_cursor = memoize(_render_cursor, (obj) => {
 });
 
 class CanvasItem extends Component {
+  // Normally an anti-pattern, but it's just a seed for initial state! dont h8
   state = {
     movement_state: null,
-  };
+    ...this.props.getInitialState(),
+  }
 
   render() {
-    let { movement_state } = this.state;
+    let { movement_state, x, y, width, height, rotation } = this.state;
     let {
       item,
       selected,
       onSelect,
-      onChange,
-      // inverseScale,
       children,
     } = this.props;
+
+    let onChange = (change) => {
+      this.setState(({ x, y, rotation, height, width }) => {
+        return {
+          x,
+          y,
+          rotation,
+          height,
+          width,
+          ...change
+        }
+      })
+    }
 
     let act_like_selected = selected || movement_state != null;
 
@@ -165,15 +178,15 @@ class CanvasItem extends Component {
       x: 0,
       width: 0,
       height: 0,
-      rotation: item.rotation,
+      rotation: rotation,
       ...movement_state,
     };
 
     let current_item = {
-      y: item.y + with_defaults.y,
-      x: item.x + with_defaults.x,
-      width: item.width + with_defaults.width,
-      height: item.height + with_defaults.height,
+      y: y + with_defaults.y,
+      x: x + with_defaults.x,
+      width: width + with_defaults.width,
+      height: height + with_defaults.height,
       rotation: with_defaults.rotation,
     };
 
@@ -198,23 +211,23 @@ class CanvasItem extends Component {
     let width_height_movement = (direction, movement_state, item) => {
       let [x, y] = vector.rotate(
         [movement_state.x, movement_state.y],
-        -item.rotation
+        -rotation
       );
 
-      if (y * direction[1] + item.height < 1) {
-        y = -(item.height - 1) * direction[1];
+      if (y * direction[1] + height < 1) {
+        y = -(height - 1) * direction[1];
       }
       if (direction[1] === 0) {
         y = 0;
       }
-      if (x * direction[0] + item.width < 1) {
-        x = -(item.width - 1) * direction[0];
+      if (x * direction[0] + width < 1) {
+        x = -(width - 1) * direction[0];
       }
       if (direction[0] === 0) {
         x = 0;
       }
 
-      let with_rotation = vector.rotate([x / 2, y / 2], item.rotation);
+      let with_rotation = vector.rotate([x / 2, y / 2], rotation);
 
       return {
         width: direction[0] * x,
@@ -283,8 +296,8 @@ class CanvasItem extends Component {
                   }}
                   onMoveEnd={(movement_state) => {
                     onChange({
-                      y: item.y + movement_state.y,
-                      x: item.x + movement_state.x,
+                      y: y + movement_state.y,
+                      x: x + movement_state.x,
                     });
                     this.setState({
                       movement_state: null,
@@ -334,8 +347,8 @@ class CanvasItem extends Component {
                       gridArea: name,
                     }}
                     cursor={render_cursor({
-                      angle: vector.to_rotation(direction) + item.rotation,
-                      backup: get_cursor_direction(item.rotation, direction),
+                      angle: vector.to_rotation(direction) + rotation,
+                      backup: get_cursor_direction(rotation, direction),
                     })}
                     onMove={(movement_state) => {
                       this.setState({
@@ -353,10 +366,10 @@ class CanvasItem extends Component {
                         item
                       );
                       onChange({
-                        width: item.width + change.width,
-                        x: item.x + change.x,
-                        height: item.height + change.height,
-                        y: item.y + change.y,
+                        width: width + change.width,
+                        x: x + change.x,
+                        height: height + change.height,
+                        y: y + change.y,
                       });
                       this.setState({
                         movement_state: null,
@@ -378,8 +391,8 @@ class CanvasItem extends Component {
                       -movement_state.y,
                     ];
                     let start_to_center_vector = vector.rotate(
-                      [0, item.height / 2 + rotation_button_offset],
-                      item.rotation
+                      [0, height / 2 + rotation_button_offset],
+                      rotation
                     );
 
                     let straight_angle = 1 / 2 * Math.PI;
@@ -401,8 +414,8 @@ class CanvasItem extends Component {
                       -movement_state.y,
                     ];
                     let start_to_center_vector = vector.rotate(
-                      [0, item.height / 2 + rotation_button_offset],
-                      item.rotation
+                      [0, height / 2 + rotation_button_offset],
+                      rotation
                     );
 
                     let straight_angle = 1 / 2 * Math.PI;
