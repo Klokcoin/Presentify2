@@ -378,7 +378,7 @@ class Workspace extends Component {
             ))}
           </div>
 
-          <div style={{ height: 16 }} />
+          <Whitespace height={16}/>
 
           <div
             style={{
@@ -389,7 +389,7 @@ class Workspace extends Component {
             }}
           />
 
-          <SidebarTitle>layer list</SidebarTitle>
+          <SidebarTitle> Layer list </SidebarTitle>
           <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
             {items.map((item) => (
               <div
@@ -490,9 +490,9 @@ class Workspace extends Component {
             flexDirection: 'column',
           }}
         >
-          <SidebarTitle>format panel / edit layer</SidebarTitle>
+          <SidebarTitle> Edit layer </SidebarTitle>
 
-          <div style={{ height: 50 }} />
+          <Whitespace height={50} />
 
           {items.filter((x) => x.id === selected_item).map((item) => {
             let component_info = component_map[item.type];
@@ -543,7 +543,7 @@ class Workspace extends Component {
             );
           })}
 
-          <div style={{ height: 50 }} />
+          <Whitespace height={50} />
         </div>
       </div>
     );
