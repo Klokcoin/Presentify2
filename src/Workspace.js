@@ -233,7 +233,7 @@ class Workspace extends Component {
                 alignItems: 'center',
                 transition: 'opacity .2s',
                 opacity: is_dragging ? 1 : 0,
-                // pointerEvents: is_dragging ? 'all' : 'none',
+                pointerEvents: is_dragging ? 'all' : 'none',
               }}
             >
               <div
