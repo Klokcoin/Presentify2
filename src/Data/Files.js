@@ -1,3 +1,6 @@
+// This should be related to Data/Document, as a Document can not exist without it's files,
+// but for now it is just random utils oops
+
 export let Dataurl = {
   from_file: async (file) => {
     return new Promise((resolve, reject) => {

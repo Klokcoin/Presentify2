@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { mapValues, clamp } from 'lodash';
 
-import { Transformation2DMatrix } from './TransformationMatrix.js';
 import { IsolateCoordinatesForElement } from './IsolateCoordinatesForElement.js';
+import { Transformation2DMatrix } from '../Data/TransformationMatrix.js';
 
 const isWhole = (number) => number % 1 === 0;
 
@@ -172,7 +172,7 @@ class Canvas extends Component {
   };
 
   render() {
-    const { select_item, children, initialTranslation, transform } = this.props;
+    const { onBackgroundClick, children, initialTranslation, transform } = this.props;
 
     let initial_transform = new Transformation2DMatrix({
       e: -initialTranslation.x,
@@ -195,7 +195,7 @@ class Canvas extends Component {
             // Only reset selected_item if the click is **only** on the canvas,
             // and not actually on one of the divs inside
             if (e.target === e.currentTarget) {
-              select_item(null);
+              onBackgroundClick();
             }
           }}
         >
@@ -210,10 +210,10 @@ class Canvas extends Component {
               transformOrigin: '0% 0%',
             }}
             onMouseDown={(e) => {
-              // Only reset selected_item if the click is **only** on the canvas,
+              // Only trigger onBackgroundClick if the click is **only** on the canvas,
               // and not actually on one of the divs inside
               if (e.target === e.currentTarget) {
-                select_item(null);
+                onBackgroundClick(null);
               }
             }}
           >
@@ -239,21 +239,6 @@ class Canvas extends Component {
                 height: this.props.maxTranslation.y * 2,
               }}
             />
-
-            {/* White dot at 0,0 for reference */}
-            {/* <div
-              style={{
-                pointerEvents: 'none',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                backgroundColor: 'white',
-                borderRadius: 5,
-                transform: `translateX(-50%) translateY(-50%)`,
-                width: 10,
-                height: 10,
-              }}
-            /> */}
 
             {/* Render canvas items or whatever */}
             {children}

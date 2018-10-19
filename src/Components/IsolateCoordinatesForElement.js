@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentEvent } from './Elements.js'
+import { DocumentEvent } from '../Elements.js'
 
 // NOTE This is hacky as fuuuuuck
 // .... But still, I really like it.

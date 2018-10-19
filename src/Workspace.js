@@ -6,13 +6,14 @@ import styled from 'styled-components';
 import uuid from 'uuid/v1';
 import md5 from 'md5';
 
-import { Transformation2DMatrix } from './TransformationMatrix.js';
 import { DocumentEvent, Absolute, Whitespace, Layer } from './Elements.js';
-import Canvas from './Canvas.js';
-import CanvasItem from './CanvasItem.js';
-import { Dataurl, Dimensions, Bloburl, get_image_info } from './GetFile.js';
+import Canvas from './Components/Canvas.js';
+import { Dataurl, Dimensions, Bloburl, get_image_info } from './Data/Files.js';
+import { Transformation2DMatrix } from './Data/TransformationMatrix.js';
+import { CanvasItemOverlay } from './AppComponents/TransformationOverlay.js';
 import { Droptarget } from './Components/Droptarget.js';
-import { component_map } from './PresentifyComponents';
+import { Dropoverlay } from './AppComponents/Dropoverlay.js';
+import { component_map } from './PresentifyComponents/index.js';
 
 let SidebarTitle = styled.div`
   margin-top: 16px;
@@ -223,30 +224,6 @@ class Workspace extends Component {
               flexDirection: 'row',
             }}
           >
-            <Layer
-              style={{
-                zIndex: 10,
-                backgroundColor: 'rgba(138, 245, 129, 0.8)',
-                color: 'black',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                transition: 'opacity .2s',
-                opacity: is_dragging ? 1 : 0,
-                pointerEvents: is_dragging ? 'all' : 'none',
-              }}
-            >
-              <div
-                style={{
-                  padding: 32,
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  borderRadius: 5,
-                }}
-              >
-                Add image to your canvas
-              </div>
-            </Layer>
-
             <DocumentEvent
               name="keydown"
               handler={(e) => {
@@ -385,50 +362,44 @@ class Workspace extends Component {
                   >
                     {contentRect.bounds.height && (
                       <Canvas
+                        initialTranslation={{
+                          x: contentRect.bounds.width / 2,
+                          y: contentRect.bounds.height / 2,
+                        }}
                         transform={transform}
                         onTransformChange={(change) => {
                           this.setState((state) => {
                             let x = change({ transform: state.transform });
                             if (x != null) {
-                              return {
-                                transform: x.transform,
-                              };
+                              return { transform: x.transform };
                             }
                           });
                         }}
-                        select_item={select_item}
-                        initialTranslation={{
-                          x: contentRect.bounds.width / 2,
-                          y: contentRect.bounds.height / 2,
+                        onBackgroundClick={() => {
+                          select_item(null);
                         }}
                       >
                         {items.map((item) => {
                           let component_info = component_map[item.type];
                           return (
-                            <CanvasItem
+                            <CanvasItemOverlay
                               key={item.id}
-                              item={item}
                               selected={selected_id === item.id}
-                              onSelect={() => select_item(item.id)}
-                              onChange={(next_item) =>
-                                change_item(item.id, next_item)
-                              }
+                              onSelect={() => {
+                                select_item(item.id);
+                              }}
+                              item={item}
+                              onChange={(next_item) => {
+                                change_item(item.id, next_item);
+                              }}
                             >
-                              <Absolute
-                                top={0}
-                                left={0}
-                                bottom={0}
-                                right={0}
-                                style={{
-                                  pointerEvents: 'none',
-                                }}
-                              >
+                              <Layer style={{ pointerEvents: 'none' }}>
                                 <component_info.Component
                                   size={item}
                                   options={item.options || {}}
                                 />
-                              </Absolute>
-                            </CanvasItem>
+                              </Layer>
+                            </CanvasItemOverlay>
                           );
                         })}
                       </Canvas>
