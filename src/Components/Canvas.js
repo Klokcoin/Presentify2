@@ -95,51 +95,35 @@ class Canvas extends Component {
 
       const scale = 1 - 1 / 110 * deltaY;
 
-      // We need to apply the inverse of the current transformation to the mouse coordinates
-      // to get the 'actual' click coordinates
-      const { x: mouseX, y: mouseY } = transform
-        .inverse()
-        .multiply(initial_transform)
-        .applyToCoords({
-          x: clientX,
-          y: clientY,
-        });
+      let { top, left } = this.measureRef.getBoundingClientRect();
+      // NOTE So learnt now, need to apply the initial_transform AFTER the invert... which now
+      // .... I think about it.. is quite obvious from the fact that it is reversed
+      const click_inside_canvas = transform.inverse().multiply(initial_transform).applyToCoords({
+        x: clientX - left,
+        y: clientY - top,
+      });
 
-      let new_transform = transform.multiply(
-        new Transformation2DMatrix({
-          a: scale,
-          d: scale,
-          e: -mouseX * (scale - 1),
-          f: -mouseY * (scale - 1),
-        })
-      );
-
-      // Check if we are inside the zoom bounds
-      let zoom_scale = new_transform.getScale().x;
-      let zoom_diff = zoom_scale / clamp(zoom_scale, minZoom, maxZoom);
-      if (zoom_diff !== 1) {
-        // Out of bounds, but instead of not applying the transformation,
-        // apply it as far as we can.
-        // NOTE Not sure if I need mouseX or mouseY here but I like it
-        // .... (This is also why I can not move this to `matrix.clampScale`)
-        new_transform = new_transform.multiply(
+      let current_zoom = transform.getScale().x;
+      let zoom_diff = current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
+      let new_transform = transform
+        .multiply(
+          new Transformation2DMatrix({
+            e: click_inside_canvas.x,
+            f: click_inside_canvas.y,
+          })
+        )
+        .multiply(
           new Transformation2DMatrix({
             a: 1 / zoom_diff,
             d: 1 / zoom_diff,
-            e: -mouseX * (1 / zoom_diff - 1),
-            f: -mouseY * (1 / zoom_diff - 1),
+          })
+        )
+        .multiply(
+          new Transformation2DMatrix({
+            e: -click_inside_canvas.x,
+            f: -click_inside_canvas.y,
           })
         );
-
-        // NOTE When unsure if this tweaking works, uncomment this
-        // let point_zero = new_transform.applyToCoords({ x: 0, y: 0 });
-        // let point_one = new_transform.applyToCoords({ x: 1, y: 0 });
-        // let zoom_scale = point_one.x - point_zero.x;
-        // let zoom_diff2 = zoom_scale / clamp(zoom_scale, minZoom, maxZoom);
-        // if (zoom_diff2 !== 1) {
-        //   throw new Error(`After fix, zoom_diff still is not 1 (it should)`)
-        // }
-      }
 
       // After zoom fix, we check if we happen to go over the translation bounds still
       new_transform = new_transform.clampTranslation({
@@ -172,7 +156,12 @@ class Canvas extends Component {
   };
 
   render() {
-    const { onBackgroundClick, children, initialTranslation, transform } = this.props;
+    const {
+      onBackgroundClick,
+      children,
+      initialTranslation,
+      transform,
+    } = this.props;
 
     let initial_transform = new Transformation2DMatrix({
       e: -initialTranslation.x,
@@ -190,6 +179,7 @@ class Canvas extends Component {
             width: '100%',
             backgroundColor: 'rgb(162, 162, 204)',
           }}
+          ref={(ref) => (this.measureRef = ref)}
           onWheel={this.onWheel}
           onMouseDown={(e) => {
             // Only reset selected_item if the click is **only** on the canvas,
@@ -213,7 +203,7 @@ class Canvas extends Component {
               // Only trigger onBackgroundClick if the click is **only** on the canvas,
               // and not actually on one of the divs inside
               if (e.target === e.currentTarget) {
-                onBackgroundClick(null);
+                onBackgroundClick();
               }
             }}
           >
