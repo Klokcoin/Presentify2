@@ -245,7 +245,7 @@ export class CanvasItemOverlay extends Component {
             translateX(-50%)
             translateY(-50%)
             rotate(${current_item.rotation}rad)
-            translateZ(${item.z}px)
+            translateZ(${item.z || 0}px)
           `,
           userSelect: 'none',
           WebkitUserSelect: 'none',
