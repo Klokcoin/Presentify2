@@ -5,7 +5,7 @@ import styled from 'styled-components';
 import { LoadFile } from '../Workspace.js';
 
 let WebviewIconFrame = styled.div`
-  border: solid 2px black;
+  border: solid 2px var(--color, black);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -63,6 +63,7 @@ export let component_map = {
     Component: ({ size, options }) => {
       return (
         <iframe
+          title="iFrame"
           // width={size.width}
           // height={size.height}
           style={{ height: '100%', width: '100%' }}
@@ -80,7 +81,7 @@ export let component_map = {
         style={{
           height: '1em',
           width: '1em',
-          backgroundColor: 'black',
+          backgroundColor: 'var(--color, black)',
           borderRadius: 3,
         }}
       />
@@ -92,8 +93,9 @@ export let component_map = {
     },
     ConfigScreen: ({ value, onChange }) => {
       return (
-        <div>
+        <div style={{ padding: 8, flexShrink: 0 }}>
           <SketchPicker
+            width={null}
             color={value.backgroundColor}
             onChangeComplete={({ rgb }) => {
               onChange({

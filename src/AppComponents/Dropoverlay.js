@@ -1,12 +1,22 @@
 import React from 'react';
 import { Layer } from '../Elements.js';
+import styled from 'styled-components';
+
+let TextBox = styled.div`
+  padding: 24px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 10px;
+  border: white dashed 10px;
+`
 
 export let Dropoverlay = ({ is_dragging }) => {
   return (
     <Layer
       style={{
         zIndex: 10,
-        backgroundColor: 'rgba(138, 245, 129, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
         color: 'black',
         display: 'flex',
         justifyContent: 'center',
@@ -16,15 +26,9 @@ export let Dropoverlay = ({ is_dragging }) => {
         pointerEvents:  is_dragging ? 'all' : 'none',
       }}
     >
-      <div
-        style={{
-          padding: 32,
-          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-          borderRadius: 5,
-        }}
-      >
+      <TextBox>
         Add image to your canvas
-      </div>
+      </TextBox>
     </Layer>
   )
 }

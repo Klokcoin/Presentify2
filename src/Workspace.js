@@ -10,12 +10,23 @@ import localforage from 'localforage';
 
 import { DocumentEvent, Absolute, Whitespace, Layer } from './Elements.js';
 import Canvas from './Components/Canvas.js';
-import { Dataurl, Dimensions, Bloburl, get_image_info } from './Data/Files.js';
+import { Dataurl, Dimensions, get_image_info } from './Data/Files.js';
 import { Transformation2DMatrix } from './Data/TransformationMatrix.js';
 import { CanvasItemOverlay } from './AppComponents/TransformationOverlay.js';
 import { Droptarget } from './Components/Droptarget.js';
 import { Dropoverlay } from './AppComponents/Dropoverlay.js';
 import { component_map } from './PresentifyComponents/';
+
+let Sidebar = styled.div`
+  width: 232px;
+  flex-shrink: 0;
+  background-color: rgb(39, 39, 39);
+  display: flex;
+  flex-direction: column;
+
+  color: white;
+  --color: white;
+`;
 
 let SidebarTitle = styled.div`
   margin-top: 16px;
@@ -25,17 +36,26 @@ let SidebarTitle = styled.div`
   font-weight: bold;
 `;
 
-let ComponentButton = styled.div`
+let SidebarLine = styled.div`
+  width: calc(100% - 16px - 16px);
+  margin-left: 16px;
+  margin-right: 16px;
+  border: solid 1px var(--color, black);
+`
+
+let SidebarButton = styled.div`
   transition: background-color 0.2s;
-  background-color: rgba(255, 255, 255, 0);
+  background-color: ${p => p.active ? '#8e8e8e' : 'rgba(255, 255, 255, 0)'};
   cursor: pointer;
 
   display: flex;
   flex-direction: row;
   align-items: center;
 
+  padding: 8px 16px;
+
   &:hover {
-    background-color: rgb(255, 108, 240);
+    background-color: #ccc;
   }
 `;
 
@@ -253,6 +273,8 @@ class Workspace extends Component {
               flexDirection: 'row',
             }}
           >
+            <Dropoverlay is_dragging={is_dragging} />
+
             <DocumentEvent
               name="keydown"
               handler={(e) => {
@@ -308,63 +330,35 @@ class Workspace extends Component {
             />
 
             {/* Left sidebar */}
-            <div
-              style={{
-                width: 250,
-                backgroundColor: 'rgb(245, 212, 126)',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              {/* Adding layers */}
-              <SidebarTitle> Add layer </SidebarTitle>
+            <Sidebar>
+              <SidebarTitle>Add layer</SidebarTitle>
               <Whitespace height={16} />
               <div style={{ flexShrink: 0 }}>
                 {Object.entries(component_map).map(([key, comp]) => (
-                  <ComponentButton
-                    style={{
-                      paddingLeft: 50,
-                      paddingRight: 50,
-                      paddingTop: 16,
-                      paddingBottom: 16,
-                    }}
-                    onClick={() => add_component({ type: key })}
-                  >
+                  <SidebarButton onClick={() => add_component({ type: key })}>
                     <span>{comp.icon}</span>
                     <div style={{ width: 16 }} />
                     <span>{comp.name}</span>
-                  </ComponentButton>
+                  </SidebarButton>
                 ))}
               </div>
               <Whitespace height={16} />
 
               {/* Layer list */}
-              <div
-                style={{
-                  width: 'calc(100% - 16px - 16px)',
-                  marginLeft: '16px',
-                  marginRight: '16px',
-                  border: 'solid 1px black',
-                }}
-              />
+              <SidebarLine />
+
               <SidebarTitle> Layer list </SidebarTitle>
-              <div style={{ maxHeight: '30%', overflowY: 'auto' }}>
+              <div style={{ overflowY: 'auto' }}>
                 {items.map((item) => (
-                  <div
+                  <SidebarButton
+                    active={item.id === selected_id}
                     onClick={() => select_item(item.id)}
-                    style={{
-                      backgroundColor:
-                        item.id === selected_id
-                          ? 'rgba(255,255,255,.8)'
-                          : 'transparent',
-                      padding: 16,
-                    }}
                   >
                     {item.name}
-                  </div>
+                  </SidebarButton>
                 ))}
               </div>
-            </div>
+            </Sidebar>
 
             {/* Canvas */}
             <FilesContext.Provider
@@ -386,6 +380,7 @@ class Workspace extends Component {
                       width: '100%',
                       height: '100%',
                       userSelect: 'none',
+                      backgroundColor: '#ccc',
                     }}
                     ref={measureRef}
                   >
@@ -439,17 +434,8 @@ class Workspace extends Component {
             </FilesContext.Provider>
 
             {/* Right sidebar */}
-            <div
-              style={{
-                width: 220,
-                flexShrink: 0,
-                backgroundColor: 'rgb(245, 212, 126)',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              {/* Edit layer */}
-              <SidebarTitle> Edit layer </SidebarTitle>
+            <Sidebar>
+              <SidebarTitle>Edit layer</SidebarTitle>
               <Whitespace height={50} />
               {items.filter((x) => x.id === selected_id).map((item) => {
                 let component_info = component_map[item.type];
@@ -482,7 +468,7 @@ class Workspace extends Component {
                         boxSizing: 'border-box',
                         border: 'none',
                         padding: 16,
-                        backgroundColor: 'crimson',
+                        backgroundColor: 'transparent',
                         color: 'white',
                         fontSize: 12,
                         height: 400,
@@ -500,7 +486,7 @@ class Workspace extends Component {
                 );
               })}
               <Whitespace height={50} />
-            </div>
+            </Sidebar>
           </div>
         )}
       </Droptarget>

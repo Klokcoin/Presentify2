@@ -32,8 +32,8 @@ class Canvas extends Component {
   static defaultProps = {
     maxTranslation: {
       // I don't yet see a reason to limit this...
-      x: 300,
-      y: 300,
+      x: Infinity,
+      y: Infinity,
     },
     minZoom: 0.5,
     maxZoom: 20,
@@ -177,7 +177,6 @@ class Canvas extends Component {
             overflow: 'hidden',
             height: '100%',
             width: '100%',
-            backgroundColor: 'rgb(162, 162, 204)',
           }}
           ref={(ref) => (this.measureRef = ref)}
           onWheel={this.onWheel}
