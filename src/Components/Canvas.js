@@ -35,8 +35,10 @@ class Canvas extends Component {
       x: Infinity,
       y: Infinity,
     },
-    minZoom: 0.5,
-    maxZoom: 20,
+    // Took these from sketch
+    // https://sketchapp.com/docs/canvas/#zooming
+    minZoom: 0.01,
+    maxZoom: 256,
     initialTranslation: {
       x: 0,
       y: 0,

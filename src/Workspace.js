@@ -28,6 +28,13 @@ let Sidebar = styled.div`
   --color: white;
 `;
 
+let EllipsisOverflow = styled.div`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+`
+
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
@@ -337,8 +344,8 @@ class Workspace extends Component {
                 {Object.entries(component_map).map(([key, comp]) => (
                   <SidebarButton onClick={() => add_component({ type: key })}>
                     <span>{comp.icon}</span>
-                    <div style={{ width: 16 }} />
-                    <span>{comp.name}</span>
+                    <Whitespace width={16} />
+                    <EllipsisOverflow>{comp.name}</EllipsisOverflow>
                   </SidebarButton>
                 ))}
               </div>
@@ -354,7 +361,7 @@ class Workspace extends Component {
                     active={item.id === selected_id}
                     onClick={() => select_item(item.id)}
                   >
-                    {item.name}
+                    <EllipsisOverflow>{item.name}</EllipsisOverflow>
                   </SidebarButton>
                 ))}
               </div>
