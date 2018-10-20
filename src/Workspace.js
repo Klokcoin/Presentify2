@@ -6,6 +6,8 @@ import styled from 'styled-components';
 import uuid from 'uuid/v1';
 import md5 from 'md5';
 
+import localforage from 'localforage';
+
 import { DocumentEvent, Absolute, Whitespace, Layer } from './Elements.js';
 import Canvas from './Components/Canvas.js';
 import { Dataurl, Dimensions, Bloburl, get_image_info } from './Data/Files.js';
@@ -13,7 +15,7 @@ import { Transformation2DMatrix } from './Data/TransformationMatrix.js';
 import { CanvasItemOverlay } from './AppComponents/TransformationOverlay.js';
 import { Droptarget } from './Components/Droptarget.js';
 import { Dropoverlay } from './AppComponents/Dropoverlay.js';
-import { component_map } from './PresentifyComponents/index.js';
+import { component_map } from './PresentifyComponents/';
 
 let SidebarTitle = styled.div`
   margin-top: 16px;
@@ -51,6 +53,9 @@ export let FilesContext = React.createContext({
     throw new Error(`Need a provider for FilesContext.Consumer`);
   },
 });
+let BLOBURL = Symbol(
+  'The blob url, but only valid in the document it was created in'
+);
 export let LoadFile = ({ url, children }) => {
   let local_match = url.match(/canvas-local:\/\/(.*)/);
   if (local_match) {
@@ -58,7 +63,9 @@ export let LoadFile = ({ url, children }) => {
       <FilesContext.Consumer>
         {({ getFile }) => {
           let file = getFile(local_match[1]);
-          return children({ url: file.blobUrl });
+          // TODO Some way to unload it when it is no longer used?
+          file[BLOBURL] = file[BLOBURL] || URL.createObjectURL(file.file);
+          return children({ url: file[BLOBURL] });
         }}
       </FilesContext.Consumer>
     );
@@ -70,7 +77,6 @@ export let LoadFile = ({ url, children }) => {
 class Workspace extends Component {
   state = {
     transform: new Transformation2DMatrix(),
-    next_id: 1,
     items: [],
     canvas: {
       height: 500,
@@ -86,17 +92,43 @@ class Workspace extends Component {
     files: [],
   };
 
+  async componentDidMount() {
+    let workspace = await localforage.getItem('workspace');
+    if (workspace != null) {
+      this.setState({
+        files: workspace.files,
+        canvas: workspace.canvas,
+        items: workspace.items,
+      });
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (
+      this.state.files !== prevState.files ||
+      this.state.canvas !== prevState.canvas ||
+      this.state.items !== prevState.items
+    ) {
+      // NOTE Workspace: Includes files, a document, maybe multiple documents?
+      localforage.setItem('workspace', {
+        files: this.state.files,
+        canvas: this.state.canvas,
+        items: this.state.items,
+      });
+    }
+  }
+
   add_component = (
     { type, ...info },
     { viewportWidth = 100, viewportHeight = 100 } = {}
   ) => {
     let component_info = component_map[type];
 
-    this.setState(({ items, next_id, canvas, transform }) => {
+    this.setState(({ items, canvas, transform }) => {
       let result = transform.inverse().applyToCoords({ x: 0, y: 0 });
       let scale = transform.inverse().getScale().x;
+      let next_id = uuid();
       return {
-        next_id: next_id + 1,
         selected_id: next_id,
         items: [
           ...items,
@@ -122,25 +154,22 @@ class Workspace extends Component {
   add_file = async (file) => {
     let { files } = this.state;
 
-    let dataurl = await Dataurl.from_file(file);
-    let bloburl = await URL.createObjectURL(file);
-
     let samesize_files = files.filter((x) => x.size === file.size);
     if (samesize_files.length !== 0) {
-      let md5_hash = md5(dataurl);
+      let md5_hash = md5(await Dataurl.from_file(file));
       // Find *possibly* the matching file
-      let matching_md5 = samesize_files.find((x) => {
-        if (x.md5_hash == null) {
-          x.md5_hash = md5(x.dataurl);
+      for (let samesize of samesize_files) {
+        if (samesize.md5_hash == null) {
+          samesize.md5_hash = md5(await Dataurl.from_file(samesize.file));
         }
-        return x.md5_hash === md5_hash;
-      });
-      if (matching_md5 != null) {
-        return matching_md5;
+        if (samesize.md5_hash === md5_hash) {
+          return samesize;
+        }
       }
     }
 
-    let image_info = await get_image_info(dataurl);
+    let object_url = URL.createObjectURL(file);
+    let image_info = await get_image_info(object_url);
     let { width, height } = Dimensions.contain({
       dimensions: image_info,
       bounds: {
@@ -148,14 +177,14 @@ class Workspace extends Component {
         height: 200,
       },
     });
+    URL.revokeObjectURL(object_url);
 
     let new_file = {
       id: uuid(),
       name: file.name,
       type: file.type,
       size: file.size,
-      blobUrl: bloburl,
-      dataurl: dataurl,
+      file: file,
       image: {
         width: width,
         height: height,
