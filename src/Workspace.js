@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
-import { isEqual, debounce } from 'lodash';
+import React from 'react';
+import { isEqual } from 'lodash';
 import yaml from 'js-yaml';
 import Measure from 'react-measure';
 import styled from 'styled-components';
 import uuid from 'uuid/v1';
 import md5 from 'md5';
+import ComponentComponent from '@reach/component-component';
 
 import localforage from 'localforage';
 
@@ -33,7 +34,7 @@ let EllipsisOverflow = styled.div`
   text-overflow: ellipsis;
   white-space: nowrap;
   display: block;
-`
+`;
 
 let SidebarTitle = styled.div`
   margin-top: 16px;
@@ -48,11 +49,11 @@ let SidebarLine = styled.div`
   margin-left: 16px;
   margin-right: 16px;
   border: solid 1px var(--color, black);
-`
+`;
 
 let SidebarButton = styled.div`
   transition: background-color 0.2s;
-  background-color: ${p => p.active ? '#8e8e8e' : 'rgba(255, 255, 255, 0)'};
+  background-color: ${(p) => (p.active ? '#8e8e8e' : 'rgba(255, 255, 255, 0)')};
   cursor: pointer;
 
   display: flex;
@@ -88,12 +89,20 @@ export let LoadFile = ({ url, children }) => {
   if (local_match) {
     return (
       <FilesContext.Consumer>
-        {({ getFile }) => {
-          let file = getFile(local_match[1]);
-          // TODO Some way to unload it when it is no longer used?
-          file[BLOBURL] = file[BLOBURL] || URL.createObjectURL(file.file);
-          return children({ url: file[BLOBURL] });
-        }}
+        {({ getFile }) => (
+          <ComponentComponent
+            initialState={{}}
+            didMount={({ setState }) => {
+              let file = getFile(local_match[1]);
+              setState({ url: URL.createObjectURL(file.file) });
+            }}
+            willUnmount={({ state }) => {
+              URL.revokeObjectURL(state.url);
+            }}
+          >
+            {({ state }) => state.url ? children({ url: state.url }) : null}
+          </ComponentComponent>
+        )}
       </FilesContext.Consumer>
     );
   } else {
@@ -101,7 +110,7 @@ export let LoadFile = ({ url, children }) => {
   }
 };
 
-class Workspace extends Component {
+class Workspace extends React.Component {
   state = {
     transform: new Transformation2DMatrix(),
     items: [],

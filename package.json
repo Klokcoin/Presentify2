@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.4.1",
+    "@reach/component-component": "^0.1.1",
     "eslint": "^5.7.0",
     "js-yaml": "^3.12.0",
     "localforage": "^1.7.2",

@@ -1,4 +1,5 @@
 import React from 'react';
+import ComponentComponent from '@reach/component-component';
 
 /*
 Simple component that will not render anything.
@@ -8,14 +9,19 @@ On mount it will bind to a document event, and it will clean up on unmount
     handler={updateScrollPosition}
   />
 */
+
+/*:flow
 type T_documentevent_props = {
   handler: (e: any) => mixed,
   name: string,
   passive?: boolean,
 };
+*/
 
-export class DocumentEvent extends React.Component<T_documentevent_props> {
-  unbind: () => void;
+export class DocumentEvent extends React.Component/*:<T_documentevent_props>*/ {
+  /*:flow
+  unbind: () => void
+  */
 
   componentDidMount() {
     let fn = (e) => {
@@ -39,28 +45,6 @@ export class DocumentEvent extends React.Component<T_documentevent_props> {
   }
 }
 
-export class ComponentComponent extends React.Component {
-  componentDidMount() {
-    if (this.props.didMount) {
-      let teardown = this.props.didMount();
-      this.teardown = teardown;
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.teardown) {
-      this.teardown();
-    }
-    if (this.props.willUnmount) {
-      this.props.willUnmount();
-    }
-  }
-
-  render() {
-    return null; // Even this I could make dynamic?
-  }
-}
-
 export class Draggable extends React.Component {
   state = {
     dragging_state: null,
@@ -78,13 +62,13 @@ export class Draggable extends React.Component {
           cursor && (
             <ComponentComponent
               key={cursor} // So it re-mounts on cursor change
-              didMount={() => {
+              didMount={({ setState }) => {
                 let previous_cursor = document.body.style.cursor;
                 document.body.style.cursor = cursor;
-
-                return () => {
-                  document.body.style.cursor = previous_cursor;
-                };
+                setState({ previous_cursor });
+              }}
+              willUnmount={({ state }) => {
+                document.body.style.cursor = state.previous_cursor;
               }}
             />
           )}
