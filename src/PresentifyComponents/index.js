@@ -1,6 +1,6 @@
 import React from "react";
 import { SketchPicker } from "react-color";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 
 import { LoadFile } from "../Workspace.js";
 

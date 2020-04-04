@@ -2,7 +2,7 @@ import React from "react";
 import { isEqual } from "lodash";
 import yaml from "js-yaml";
 import Measure from "react-measure";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 import uuid from "uuid/v1";
 import md5 from "md5";
 import ComponentComponent from "@reach/component-component";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Layer } from "../Elements.js";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 
 let TextBox = styled.div`
   padding: 24px;
