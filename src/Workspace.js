@@ -251,23 +251,25 @@ class Workspace extends React.Component {
     });
   };
 
-  change_itemOrder(id, newPosition) {
+  change_itemOrder = (id, newIndex) => {
+    console.log("info");
+    console.log(id, newIndex);
     let { selected_id, items } = this.state;
     //first remove item, then move it to new position
 
-    let reOrdered_items = items.filter((x) => x.id !== selected_id);
+    let reOrdered_items = items.filter((x) => x.id !== id);
 
     reOrdered_items.splice(
-      newPosition,
+      newIndex,
       0,
-      items.find((x) => x.id === selected_id)
+      items.find((x) => x.id === id)
     );
     console.log("new:", reOrdered_items);
 
     this.setState({
       items: reOrdered_items,
     });
-  }
+  };
 
   select_item = (id) => {
     this.setState({ selected_id: id });
@@ -395,7 +397,9 @@ class Workspace extends React.Component {
               <SidebarLine />
 
               <div>
-                <button onClick={() => this.change_itemOrder(0, 0)}>/\</button>
+                <button onClick={() => this.change_itemOrder(selected_id, 1)}>
+                  /\
+                </button>
                 <button onClick={this.handle_removeItem}>remove item</button>
               </div>
 
@@ -404,6 +408,7 @@ class Workspace extends React.Component {
                 items={items}
                 selected_id={selected_id}
                 select_item={select_item}
+                change_itemOrder={this.change_itemOrder}
               >
                 {/* {items.map((item) => (
                   <SidebarButton
