@@ -17,6 +17,7 @@ import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
 import { component_map } from "./PresentifyComponents/";
+import { LayerList, LayerListItem } from "./Components/LayerList";
 
 let Sidebar = styled.div`
   width: 232px;
@@ -250,8 +251,38 @@ class Workspace extends React.Component {
     });
   };
 
+  change_itemOrder(id, newPosition) {
+    let { selected_id, items } = this.state;
+    //first remove item, then move it to new position
+
+    let reOrdered_items = items.filter((x) => x.id !== selected_id);
+
+    reOrdered_items.splice(
+      newPosition,
+      0,
+      items.find((x) => x.id === selected_id)
+    );
+    console.log("new:", reOrdered_items);
+
+    this.setState({
+      items: reOrdered_items,
+    });
+  }
+
   select_item = (id) => {
     this.setState({ selected_id: id });
+  };
+
+  handle_removeItem = () => {
+    let { selected_id, items } = this.state;
+
+    if (selected_id) {
+      console.log("going to remove:", selected_id);
+
+      this.setState({
+        items: items.filter((x) => x.id !== selected_id),
+      });
+    }
   };
 
   render() {
@@ -363,17 +394,24 @@ class Workspace extends React.Component {
               {/* Layer list */}
               <SidebarLine />
 
+              <div>
+                <button onClick={() => this.change_itemOrder(0, 0)}>/\</button>
+                <button onClick={this.handle_removeItem}>remove item</button>
+              </div>
+
               <SidebarTitle> Layer list </SidebarTitle>
-              <div style={{ overflowY: "auto" }}>
+              <LayerList>
                 {items.map((item) => (
                   <SidebarButton
                     active={item.id === selected_id}
                     onClick={() => select_item(item.id)}
                   >
-                    <EllipsisOverflow>{item.name}</EllipsisOverflow>
+                    <LayerListItem>
+                      <EllipsisOverflow>{item.name}</EllipsisOverflow>
+                    </LayerListItem>
                   </SidebarButton>
                 ))}
-              </div>
+              </LayerList>
             </Sidebar>
 
             {/* Canvas */}
