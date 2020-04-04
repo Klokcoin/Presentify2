@@ -30,7 +30,7 @@ let Sidebar = styled.div`
   --color: white;
 `;
 
-let EllipsisOverflow = styled.div`
+export let EllipsisOverflow = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -52,7 +52,7 @@ let SidebarLine = styled.div`
   border: solid 1px var(--color, black);
 `;
 
-let SidebarButton = styled.div`
+export let SidebarButton = styled.div`
   transition: background-color 0.2s;
   background-color: ${(p) => (p.active ? "#8e8e8e" : "rgba(255, 255, 255, 0)")};
   cursor: pointer;
@@ -400,8 +400,12 @@ class Workspace extends React.Component {
               </div>
 
               <SidebarTitle> Layer list </SidebarTitle>
-              <LayerList>
-                {items.map((item) => (
+              <LayerList
+                items={items}
+                selected_id={selected_id}
+                select_item={select_item}
+              >
+                {/* {items.map((item) => (
                   <SidebarButton
                     active={item.id === selected_id}
                     onClick={() => select_item(item.id)}
@@ -410,7 +414,7 @@ class Workspace extends React.Component {
                       <EllipsisOverflow>{item.name}</EllipsisOverflow>
                     </LayerListItem>
                   </SidebarButton>
-                ))}
+                ))} */}
               </LayerList>
             </Sidebar>
 
