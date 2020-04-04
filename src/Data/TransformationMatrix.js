@@ -1,4 +1,4 @@
-import { clamp } from 'lodash';
+import { clamp } from "lodash";
 
 let default3dMatrix = {
   a: 1,
@@ -129,7 +129,7 @@ export class Transformation2DMatrix {
 
     // Not an invertible matrix!
     if (determinant === 0) {
-      throw new Error('Matrix is not invertible!');
+      throw new Error("Matrix is not invertible!");
     }
 
     return new Transformation2DMatrix({

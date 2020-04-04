@@ -41,7 +41,10 @@ export let get_image_info = async (url) => {
 
 export let Dimensions = {
   contain: ({ dimensions, bounds }) => {
-    let scale = Math.max(dimensions.width / bounds.width, dimensions.height / bounds.height);
+    let scale = Math.max(
+      dimensions.width / bounds.width,
+      dimensions.height / bounds.height
+    );
     return {
       width: dimensions.width / scale,
       height: dimensions.height / scale,

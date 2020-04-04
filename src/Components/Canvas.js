@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
-import { mapValues, clamp } from 'lodash';
+import React, { Component } from "react";
+import { mapValues, clamp } from "lodash";
 
-import { IsolateCoordinatesForElement } from './IsolateCoordinatesForElement.js';
-import { Transformation2DMatrix } from '../Data/TransformationMatrix.js';
+import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement.js";
+import { Transformation2DMatrix } from "../Data/TransformationMatrix.js";
 
 const isWhole = (number) => number % 1 === 0;
 
 let ZoomContext = React.createContext({ scale: 1 });
 
 export let Unzoom = ({ children, ...props }) => {
-  if (typeof children === 'function') {
+  if (typeof children === "function") {
     return (
       <ZoomContext.Consumer
         children={({ scale }) =>
@@ -95,18 +95,22 @@ class Canvas extends Component {
         f: -initialTranslation.y,
       });
 
-      const scale = 1 - 1 / 110 * deltaY;
+      const scale = 1 - (1 / 110) * deltaY;
 
       let { top, left } = this.measureRef.getBoundingClientRect();
       // NOTE So learnt now, need to apply the initial_transform AFTER the invert... which now
       // .... I think about it.. is quite obvious from the fact that it is reversed
-      const click_inside_canvas = transform.inverse().multiply(initial_transform).applyToCoords({
-        x: clientX - left,
-        y: clientY - top,
-      });
+      const click_inside_canvas = transform
+        .inverse()
+        .multiply(initial_transform)
+        .applyToCoords({
+          x: clientX - left,
+          y: clientY - top,
+        });
 
       let current_zoom = transform.getScale().x;
-      let zoom_diff = current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
+      let zoom_diff =
+        current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
       let new_transform = transform
         .multiply(
           new Transformation2DMatrix({
@@ -176,9 +180,9 @@ class Canvas extends Component {
       <ZoomContext.Provider value={{ scale: invert.getScale().x }}>
         <div
           style={{
-            overflow: 'hidden',
-            height: '100%',
-            width: '100%',
+            overflow: "hidden",
+            height: "100%",
+            width: "100%",
           }}
           ref={(ref) => (this.measureRef = ref)}
           onWheel={this.onWheel}
@@ -198,7 +202,7 @@ class Canvas extends Component {
                 ${transform.toMatrix3D().toString()}
               `,
               transformStyle: `preserve-3d`,
-              transformOrigin: '0% 0%',
+              transformOrigin: "0% 0%",
             }}
             onMouseDown={(e) => {
               // Only trigger onBackgroundClick if the click is **only** on the canvas,
@@ -219,11 +223,11 @@ class Canvas extends Component {
             {/* A gray shape to show the bounds, also just for reference */}
             <div
               style={{
-                pointerEvents: 'none',
-                position: 'absolute',
+                pointerEvents: "none",
+                position: "absolute",
                 top: 0,
                 left: 0,
-                border: 'solid 1px white',
+                border: "solid 1px white",
                 borderRadius: 5,
                 transform: `translateX(-50%) translateY(-50%)`,
                 width: this.props.maxTranslation.x * 2,

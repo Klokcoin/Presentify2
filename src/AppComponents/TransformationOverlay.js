@@ -3,10 +3,10 @@
 
 // For now, I have the CanvasItemOverlay here
 
-import React, { Component } from 'react';
-import { Draggable, DraggingCircle, Absolute } from '../Elements';
-import { Unzoom } from '../Components/Canvas';
-import { memoize } from 'lodash';
+import React, { Component } from "react";
+import { Draggable, DraggingCircle, Absolute } from "../Elements";
+import { Unzoom } from "../Components/Canvas";
+import { memoize } from "lodash";
 
 let vector = {
   rotate: ([x, y], rotation) => {
@@ -35,20 +35,20 @@ let get_cursor_direction = (angle, pos) => {
     Math.round(vector.to_rotation(vector.rotate(pos, angle)) / Math.PI / 0.25) +
     4;
   return [
-    'ew-resize',
-    'nwse-resize',
-    'ns-resize',
-    'nesw-resize',
-    'ew-resize',
-    'nwse-resize',
-    'ns-resize',
-    'nesw-resize',
-    'ew-resize',
+    "ew-resize",
+    "nwse-resize",
+    "ns-resize",
+    "nesw-resize",
+    "ew-resize",
+    "nwse-resize",
+    "ns-resize",
+    "nesw-resize",
+    "ew-resize",
   ][new_angle];
 };
 
 // HD moving cursors for real pros
-let unwhitespaceify = (str) => str.replace(/( |\n)+/g, ' ').trim();
+let unwhitespaceify = (str) => str.replace(/( |\n)+/g, " ").trim();
 
 let CURSORS = {
   resize: ({ angle, size }) => {
@@ -106,35 +106,30 @@ let render_css_url = (text, mime_type) => {
   return `url(${url})`;
 };
 
-let _render_cursor = ({
-  type = 'resize',
-  size = 24,
-  angle,
-  backup
-}) => {
+let _render_cursor = ({ type = "resize", size = 24, angle, backup }) => {
   if (CURSORS[type] == null) {
     throw new Error(`Trying to render unknown cursor '${type}'`);
   }
 
-  if (navigator.userAgent.includes('Chrome')) {
+  if (navigator.userAgent.includes("Chrome")) {
     let hires_svg = CURSORS[type]({ angle, size: size * 2 });
-    let hires = render_css_url(unwhitespaceify(hires_svg), 'image/svg+xml');
+    let hires = render_css_url(unwhitespaceify(hires_svg), "image/svg+xml");
     // let hires = rotation_cursor_uri({ angle, size: size * 2 });
 
     return unwhitespaceify(`
       -webkit-image-set(
         ${hires} 2x
       ) ${size / 2} ${size / 2},
-      ${backup || 'pointer'}
+      ${backup || "pointer"}
     `);
   } else {
     console.log(`backup:`, backup);
-    console.log(`window.devicePixelRatio:`, window.devicePixelRatio)
+    console.log(`window.devicePixelRatio:`, window.devicePixelRatio);
     // Use lowres only when the device is lowres, or there is no backup (eg. rotate)
     if (backup == null || window.devicePixelRatio < 2) {
       let lowres_svg = CURSORS[type]({ angle, size: size });
-      let lowres = render_css_url(unwhitespaceify(lowres_svg), 'image/svg+xml');
-      return `${lowres} ${size / 2} ${size / 2}, ${backup || 'pointer'}`
+      let lowres = render_css_url(unwhitespaceify(lowres_svg), "image/svg+xml");
+      return `${lowres} ${size / 2} ${size / 2}, ${backup || "pointer"}`;
     } else {
       return backup;
     }
@@ -143,7 +138,7 @@ let _render_cursor = ({
 let render_cursor = memoize(_render_cursor, (obj) => {
   return JSON.stringify({
     ...obj,
-    angle: Math.round(obj.angle / (2 * Math.PI) * 32) / 32,
+    angle: Math.round((obj.angle / (2 * Math.PI)) * 32) / 32,
   });
 });
 
@@ -237,19 +232,19 @@ export class CanvasItemOverlay extends Component {
           onSelect();
         }}
         style={{
-          cursor: movement_state ? 'grabbing' : undefined,
+          cursor: movement_state ? "grabbing" : undefined,
           height: current_item.height,
           width: current_item.width,
-          transformOrigin: 'center',
+          transformOrigin: "center",
           transform: `
             translateX(-50%)
             translateY(-50%)
             rotate(${current_item.rotation}rad)
             translateZ(${item.z || 0}px)
           `,
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          MozUserSelect: 'none',
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          MozUserSelect: "none",
         }}
       >
         <div>{children}</div>
@@ -258,12 +253,12 @@ export class CanvasItemOverlay extends Component {
             <React.Fragment>
               <div
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   top: Math.min(-8, current_item.height - 24) * scale,
                   left: Math.min(-8, current_item.width - 24) * scale,
                   right: Math.min(-8, current_item.width - 24) * scale,
                   bottom: Math.min(-8, current_item.height - 24) * scale,
-                  display: 'grid',
+                  display: "grid",
                   // TODO Scale these 16px's with the zoom, to keep them big when everything gets small?
                   gridTemplate: act_like_selected
                     ? `
@@ -278,7 +273,7 @@ export class CanvasItemOverlay extends Component {
                   `,
                   border: act_like_selected
                     ? `${1 * scale}px dashed white`
-                    : 'none',
+                    : "none",
                 }}
               >
                 <Draggable
@@ -296,45 +291,45 @@ export class CanvasItemOverlay extends Component {
                     });
                   }}
                   cursor="grabbing"
-                  style={{ gridArea: '🧠' }}
+                  style={{ gridArea: "🧠" }}
                 />
 
                 {[
                   {
-                    name: '↖',
+                    name: "↖",
                     direction: [-1, -1],
                   },
                   {
-                    name: '↑',
+                    name: "↑",
                     direction: [0, -1],
                   },
                   {
-                    name: '↗',
+                    name: "↗",
                     direction: [1, -1],
                   },
                   {
-                    name: '→',
+                    name: "→",
                     direction: [1, 0],
                   },
                   {
-                    name: '↘',
+                    name: "↘",
                     direction: [1, 1],
                   },
                   {
-                    name: '↓',
+                    name: "↓",
                     direction: [0, 1],
                   },
                   {
-                    name: '↙',
+                    name: "↙",
                     direction: [-1, 1],
                   },
                   {
-                    name: '←',
+                    name: "←",
                     direction: [-1, 0],
                   },
                 ].map(({ direction, name, cursor }) => (
                   <Draggable
-                    key={direction.join(',')}
+                    key={direction.join(",")}
                     style={{
                       gridArea: name,
                     }}
@@ -374,7 +369,7 @@ export class CanvasItemOverlay extends Component {
               {act_like_selected && (
                 <Draggable
                   cursor={render_cursor({
-                    type: 'rotate',
+                    type: "rotate",
                     angle: current_item.rotation,
                   })}
                   onMove={(movement_state) => {
@@ -387,7 +382,7 @@ export class CanvasItemOverlay extends Component {
                       item.rotation
                     );
 
-                    let straight_angle = 1 / 2 * Math.PI;
+                    let straight_angle = (1 / 2) * Math.PI;
                     this.setState({
                       movement_state: {
                         rotation:
@@ -410,7 +405,7 @@ export class CanvasItemOverlay extends Component {
                       item.rotation
                     );
 
-                    let straight_angle = 1 / 2 * Math.PI;
+                    let straight_angle = (1 / 2) * Math.PI;
                     onChange({
                       rotation:
                         vector.to_rotation(

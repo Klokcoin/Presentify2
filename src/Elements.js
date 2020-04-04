@@ -1,5 +1,5 @@
-import React from 'react';
-import ComponentComponent from '@reach/component-component';
+import React from "react";
+import ComponentComponent from "@reach/component-component";
 
 /*
 Simple component that will not render anything.
@@ -18,7 +18,7 @@ type T_documentevent_props = {
 };
 */
 
-export class DocumentEvent extends React.Component/*:<T_documentevent_props>*/ {
+export class DocumentEvent extends React.Component /*:<T_documentevent_props>*/ {
   /*:flow
   unbind: () => void
   */
@@ -58,20 +58,19 @@ export class Draggable extends React.Component {
 
     return (
       <React.Fragment>
-        {dragging_state &&
-          cursor && (
-            <ComponentComponent
-              key={cursor} // So it re-mounts on cursor change
-              didMount={({ setState }) => {
-                let previous_cursor = document.body.style.cursor;
-                document.body.style.cursor = cursor;
-                setState({ previous_cursor });
-              }}
-              willUnmount={({ state }) => {
-                document.body.style.cursor = state.previous_cursor;
-              }}
-            />
-          )}
+        {dragging_state && cursor && (
+          <ComponentComponent
+            key={cursor} // So it re-mounts on cursor change
+            didMount={({ setState }) => {
+              let previous_cursor = document.body.style.cursor;
+              document.body.style.cursor = cursor;
+              setState({ previous_cursor });
+            }}
+            willUnmount={({ state }) => {
+              document.body.style.cursor = state.previous_cursor;
+            }}
+          />
+        )}
         <div
           style={{
             cursor: cursor,
@@ -152,7 +151,7 @@ export let Absolute = ({
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         left,
         right,
         top,
@@ -177,10 +176,10 @@ export let DraggingCircle = ({ style }) => {
         style={{
           margin: -4,
           border: `solid 1px black`,
-          backgroundColor: 'white',
+          backgroundColor: "white",
           height: 8,
           width: 8,
-          borderRadius: '50%',
+          borderRadius: "50%",
           ...style,
         }}
       />

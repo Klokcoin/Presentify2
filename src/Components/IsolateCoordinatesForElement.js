@@ -1,5 +1,5 @@
-import React from 'react';
-import { DocumentEvent } from '../Elements.js'
+import React from "react";
+import { DocumentEvent } from "../Elements.js";
 
 // NOTE This is hacky as fuuuuuck
 // .... But still, I really like it.
@@ -12,7 +12,6 @@ import { DocumentEvent } from '../Elements.js'
 // .... 2. I had the idea I had a whole list but I don't but there sure are potential problems,
 // ....    so just add them as you find them (or fix them, HOW ABOUT THAT E)
 
-
 let fixup_react_event = (mapCoords, e) => {
   // TODO Cache this, and maybe only call it if pageX and pageY are actuall requested?
   let page = mapCoords({
@@ -22,22 +21,22 @@ let fixup_react_event = (mapCoords, e) => {
   let type = e.type;
 
   // TODO More than just pageX and pageY
-  Object.defineProperty(e, 'pageX', {
+  Object.defineProperty(e, "pageX", {
     get: () => {
       return page.x;
     },
   });
-  Object.defineProperty(e, 'pageY', {
+  Object.defineProperty(e, "pageY", {
     get: () => page.y,
   });
 
   if (e.nativeEvent) {
-    Object.defineProperty(e.nativeEvent, 'pageX', {
+    Object.defineProperty(e.nativeEvent, "pageX", {
       get: () => {
         return page.x;
       },
     });
-    Object.defineProperty(e.nativeEvent, 'pageY', {
+    Object.defineProperty(e.nativeEvent, "pageY", {
       get: () => page.y,
     });
   }
@@ -50,7 +49,7 @@ export class IsolateCoordinatesForElement extends React.Component {
     let { element, mapCoords } = this.props;
     let path = (event) => {
       return event.path || (event.composedPath && event.composedPath());
-    }
+    };
     return (
       <React.Fragment>
         <DocumentEvent
