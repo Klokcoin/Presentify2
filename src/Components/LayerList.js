@@ -5,8 +5,8 @@ import { SidebarButton, EllipsisOverflow } from "../Workspace";
 
 let List = styled.div`
   overflow-y: auto;
-  // display: flex;
-  // flex-direction: column-reverse;
+  display: flex;
+  flex-direction: column-reverse;
 `;
 
 let Container = styled.div`
@@ -33,14 +33,19 @@ let DragContainer = styled.div`
 
   pointer-events: none; // this messes with dragging
 `;
-
+const HITBOX_HEIGHT = 25;
+const HITBOX_PADDING = 10;
 let DetectAbove = styled.div`
   z-index: 99;
   position: absolute;
-  top: -10px;
-  height: 20px;
+  height: ${2 * HITBOX_PADDING}px;
+  top: ${-HITBOX_PADDING}px;
   width: 100%;
-  background: rgba(255, 0, 0, 0.5);
+  background: rgba(255, 0, 0, 0.1);
+
+  :hover {
+    height: ${2 * HITBOX_PADDING + HITBOX_HEIGHT}px;
+  }
 `;
 let DetectBelow = styled.div`
   z-index: 99;
@@ -51,12 +56,61 @@ let DetectBelow = styled.div`
   background: lightblue;
 `;
 
-let InsertArea = styled.hr`
-  border-top: 4px dashed red;
+// let InsertArea = styled.hr`
+//   border-top: 4px dashed red;
+//   width: 100%;
+//   padding: 10px;
+//   box-sizing: border-box;
+// `;
+
+let HitboxContainer = styled.div`
   width: 100%;
-  padding: 10px;
-  box-sizing: border-box;
+  height: ${(props) => (props.expand ? HITBOX_HEIGHT + "px" : "0px")};
+  position: relative;
+  background: coral;
+  transition: height 0.15s;
+  transition-timing-function: ease;
 `;
+
+function InsertArea(props) {
+  let { set_insertIndex, draggedItemIndex, listItemIndex } = props;
+  let [expand, set_expand] = useState(false);
+
+  function isHoveringItself() {
+    if (draggedItemIndex === listItemIndex) return true;
+    if (draggedItemIndex === listItemIndex + 1) return true;
+    return false;
+  }
+
+  let handleMouseOver = () => {
+    if (isHoveringItself()) {
+      set_insertIndex(null);
+      set_expand(false);
+    } else {
+      set_expand(true);
+      if (draggedItemIndex > listItemIndex) {
+        set_insertIndex(listItemIndex + 1);
+      } else {
+        set_insertIndex(listItemIndex);
+      }
+    }
+  };
+
+  // hitbox checks if a item needs to inserted ABOVE
+  //
+  //  ############# <- hitbox
+  //  | list item |
+  //  =============
+
+  return (
+    <HitboxContainer expand={expand}>
+      <DetectAbove
+        onMouseEnter={handleMouseOver}
+        onMouseLeave={() => set_expand(false)}
+      ></DetectAbove>
+    </HitboxContainer>
+  );
+}
 
 export function LayerList(props) {
   let { items, selected_id, select_item, change_itemOrder } = props;
@@ -64,35 +118,32 @@ export function LayerList(props) {
   let [isBeingDragged, set_isBeingDragged] = useState(false);
   let [mouseY, set_mouseY] = useState(0);
   let [insertIndex, set_insertIndex] = useState(null);
-  // let overlayRef = useRef(null);
-
-  // useEffect(() => {
-  //   if (!isBeingDragged) {
-  //     change_itemOrder(isBeingDragged.id, insertIndex);
-  //     set_insertIndex(null);
-  //   }
-  // }, [isBeingDragged]);
-
-  // let handleMouseMove = (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   let newOffset = e.pageY - overlayRef.current.getBoundingClientRect().top;
-  //   set_yOffset(newOffset);
-  // };
 
   function handle_dragEnd(id, currentIndex) {
-    // console.log("DRAG_END", isBeingDragged.id);
-    if (currentIndex !== insertIndex) change_itemOrder(id, insertIndex);
-    set_insertIndex(null);
+    console.log("DRAG_END", isBeingDragged.id, "newIndex", insertIndex);
+    if (insertIndex !== null) change_itemOrder(id, insertIndex);
     set_isBeingDragged(false);
+    set_insertIndex(null);
   }
+
+  // Listitem handles dragStart, dragEnd
+  // Insert area sets newIndex
 
   return (
     <Container>
       <List>
+        {isBeingDragged && (
+          <InsertArea
+            listItemIndex={-1}
+            draggedItemIndex={isBeingDragged.index}
+            set_insertIndex={set_insertIndex}
+          />
+        )}
+
+        {/* THE ITEMS */}
         {items.map((item, i) => (
           <>
-            {insertIndex === i && <InsertArea />}
+            {/* {insertIndex === i && <InsertArea />} */}
 
             <ListItem
               id={item.id}
@@ -108,7 +159,7 @@ export function LayerList(props) {
               </SidebarButton>
 
               {/* create hitboxes when another item is being dragged */}
-              {isBeingDragged && (
+              {/* {isBeingDragged && (
                 <DetectAbove
                   onMouseEnter={() => {
                     console.log("drag:", isBeingDragged.index, "current", i);
@@ -120,11 +171,18 @@ export function LayerList(props) {
                     else set_insertIndex(null);
                   }}
                 />
-              )}
+              )} */}
             </ListItem>
+            {isBeingDragged && (
+              <InsertArea
+                listItemIndex={i}
+                draggedItemIndex={isBeingDragged.index}
+                set_insertIndex={set_insertIndex}
+              />
+            )}
           </>
         ))}
-        <DetectBelow
+        {/* <DetectBelow
           onMouseEnter={() => {
             let i = items.length - 1;
             console.log("drag:", isBeingDragged.index, "current", i);
@@ -136,7 +194,7 @@ export function LayerList(props) {
           <>
             <InsertArea />
           </>
-        )}
+        )} */}
       </List>
 
       {isBeingDragged && (

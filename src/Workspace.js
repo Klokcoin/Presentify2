@@ -254,6 +254,8 @@ class Workspace extends React.Component {
   change_itemOrder = (id, newIndex) => {
     let { items } = this.state;
 
+    console.log("newIndex", newIndex);
+
     //first remove item, then move it to new position
     let reOrdered_items = items.filter((x) => x.id !== id);
 
@@ -262,7 +264,7 @@ class Workspace extends React.Component {
       0,
       items.find((x) => x.id === id)
     );
-    console.log("new:", reOrdered_items);
+    // console.log("new:", reOrdered_items);
 
     this.setState({
       items: reOrdered_items,
