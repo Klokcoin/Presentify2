@@ -5,7 +5,7 @@ import JSON5 from "json5";
 
 export let JSON_parse_safe = (json) => {
   try {
-    return [null, JSON5.parse(json)];
+    return [null, JSON5.parse(`{${json}}`)];
   } catch (err) {
     console.log(`err:`, err);
     return [err, null];
