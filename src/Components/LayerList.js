@@ -5,8 +5,8 @@ import { SidebarButton, EllipsisOverflow } from "../Workspace";
 
 let List = styled.div`
   overflow-y: auto;
-  display: flex;
-  flex-direction: column-reverse;
+  // display: flex;
+  // flex-direction: column-reverse;
 `;
 
 let Container = styled.div`
@@ -37,10 +37,10 @@ let DragContainer = styled.div`
 let DetectAbove = styled.div`
   z-index: 99;
   position: absolute;
-  top: 0;
-  height: 10px;
+  top: -10px;
+  height: 20px;
   width: 100%;
-  // background: tomato;
+  background: rgba(255, 0, 0, 0.5);
 `;
 let DetectBelow = styled.div`
   z-index: 99;
@@ -48,13 +48,13 @@ let DetectBelow = styled.div`
   bottom: 0;
   height: 10px;
   width: 100%;
-  // background: lightblue;
+  background: lightblue;
 `;
 
 let InsertArea = styled.hr`
   border-top: 4px dashed red;
   width: 100%;
-  padding: 1rem;
+  padding: 10px;
   box-sizing: border-box;
 `;
 
@@ -107,40 +107,36 @@ export function LayerList(props) {
                 <EllipsisOverflow>{item.name}</EllipsisOverflow>
               </SidebarButton>
 
-              {/* {i === items.length - 1 && insertIndex >= items.length && (
-                <>
-                  <InsertArea />
-                </>
-              )} */}
-
               {/* create hitboxes when another item is being dragged */}
               {isBeingDragged && (
-                <>
-                  <DetectAbove
-                    onMouseEnter={() => {
-                      console.log(
-                        "drag:",
-                        isBeingDragged.index,
-                        "current",
-                        i + 1
-                      );
-                      if (i + 1 !== isBeingDragged.index)
-                        set_insertIndex(i + 1);
-                      else set_insertIndex(null);
-                    }}
-                  />
-                  <DetectBelow
-                    onMouseEnter={() => {
-                      console.log("drag:", isBeingDragged.index, "current", i);
-                      if (i - 1 !== isBeingDragged.index) set_insertIndex(i);
-                      else set_insertIndex(null);
-                    }}
-                  />
-                </>
+                <DetectAbove
+                  onMouseEnter={() => {
+                    console.log("drag:", isBeingDragged.index, "current", i);
+
+                    if (isBeingDragged.index < i) {
+                      if (isBeingDragged.index + 1 === i) set_insertIndex(null);
+                      else set_insertIndex(i - 1);
+                    } else if (isBeingDragged.index > i) set_insertIndex(i);
+                    else set_insertIndex(null);
+                  }}
+                />
               )}
             </ListItem>
           </>
         ))}
+        <DetectBelow
+          onMouseEnter={() => {
+            let i = items.length - 1;
+            console.log("drag:", isBeingDragged.index, "current", i);
+            if (i !== isBeingDragged.index) set_insertIndex(i + 1);
+            else set_insertIndex(null);
+          }}
+        />
+        {isBeingDragged && insertIndex >= items.length && (
+          <>
+            <InsertArea />
+          </>
+        )}
       </List>
 
       {isBeingDragged && (
@@ -178,6 +174,8 @@ let LayerListItemContainer = styled.div`
   height: 100%;
   border: ${(props) => (props.mouseDown ? "solid 1px green" : "")};
   user-select: none; // because this messes with dragging
+  border-top: 1px solid green;
+  border-bottom: 1px solid green;
 `;
 
 export function ListItem(props) {

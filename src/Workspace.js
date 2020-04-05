@@ -252,11 +252,9 @@ class Workspace extends React.Component {
   };
 
   change_itemOrder = (id, newIndex) => {
-    console.log("info");
-    console.log(id, newIndex);
-    let { selected_id, items } = this.state;
-    //first remove item, then move it to new position
+    let { items } = this.state;
 
+    //first remove item, then move it to new position
     let reOrdered_items = items.filter((x) => x.id !== id);
 
     reOrdered_items.splice(
