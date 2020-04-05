@@ -11,7 +11,10 @@ import { YamlViewer } from "./AppComponents/YamlViewer.js";
 import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
 import { Dataurl, Dimensions, get_image_info } from "./Data/Files.js";
-import { Transformation2DMatrix } from "./Data/TransformationMatrix.js";
+import {
+  Transformation2DMatrix,
+  Transformation2DMatrixFromString,
+} from "./Data/TransformationMatrix.js";
 import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
@@ -112,6 +115,18 @@ let Workspace = () => {
     transform: new Transformation2DMatrix(),
   });
 
+  // The order of these matters! If the sheet is retrieved before the transform, items are rendered once with the
+  // default transform, before updating to the retrieved transform -> which we don't want
+  React.useEffect(() => {
+    localforage.getItem("transform").then((transform) => {
+      if (transform != null) {
+        set_sheet_view({
+          transform: Transformation2DMatrixFromString(transform),
+        });
+      }
+    });
+  }, []);
+
   // Load initial sheet from localstorage
   React.useEffect(() => {
     localforage.getItem("sheet").then((stored_sheet) => {
@@ -127,6 +142,13 @@ let Workspace = () => {
       localforage.setItem("sheet", sheet);
     }
   }, [sheet]);
+
+  React.useEffect(() => {
+    if (sheet_view.transform != null) {
+      // Store the TransformationMatrix as a string
+      localforage.setItem("transform", sheet_view.transform.toString());
+    }
+  }, [sheet_view.transform]);
 
   let add_component = (
     { type, ...info },
