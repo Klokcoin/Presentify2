@@ -232,6 +232,7 @@ let Workspace = () => {
   };
 
   let change_item = (id, change) => {
+    console.log("change", id, change);
     set_sheet(
       immer((sheet) => {
         let index = sheet.items.findIndex((x) => x.id === id);
@@ -385,6 +386,7 @@ let Workspace = () => {
                 selected_id={sheet_view.selected_id}
                 select_item={select_item}
                 change_itemOrder={change_itemOrder}
+                change_item={change_item}
               />
             </div>
           </Sidebar>

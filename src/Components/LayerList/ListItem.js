@@ -30,9 +30,10 @@ export function ListItem(props) {
     index,
     active,
     select_item,
+    change_itemName,
   } = props;
 
-  let [input, set_input] = useState("");
+  let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
   let inputRef = useRef(null);
 
@@ -58,9 +59,20 @@ export function ListItem(props) {
     if (!disabled) inputRef.current.focus();
   }, [disabled]);
 
+  let handleBlur = () => {
+    set_disabled(true);
+    change_itemName(id, input);
+  };
+
   let handleDoubleClick = () => {
     console.log("doudlbe");
     set_disabled(false);
+  };
+
+  let handleEnterPress = (e) => {
+    if (e.keyCode === 13) {
+      inputRef.current.blur();
+    }
   };
 
   return (
@@ -68,11 +80,13 @@ export function ListItem(props) {
       <SidebarButton active={active} onClick={select_item}>
         <div onDoubleClick={handleDoubleClick}>
           <EditableName
-            value={name}
+            value={input}
             disabled={disabled}
             onClick={(e) => e.preventDefault()}
             ref={inputRef}
-            onBlur={() => set_disabled(true)}
+            onBlur={handleBlur}
+            onChange={(e) => set_input(e.target.value)}
+            onKeyUp={handleEnterPress}
           />
         </div>
       </SidebarButton>

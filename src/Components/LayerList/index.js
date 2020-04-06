@@ -111,7 +111,13 @@ function InsertArea(props) {
 }
 
 export function LayerList(props) {
-  let { items, selected_id, select_item, change_itemOrder } = props;
+  let {
+    items,
+    selected_id,
+    select_item,
+    change_itemOrder,
+    change_item,
+  } = props;
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
   let [mouse, set_mouse] = useState(0);
@@ -123,6 +129,10 @@ export function LayerList(props) {
     set_isBeingDragged(false);
     set_insertIndex(null);
   }
+
+  let change_itemName = (id, newName) => {
+    change_item(id, { name: newName });
+  };
 
   // Listitem handles dragStart, dragEnd
   // Insert area sets newIndex
@@ -153,6 +163,7 @@ export function LayerList(props) {
               active={item.id === selected_id}
               select_item={() => select_item(item.id)}
               name={item.name}
+              change_itemName={change_itemName}
             >
               {/* <SidebarButton
                 active={item.id === selected_id}
