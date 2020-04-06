@@ -9,22 +9,11 @@ const isWhole = number => number % 1 === 0;
 let ZoomContext = React.createContext({ scale: 1 });
 
 export let Unzoom = ({ children, ...props }) => {
+  let { scale } = React.useContext(ZoomContext);
   if (typeof children === "function") {
-    return (
-      <ZoomContext.Consumer
-        children={({ scale }) =>
-          children({ scale, ...mapValues(props, x => scale * x) })
-        }
-      />
-    );
+    return children({ scale, ...mapValues(props, x => scale * x) });
   } else {
-    return (
-      <ZoomContext.Consumer>
-        {({ scale }) => (
-          <div style={{ transform: `scale(${scale})` }} children={children} />
-        )}
-      </ZoomContext.Consumer>
-    );
+    return <div style={{ transform: `scale(${scale})` }} children={children} />;
   }
 };
 
@@ -133,6 +122,7 @@ let Canvas = ({
 
   let invert = initial_transform.multiply(transform.inverse());
 
+  // This is necessary for the onWheel={() => {}} event, because we can
   React.useEffect(() => {
     if (measureRef.current == null) {
       return;

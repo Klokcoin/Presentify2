@@ -1,30 +1,41 @@
 import { clamp } from "lodash";
 
-let default3dMatrix = {
-  a: 1,
-  b: 0,
-  c: 0,
-  d: 0,
-  e: 0,
-  f: 1,
-  g: 0,
-  h: 0,
-  i: 0,
-  j: 0,
-  k: 1,
-  l: 0,
-  m: 0,
-  n: 0,
-  o: 0,
-  p: 1,
-};
-
+// Do we even need 3d matrices?
 export class Transformation3DMatrix {
-  constructor(raw) {
-    this.raw = {
-      ...default3dMatrix,
-      ...raw,
-    };
+  constructor({
+    a = 1,
+    b = 0,
+    c = 0,
+    d = 0,
+    e = 0,
+    f = 1,
+    g = 0,
+    h = 0,
+    i = 0,
+    j = 0,
+    k = 1,
+    l = 0,
+    m = 0,
+    n = 0,
+    o = 0,
+    p = 1,
+  }) {
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.d = d;
+    this.e = e;
+    this.f = f;
+    this.g = g;
+    this.h = h;
+    this.i = i;
+    this.j = j;
+    this.k = k;
+    this.l = l;
+    this.m = m;
+    this.n = n;
+    this.o = o;
+    this.p = p;
   }
 
   // multiply = (otherMatrix) => {
@@ -37,7 +48,7 @@ export class Transformation3DMatrix {
   // }
 
   to2DMatrix() {
-    let { a, b, e, f, m, n } = this.raw;
+    let { a, b, e, f, m, n } = this;
     return new Transformation2DMatrix({
       a: a,
       b: b,
@@ -49,7 +60,7 @@ export class Transformation3DMatrix {
   }
 
   toString = () => {
-    const { a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p } = this.raw;
+    const { a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p } = this;
     return `matrix3d(
       ${a}, ${b}, ${c}, ${d},
       ${e}, ${f}, ${g}, ${h},
@@ -60,7 +71,7 @@ export class Transformation3DMatrix {
 }
 
 /*
-  Matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
+  2D matrix as defined onhttps://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/transform
   [a c e]
   |b d f|
   [0 0 1]
@@ -199,3 +210,40 @@ export class Transformation2DMatrix {
     );
   };
 }
+
+export const Transformation2DMatrixFromString = (string) => {
+  const [a, b, c, d, e, f] = string
+    .replace("matrix(", "")
+    .replace(")", "")
+    .replace(" ", "")
+    .split(",")
+    .map(parseFloat);
+  return new Transformation2DMatrix({ a, b, c, d, e, f });
+};
+
+export const Transformation3DMatrixFromString = (string) => {
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = string
+    .replace("matrix3d(", "")
+    .replace(")", "")
+    .replace(" ", "")
+    .split(",")
+    .map(parseFloat);
+  return new Transformation3DMatrix({
+    a,
+    b,
+    c,
+    d,
+    e,
+    f,
+    g,
+    h,
+    i,
+    j,
+    k,
+    l,
+    m,
+    n,
+    o,
+    p,
+  });
+};
