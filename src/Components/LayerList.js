@@ -4,13 +4,18 @@ import { useGesture, useDrag } from "react-use-gesture";
 import { SidebarButton, EllipsisOverflow } from "../Workspace";
 
 let List = styled.div`
-  overflow-y: auto;
+  // overflow-y: auto;
+  overflow-x: none;
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
+  width: 100%;
 `;
 
 let Container = styled.div`
   position: relative;
+  height: 100%;
+  display: flex;
 `;
 
 let DragOverlay = styled.div`
@@ -41,27 +46,12 @@ let DetectAbove = styled.div`
   height: ${2 * HITBOX_PADDING}px;
   top: ${-HITBOX_PADDING}px;
   width: 100%;
-  background: rgba(255, 0, 0, 0.1);
+  // background: rgba(255, 0, 0, 0.1);
 
   :hover {
     height: ${2 * HITBOX_PADDING + HITBOX_HEIGHT}px;
   }
 `;
-let DetectBelow = styled.div`
-  z-index: 99;
-  position: absolute;
-  bottom: 0;
-  height: 10px;
-  width: 100%;
-  background: lightblue;
-`;
-
-// let InsertArea = styled.hr`
-//   border-top: 4px dashed red;
-//   width: 100%;
-//   padding: 10px;
-//   box-sizing: border-box;
-// `;
 
 let HitboxContainer = styled.div`
   width: 100%;
@@ -73,7 +63,7 @@ let HitboxContainer = styled.div`
 `;
 
 function InsertArea(props) {
-  let { set_insertIndex, draggedItemIndex, listItemIndex } = props;
+  let { set_insertIndex, draggedItemIndex, listItemIndex, set_mouseY } = props;
   let [expand, set_expand] = useState(false);
 
   function isHoveringItself() {
@@ -107,6 +97,7 @@ function InsertArea(props) {
       <DetectAbove
         onMouseEnter={handleMouseOver}
         onMouseLeave={() => set_expand(false)}
+        onMouseMove={(e) => set_mouseY(e.clientY)} // fix this later....
       ></DetectAbove>
     </HitboxContainer>
   );
@@ -137,6 +128,8 @@ export function LayerList(props) {
             listItemIndex={-1}
             draggedItemIndex={isBeingDragged.index}
             set_insertIndex={set_insertIndex}
+            id="bottomLayerInsert"
+            set_mouseY={set_mouseY}
           />
         )}
 
@@ -157,44 +150,17 @@ export function LayerList(props) {
               >
                 <EllipsisOverflow>{item.name}</EllipsisOverflow>
               </SidebarButton>
-
-              {/* create hitboxes when another item is being dragged */}
-              {/* {isBeingDragged && (
-                <DetectAbove
-                  onMouseEnter={() => {
-                    console.log("drag:", isBeingDragged.index, "current", i);
-
-                    if (isBeingDragged.index < i) {
-                      if (isBeingDragged.index + 1 === i) set_insertIndex(null);
-                      else set_insertIndex(i - 1);
-                    } else if (isBeingDragged.index > i) set_insertIndex(i);
-                    else set_insertIndex(null);
-                  }}
-                />
-              )} */}
             </ListItem>
             {isBeingDragged && (
               <InsertArea
                 listItemIndex={i}
                 draggedItemIndex={isBeingDragged.index}
                 set_insertIndex={set_insertIndex}
+                set_mouseY={set_mouseY}
               />
             )}
           </>
         ))}
-        {/* <DetectBelow
-          onMouseEnter={() => {
-            let i = items.length - 1;
-            console.log("drag:", isBeingDragged.index, "current", i);
-            if (i !== isBeingDragged.index) set_insertIndex(i + 1);
-            else set_insertIndex(null);
-          }}
-        />
-        {isBeingDragged && insertIndex >= items.length && (
-          <>
-            <InsertArea />
-          </>
-        )} */}
       </List>
 
       {isBeingDragged && (
@@ -203,8 +169,6 @@ export function LayerList(props) {
           onMouseUp={() => set_isBeingDragged(false)}
           onMouseMove={(e) => set_mouseY(e.clientY)}
         >
-          y:{isBeingDragged.y}
-          id:{isBeingDragged.index}
           <DragContainer y={mouseY}>
             {items.map((item) => {
               if (item.id === isBeingDragged.id) {
@@ -229,50 +193,30 @@ export function LayerList(props) {
 let LayerListItemContainer = styled.div`
   position: relative;
   width: 100%;
-  height: 100%;
-  border: ${(props) => (props.mouseDown ? "solid 1px green" : "")};
+  // height: 100%;
   user-select: none; // because this messes with dragging
-  border-top: 1px solid green;
-  border-bottom: 1px solid green;
 `;
 
 export function ListItem(props) {
   let { set_isBeingDragged, id, children, handle_dragEnd, index } = props;
-  let [mouseDown, set_mouseDown] = useState(false);
-  // const bind = useDrag(({ down, offset: [x, y] }) =>
-  //   set_isBeingDragged({ id, x, y })
-  // );
 
   const bind = useGesture(
     {
       onDrag: ({ down, movement: [x, y] }) => {
-        if (down) {
-          set_isBeingDragged({ id, index, x, y });
-          set_mouseDown(true);
-        }
+        if (down) set_isBeingDragged({ id, index, x, y });
       },
-      onDragEnd: () => {
-        // console.log("DRAG_END1", id);
-        handle_dragEnd(id, index);
-        set_mouseDown(false);
-      },
-      // onDragStart: state => doSomethingWith(state),
+      onDragEnd: () => handle_dragEnd(id, index),
     },
     {
       drag: {
+        filterTaps: true,
         axis: "y",
-        swipeDistance: [10, 10],
+        // swipeDistance: [10, 10],
       },
     }
   );
 
   return (
-    <LayerListItemContainer
-      // mouseDown={mouseDown}
-      {...bind()}
-      // onMouseUp={() => set_isBeingDragged(null)}
-    >
-      {children}
-    </LayerListItemContainer>
+    <LayerListItemContainer {...bind()}>{children}</LayerListItemContainer>
   );
 }

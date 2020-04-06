@@ -275,17 +275,17 @@ class Workspace extends React.Component {
     this.setState({ selected_id: id });
   };
 
-  handle_removeItem = () => {
-    let { selected_id, items } = this.state;
+  // handle_removeItem = () => {
+  //   let { selected_id, items } = this.state;
 
-    if (selected_id) {
-      console.log("going to remove:", selected_id);
+  //   if (selected_id) {
+  //     console.log("going to remove:", selected_id);
 
-      this.setState({
-        items: items.filter((x) => x.id !== selected_id),
-      });
-    }
-  };
+  //     this.setState({
+  //       items: items.filter((x) => x.id !== selected_id),
+  //     });
+  //   }
+  // };
 
   render() {
     let { selected_id, items, clipboard, transform } = this.state;
@@ -395,13 +395,6 @@ class Workspace extends React.Component {
 
               {/* Layer list */}
               <SidebarLine />
-
-              <div>
-                <button onClick={() => this.change_itemOrder(selected_id, 1)}>
-                  /\
-                </button>
-                <button onClick={this.handle_removeItem}>remove item</button>
-              </div>
 
               <SidebarTitle> Layer list </SidebarTitle>
               <LayerList
