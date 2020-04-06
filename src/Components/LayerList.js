@@ -4,8 +4,6 @@ import { useGesture, useDrag } from "react-use-gesture";
 import { SidebarButton, EllipsisOverflow } from "../Workspace";
 
 let List = styled.div`
-  // overflow-y: auto;
-  overflow-x: none;
   display: flex;
   flex-direction: column-reverse;
   justify-content: flex-end;
@@ -14,8 +12,6 @@ let List = styled.div`
 
 let Container = styled.div`
   position: relative;
-  height: 100%;
-  display: flex;
 `;
 
 let DragOverlay = styled.div`

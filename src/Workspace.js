@@ -379,22 +379,13 @@ let Workspace = () => {
             <SidebarLine />
 
             <SidebarTitle> Layer list </SidebarTitle>
-            <div style={{ overflowY: "auto" }}>
+            <div style={{ overflowY: "auto", height: "100%" }}>
               <LayerList
                 items={sheet.items}
                 selected_id={sheet_view.selected_id}
                 select_item={select_item}
                 change_itemOrder={change_itemOrder}
               />
-
-              {/* {sheet.items.map((item) => (
-                <SidebarButton
-                  active={item.id === sheet_view.selected_id}
-                  onClick={() => select_item(item.id)}
-                >
-                  <EllipsisOverflow>{item.name}</EllipsisOverflow>
-                </SidebarButton>
-              ))} */}
             </div>
           </Sidebar>
 
