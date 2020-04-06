@@ -19,6 +19,7 @@ import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
 import { component_map } from "./PresentifyComponents/";
+import { LayerList, LayerListItem } from "./Components/LayerList";
 
 let Sidebar = styled.div`
   width: 232px;
@@ -31,7 +32,7 @@ let Sidebar = styled.div`
   --color: white;
 `;
 
-let EllipsisOverflow = styled.div`
+export let EllipsisOverflow = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -53,7 +54,7 @@ let SidebarLine = styled.div`
   border: solid 1px var(--color, black);
 `;
 
-let SidebarButton = styled.div`
+export let SidebarButton = styled.div`
   transition: background-color 0.2s;
   background-color: ${(p) => (p.active ? "#8e8e8e" : "rgba(255, 255, 255, 0)")};
   cursor: pointer;
@@ -251,6 +252,26 @@ let Workspace = () => {
     });
   };
 
+  let change_itemOrder = (id, newIndex) => {
+    let { items } = sheet;
+
+    console.log("newIndex", newIndex);
+
+    //first remove item, then move it to new position
+    let reOrdered_items = items.filter((x) => x.id !== id);
+
+    reOrdered_items.splice(
+      newIndex,
+      0,
+      items.find((x) => x.id === id)
+    );
+
+    set_sheet({
+      ...sheet,
+      items: reOrdered_items,
+    });
+  };
+
   return (
     <Droptarget
       onDrop={async (e) => {
@@ -359,14 +380,21 @@ let Workspace = () => {
 
             <SidebarTitle> Layer list </SidebarTitle>
             <div style={{ overflowY: "auto" }}>
-              {sheet.items.map((item) => (
+              <LayerList
+                items={sheet.items}
+                selected_id={sheet_view.selected_id}
+                select_item={select_item}
+                change_itemOrder={change_itemOrder}
+              />
+
+              {/* {sheet.items.map((item) => (
                 <SidebarButton
                   active={item.id === sheet_view.selected_id}
                   onClick={() => select_item(item.id)}
                 >
                   <EllipsisOverflow>{item.name}</EllipsisOverflow>
                 </SidebarButton>
-              ))}
+              ))} */}
             </div>
           </Sidebar>
 
