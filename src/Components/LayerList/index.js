@@ -27,8 +27,8 @@ let DragOverlay = styled.div`
 
 let DragContainer = styled.div.attrs((props) => ({
   style: {
-    top: props.y,
-    left: props.x,
+    top: props.y - 5,
+    left: props.x - 5,
   },
 }))`
   width: 12rem;
@@ -39,7 +39,7 @@ let DragContainer = styled.div.attrs((props) => ({
   // left: ${(props) => props.x - 5}px;
   // left: 0;
   opacity: 80%;
-
+  cursor: grabbing;
   pointer-events: none; // this messes with dragging
 `;
 

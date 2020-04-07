@@ -12,6 +12,7 @@ let Container = styled.div`
   :hover {
     box-shadow: 0px 0px 10px 1px rgba(0, 0, 0, 0.55);
     transform: scale(1.05);
+    z-index: 99;
   }
 `;
 
@@ -19,6 +20,8 @@ let EditableName = styled.input`
   background: none;
   color: white;
   border: none;
+
+  user-select: none;
 `;
 
 export function ListItem(props) {
@@ -53,6 +56,10 @@ export function ListItem(props) {
     }
   );
 
+  useEffect(() => {
+    set_input(name);
+  }, [name]);
+
   //default behavoir of the input field is overwritten
   // now it needs to focus after a double click
   useEffect(() => {
@@ -65,7 +72,6 @@ export function ListItem(props) {
   };
 
   let handleDoubleClick = () => {
-    console.log("doudlbe");
     set_disabled(false);
   };
 
@@ -79,15 +85,19 @@ export function ListItem(props) {
     <Container {...bind()}>
       <SidebarButton active={active} onClick={select_item}>
         <div onDoubleClick={handleDoubleClick}>
-          <EditableName
-            value={input}
-            disabled={disabled}
-            onClick={(e) => e.preventDefault()}
-            ref={inputRef}
-            onBlur={handleBlur}
-            onChange={(e) => set_input(e.target.value)}
-            onKeyUp={handleEnterPress}
-          />
+          {disabled ? (
+            <EllipsisOverflow>{name}</EllipsisOverflow>
+          ) : (
+            <EditableName
+              value={input}
+              disabled={disabled}
+              onClick={(e) => e.preventDefault()}
+              ref={inputRef}
+              onBlur={handleBlur}
+              onChange={(e) => set_input(e.target.value)}
+              onKeyUp={handleEnterPress}
+            />
+          )}
         </div>
       </SidebarButton>
     </Container>
