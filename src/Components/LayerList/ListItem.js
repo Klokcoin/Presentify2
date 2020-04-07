@@ -24,6 +24,17 @@ let EditableName = styled.input`
   user-select: none;
 `;
 
+let TrashContainer = styled.div`
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 0 0.1rem;
+
+  :hover {
+    color: FireBrick;
+  }
+`;
+
 export function ListItem(props) {
   let {
     set_isBeingDragged,
@@ -34,10 +45,12 @@ export function ListItem(props) {
     active,
     select_item,
     change_itemName,
+    remove_item,
   } = props;
 
   let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
+  let [hover, set_hover] = useState(false);
   let inputRef = useRef(null);
 
   const bind = useGesture(
@@ -81,12 +94,30 @@ export function ListItem(props) {
     }
   };
 
+  let handleRemove = () => {
+    remove_item(id);
+  };
+
   return (
-    <Container {...bind()}>
+    <Container
+      {...bind()}
+      onMouseEnter={() => set_hover(true)}
+      onMouseLeave={() => set_hover(false)}
+    >
       <SidebarButton active={active} onClick={select_item}>
-        <div onDoubleClick={handleDoubleClick}>
+        <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
           {disabled ? (
-            <EllipsisOverflow>{name}</EllipsisOverflow>
+            <EllipsisOverflow
+              style={{ height: "100%", width: "100%", position: "relative" }}
+            >
+              {name}
+
+              {hover && (
+                <TrashContainer title="Delete layer" onClick={handleRemove}>
+                  <i class="fas fa-trash-alt"></i>
+                </TrashContainer>
+              )}
+            </EllipsisOverflow>
           ) : (
             <EditableName
               value={input}

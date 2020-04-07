@@ -8,7 +8,7 @@ let List = styled.div`
   flex-direction: column-reverse;
   justify-content: flex-end;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
 `;
 
 let Container = styled.div`
@@ -117,6 +117,7 @@ export function LayerList(props) {
     select_item,
     change_itemOrder,
     change_item,
+    remove_item,
   } = props;
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
@@ -164,6 +165,7 @@ export function LayerList(props) {
               select_item={() => select_item(item.id)}
               name={item.name}
               change_itemName={change_itemName}
+              remove_item={remove_item}
             >
               {/* <SidebarButton
                 active={item.id === selected_id}

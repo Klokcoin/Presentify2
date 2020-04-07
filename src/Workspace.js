@@ -256,8 +256,6 @@ let Workspace = () => {
   let change_itemOrder = (id, newIndex) => {
     let { items } = sheet;
 
-    console.log("newIndex", newIndex);
-
     //first remove item, then move it to new position
     let reOrdered_items = items.filter((x) => x.id !== id);
 
@@ -271,6 +269,8 @@ let Workspace = () => {
       ...sheet,
       items: reOrdered_items,
     });
+
+    select_item(id);
   };
 
   return (
@@ -387,6 +387,12 @@ let Workspace = () => {
                 select_item={select_item}
                 change_itemOrder={change_itemOrder}
                 change_item={change_item}
+                remove_item={(id) =>
+                  set_sheet({
+                    ...sheet,
+                    items: sheet.items.filter((x) => x.id !== id),
+                  })
+                }
               />
             </div>
           </Sidebar>
