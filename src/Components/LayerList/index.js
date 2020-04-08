@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components/macro";
 import { SidebarButton, EllipsisOverflow } from "../../Workspace";
 import { ListItem } from "./ListItem";
+import { useDrag, useGesture } from "react-use-gesture";
+import { clamp } from "lodash";
 
 let List = styled.div`
   display: flex;
@@ -11,104 +13,12 @@ let List = styled.div`
   overflow-x: hidden;
 `;
 
+const ITEM_HEIGHT = 50;
+
 let Container = styled.div`
   position: relative;
+  height: ${(props) => props.length + ITEM_HEIGHT};
 `;
-
-let DragOverlay = styled.div`
-  // border: solid green 1px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: grabbing;
-`;
-
-let DragContainer = styled.div.attrs((props) => ({
-  style: {
-    top: props.y,
-    left: props.x,
-  },
-}))`
-  width: 12rem;
-  // border: 1px solid blue;
-  // height: 50px;
-  position: fixed;
-  // top: ${(props) => props.y - 5}px;
-  // left: ${(props) => props.x - 5}px;
-  // left: 0;
-  opacity: 80%;
-
-  pointer-events: none; // this messes with dragging
-`;
-
-const HITBOX_HEIGHT = 25;
-const HITBOX_PADDING = 10;
-let DetectAbove = styled.div`
-  z-index: 99;
-  position: absolute;
-  height: ${2 * HITBOX_PADDING}px;
-  top: ${-HITBOX_PADDING}px;
-  width: 100%;
-  // background: rgba(255, 0, 0, 0.1);
-
-  :hover {
-    height: ${2 * HITBOX_PADDING + HITBOX_HEIGHT}px;
-  }
-`;
-
-let HitboxContainer = styled.div`
-  width: 100%;
-  height: ${(props) => (props.expand ? HITBOX_HEIGHT + "px" : "0px")};
-  position: relative;
-  background: rgb(24, 24, 24);
-  box-shadow: inset 0 0 4px #000000;
-
-  transition: height 0.15s;
-  transition-timing-function: ease;
-`;
-
-function InsertArea(props) {
-  let { set_insertIndex, draggedItemIndex, listItemIndex, set_mouse } = props;
-  let [expand, set_expand] = useState(false);
-
-  function isHoveringItself() {
-    if (draggedItemIndex === listItemIndex) return true;
-    if (draggedItemIndex === listItemIndex + 1) return true;
-    return false;
-  }
-
-  let handleMouseOver = () => {
-    if (isHoveringItself()) {
-      set_insertIndex(null);
-      set_expand(false);
-    } else {
-      set_expand(true);
-      if (draggedItemIndex > listItemIndex) {
-        set_insertIndex(listItemIndex + 1);
-      } else {
-        set_insertIndex(listItemIndex);
-      }
-    }
-  };
-
-  // hitbox checks if a item needs to inserted ABOVE
-  //
-  //  ############# <- hitbox
-  //  | list item |
-  //  =============
-
-  return (
-    <HitboxContainer expand={expand}>
-      <DetectAbove
-        onMouseEnter={handleMouseOver}
-        onMouseLeave={() => set_expand(false)}
-        onMouseMove={(e) => set_mouse({ y: e.clientY, x: e.clientX })} // fix this later....
-      ></DetectAbove>
-    </HitboxContainer>
-  );
-}
 
 export function LayerList(props) {
   let {
@@ -120,93 +30,82 @@ export function LayerList(props) {
   } = props;
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
-  let [mouse, set_mouse] = useState(0);
   let [insertIndex, set_insertIndex] = useState(null);
 
   function handle_dragEnd(id, currentIndex) {
     console.log("DRAG_END", isBeingDragged.id, "newIndex", insertIndex);
     if (insertIndex !== null) change_itemOrder(id, insertIndex);
     set_isBeingDragged(false);
-    set_insertIndex(null);
   }
 
   let change_itemName = (id, newName) => {
     change_item(id, { name: newName });
   };
 
-  // Listitem handles dragStart, dragEnd
-  // Insert area sets newIndex
+  const bind = useGesture(
+    {
+      onDragStart: ({ args: [originalIndex, id] }) => {
+        console.log("started");
+        set_isBeingDragged({ id, originalIndex, y: 0 });
+      },
+      onDrag: ({ args: [originalIndex, id], down, movement: [, y] }) => {
+        const curIndex = originalIndex;
+        const curRow = clamp(
+          Math.round((curIndex * 100 + y) / 100),
+          0,
+          items.length - 1
+        );
+
+        set_isBeingDragged({ id, originalIndex, y });
+        change_itemOrder(id, curRow);
+
+        if (!down) set_isBeingDragged(false);
+      },
+      // onDragEnd: () => {
+      //   set_isBeingDragged(false);
+      // },
+    },
+    {
+      drag: {
+        filterTaps: true,
+        axis: "y",
+        // swipeDistance: [10, 10],
+      },
+    }
+  );
 
   return (
-    <Container>
+    <Container length={items.length}>
       <List>
-        {isBeingDragged && (
-          <InsertArea
-            listItemIndex={-1}
-            draggedItemIndex={isBeingDragged.index}
-            set_insertIndex={set_insertIndex}
-            id="bottomLayerInsert"
-            set_mouse={set_mouse}
-          />
-        )}
-
         {/* THE ITEMS */}
-        {items.map((item, i) => (
-          <>
-            {/* {insertIndex === i && <InsertArea />} */}
+        {items.map((item, i) => {
+          let y, z;
 
+          if (isBeingDragged && isBeingDragged.id === item.id) {
+            y = isBeingDragged.originalIndex * ITEM_HEIGHT + isBeingDragged.y;
+            z = 99;
+          } else {
+            y = i * ITEM_HEIGHT;
+            z = 0;
+          }
+          return (
             <ListItem
+              key={item.id}
+              bind={bind}
+              y={y}
+              z={z}
               id={item.id}
               index={i}
-              set_isBeingDragged={set_isBeingDragged}
+              // set_isBeingDragged={set_isBeingDragged}
               handle_dragEnd={handle_dragEnd}
               active={item.id === selected_id}
               select_item={() => select_item(item.id)}
               name={item.name}
               change_itemName={change_itemName}
-            >
-              {/* <SidebarButton
-                active={item.id === selected_id}
-                onClick={() => select_item(item.id)}
-              >
-                <EllipsisOverflow>{item.name}</EllipsisOverflow>
-              </SidebarButton> */}
-            </ListItem>
-            {isBeingDragged && (
-              <InsertArea
-                listItemIndex={i}
-                draggedItemIndex={isBeingDragged.index}
-                set_insertIndex={set_insertIndex}
-                set_mouse={set_mouse}
-              />
-            )}
-          </>
-        ))}
+            ></ListItem>
+          );
+        })}
       </List>
-
-      {isBeingDragged && (
-        <DragOverlay
-          // ref={overlayRef}
-          onMouseUp={() => set_isBeingDragged(false)}
-          onMouseMove={(e) => set_mouse({ y: e.clientY, x: e.clientX })}
-        >
-          <DragContainer y={mouse.y} x={mouse.x}>
-            {items.map((item) => {
-              if (item.id === isBeingDragged.id) {
-                return (
-                  <SidebarButton
-                    style={{ cursor: "grabbing" }}
-                    disabled
-                    active={true}
-                  >
-                    <EllipsisOverflow>{item.name}</EllipsisOverflow>
-                  </SidebarButton>
-                );
-              }
-            })}
-          </DragContainer>
-        </DragOverlay>
-      )}
     </Container>
   );
 }
