@@ -121,7 +121,7 @@ let Workspace = () => {
     localforage.getItem("transform").then((transform) => {
       if (transform != null) {
         set_sheet_view({
-          transform: Transformation2DMatrix.fromJSON(transform),
+          transform: Transformation2DMatrixFromString(JSON.parse(transform)),
         });
       }
     });

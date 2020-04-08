@@ -119,16 +119,6 @@ export class Transformation2DMatrix {
     return this.toString();
   };
 
-  fromJSON = (string) => {
-    const [a, b, c, d, e, f] = string
-      .replace("matrix(", "")
-      .replace(")", "")
-      .replace(" ", "")
-      .split(",")
-      .map(parseFloat);
-    return new Transformation2DMatrix({ a, b, c, d, e, f });
-  };
-
   // Multiplying two matrices to get a third matrix, which does both transformations
   multiply = (otherMatrix) => {
     if (!(otherMatrix instanceof Transformation2DMatrix)) {
@@ -313,6 +303,12 @@ export const Transformation2DMatrixFromString = (string) => {
     .replace(" ", "")
     .split(",")
     .map(parseFloat);
+
+  if ([a, b, c, d, e, f].some((number) => isNaN(number))) {
+    console.error(`a,b,c,d,e,f = ${a},${b},${c},${d},${e},${f}`);
+    throw new Error(`One of a,b,c,d,e,f was not a number!`);
+  }
+
   return new Transformation2DMatrix({ a, b, c, d, e, f });
 };
 
