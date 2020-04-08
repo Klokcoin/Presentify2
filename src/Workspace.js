@@ -112,7 +112,6 @@ let Workspace = () => {
 
   let [sheet_view, set_sheet_view] = React.useState({
     selected_id: null,
-    // TODO Make the transform a simple object so it is serializable into localstorage
     transform: new Transformation2DMatrix(),
   });
 
@@ -122,7 +121,7 @@ let Workspace = () => {
     localforage.getItem("transform").then((transform) => {
       if (transform != null) {
         set_sheet_view({
-          transform: Transformation2DMatrixFromString(transform),
+          transform: Transformation2DMatrix.fromJSON(transform),
         });
       }
     });
@@ -146,8 +145,8 @@ let Workspace = () => {
 
   React.useEffect(() => {
     if (sheet_view.transform != null) {
-      // Store the TransformationMatrix as a string
-      localforage.setItem("transform", sheet_view.transform.toString());
+      // Store the TransformationMatrix as a string; it has its own toJSON method for serialization
+      localforage.setItem("transform", JSON.stringify(sheet_view.transform));
     }
   }, [sheet_view.transform]);
 
@@ -171,6 +170,7 @@ let Workspace = () => {
           rotation: 0,
           height: viewportHeight * scale,
           width: viewportWidth * scale,
+          transform: new Transformation2DMatrix(),
           options: component_info.default_options || {},
           ...info,
 

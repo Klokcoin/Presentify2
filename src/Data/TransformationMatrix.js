@@ -113,6 +113,22 @@ export class Transformation2DMatrix {
     return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
   };
 
+  // JSON.stringify() will recursively call this to serialize the matrix
+  // why not just serialize as a css transform string, instead of a regular ol' object?
+  toJSON = () => {
+    return this.toString();
+  };
+
+  fromJSON = (string) => {
+    const [a, b, c, d, e, f] = string
+      .replace("matrix(", "")
+      .replace(")", "")
+      .replace(" ", "")
+      .split(",")
+      .map(parseFloat);
+    return new Transformation2DMatrix({ a, b, c, d, e, f });
+  };
+
   // Multiplying two matrices to get a third matrix, which does both transformations
   multiply = (otherMatrix) => {
     if (!(otherMatrix instanceof Transformation2DMatrix)) {
@@ -162,21 +178,12 @@ export class Transformation2DMatrix {
     });
   };
 
-  // Applying the matrix transformation to x and y coordinates
+  // Applying the matrix transformation to x and y coordinates (assuming z=1; can only multiply 3d vector with 3x3 matrix)
   applyToCoords = ({ x, y }) => {
     const { a, b, c, d, e, f } = this;
     return {
       x: a * x + c * y + e,
       y: b * x + d * y + f,
-    };
-  };
-
-  getScale = () => {
-    let point_zero = this.applyToCoords({ x: 0, y: 0 });
-    let point_one = this.applyToCoords({ x: 1, y: 1 });
-    return {
-      x: point_one.x - point_zero.x,
-      y: point_one.y - point_zero.y,
     };
   };
 
@@ -209,7 +216,95 @@ export class Transformation2DMatrix {
       })
     );
   };
+
+  getScale = () => {
+    return {
+      x: this.a,
+      y: this.d,
+    };
+  };
+
+  getTranslation = () => {
+    return {
+      x: this.e,
+      y: this.f,
+    };
+  };
+
+  getRotation = () => {
+    let angle = Math.atan2(this.b, this.a); // [radians]
+    let degrees = (angle * 180) / Math.PI; // [degrees]
+    return degrees;
+  };
+
+  scale = (factor) => {
+    return this.multiply(scaleMatrix(factor));
+  };
+
+  scaleX = (factor) => {
+    return this.multiply(scaleXMatrix(factor));
+  };
+
+  scaleY = (factor) => {
+    return this.multiply(scaleYMatrix(factor));
+  };
+
+  translate = (x, y) => {
+    return this.multiply(translateMatrix(x, y));
+  };
+
+  translateX = (x) => {
+    return this.multiply(translateXMatrix(x));
+  };
+
+  translateY = (y) => {
+    return this.multiply(translateYMatrix(y));
+  };
+
+  skew = (x, y) => {
+    return this.multiply(skewMatrix(x, y));
+  };
+
+  skewX = (x) => {
+    return this.multiply(skewXMatrix(x));
+  };
+
+  skewY = (y) => {
+    return this.multiply(skewYMatrix(y));
+  };
+
+  rotate = (angle) => {
+    return this.multiply(rotationMatrix(angle));
+  };
 }
+
+const scaleMatrix = (x, y) => {
+  return new Transformation2DMatrix({ a: x, d: y });
+};
+const scaleXMatrix = (x) => scaleMatrix(x, 1);
+const scaleYMatrix = (y) => scaleMatrix(1, y);
+
+const translateMatrix = (x, y) => {
+  return new Transformation2DMatrix({ e: x, f: y });
+};
+const translateXMatrix = (x) => translateMatrix(x, 0);
+const translateYMatrix = (y) => translateMatrix(0, y);
+
+const skewMatrix = (x, y) => {
+  return new Transformation2DMatrix({ c: Math.tan(x), b: Math.tan(y) });
+};
+const skewXMatrix = (x) => skewMatrix(x, 0);
+const skewYMatrix = (y) => skewMatrix(0, y);
+
+// Rotate about z-axis
+const rotationMatrix = (angle) => {
+  return new Transformation2DMatrix({
+    a: Math.cos(angle),
+    b: Math.sin(angle),
+    c: -1 * Math.sin(angle),
+    d: Math.cos(angle),
+  });
+};
 
 export const Transformation2DMatrixFromString = (string) => {
   const [a, b, c, d, e, f] = string
