@@ -4,13 +4,13 @@ import { useGesture } from "react-use-gesture";
 import { SidebarButton, EllipsisOverflow } from "../../Workspace";
 
 let Container = styled.div.attrs((props) => ({
-  style: {
-    top: props.y,
-  },
+  // style: {
+  //   top: props.y,
+  // },
 }))`
-  position: absolute;
+  // position: absolute;
 
-  z-index: ${(props) => props.z};
+  // z-index: ${(props) => props.z};
 
   width: 100%;
   // height: 100%;
@@ -21,7 +21,6 @@ let Container = styled.div.attrs((props) => ({
   //   transform: scale(1.05);
   // }
 
-  transition: ${(props) => (props.isBeingDragged ? null : "top 0.5s ease")};
   border: 1px solid green;
 `;
 
@@ -46,10 +45,8 @@ let TrashContainer = styled.div`
 
 export function ListItem(props) {
   let {
-    set_isBeingDragged,
     id,
     name,
-    handle_dragEnd,
     index,
     active,
     select_item,
@@ -71,6 +68,10 @@ export function ListItem(props) {
   useEffect(() => {
     if (!disabled) inputRef.current.focus();
   }, [disabled]);
+
+  useEffect(() => {
+    // console.log("rerender", id);
+  });
 
   let handleBlur = () => {
     set_disabled(true);
@@ -95,11 +96,11 @@ export function ListItem(props) {
     <Container
       y={y}
       z={z}
-      {...bind(index, id)}
+      // {...bind(index, id)}
       // onMouseEnter={() => set_hover(true)}
-      onMouseEnter={() => console.log("hoverrr")}
-      onMouseLeave={() => set_hover(false)}
-      isBeingDragged={isBeingDragged}
+      // onMouseEnter={() => console.log("hoverrr")}
+      // onMouseLeave={() => set_hover(false)}
+      // isBeingDragged={isBeingDragged}
     >
       <SidebarButton active={active} onClick={select_item}>
         <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
