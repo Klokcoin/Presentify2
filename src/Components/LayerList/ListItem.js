@@ -3,9 +3,13 @@ import styled from "styled-components/macro";
 import { useGesture } from "react-use-gesture";
 import { SidebarButton, EllipsisOverflow } from "../../Workspace";
 
-let Container = styled.div`
+let Container = styled.div.attrs((props) => ({
+  style: {
+    top: props.y,
+  },
+}))`
   position: absolute;
-  top: ${(props) => props.y}px;
+
   z-index: ${(props) => props.z};
 
   width: 100%;
@@ -17,13 +21,27 @@ let Container = styled.div`
   //   transform: scale(1.05);
   // }
 
-  transition: top 0.2s ease;
+  transition: ${(props) => (props.isBeingDragged ? null : "top 0.5s ease")};
+  border: 1px solid green;
 `;
 
 let EditableName = styled.input`
   background: none;
   color: white;
   border: none;
+
+  user-select: none;
+`;
+
+let TrashContainer = styled.div`
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 0 0.1rem;
+
+  :hover {
+    color: FireBrick;
+  }
 `;
 
 export function ListItem(props) {
@@ -39,10 +57,13 @@ export function ListItem(props) {
     y,
     z,
     bind,
+    remove_item,
+    isBeingDragged,
   } = props;
 
   let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
+  let [hover, set_hover] = useState(false);
   let inputRef = useRef(null);
 
   //default behavoir of the input field is overwritten
@@ -57,7 +78,6 @@ export function ListItem(props) {
   };
 
   let handleDoubleClick = () => {
-    console.log("doudlbe");
     set_disabled(false);
   };
 
@@ -67,19 +87,45 @@ export function ListItem(props) {
     }
   };
 
+  let handleRemove = () => {
+    remove_item(id);
+  };
+
   return (
-    <Container y={y} z={z} {...bind(index, id)}>
+    <Container
+      y={y}
+      z={z}
+      {...bind(index, id)}
+      // onMouseEnter={() => set_hover(true)}
+      onMouseEnter={() => console.log("hoverrr")}
+      onMouseLeave={() => set_hover(false)}
+      isBeingDragged={isBeingDragged}
+    >
       <SidebarButton active={active} onClick={select_item}>
-        <div onDoubleClick={handleDoubleClick}>
-          <EditableName
-            value={input}
-            disabled={disabled}
-            onClick={(e) => e.preventDefault()}
-            ref={inputRef}
-            onBlur={handleBlur}
-            onChange={(e) => set_input(e.target.value)}
-            onKeyUp={handleEnterPress}
-          />
+        <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
+          {disabled ? (
+            <EllipsisOverflow
+              style={{ height: "100%", width: "100%", position: "relative" }}
+            >
+              {name}
+
+              {hover && (
+                <TrashContainer title="Delete layer" onClick={handleRemove}>
+                  <i class="fas fa-trash-alt"></i>
+                </TrashContainer>
+              )}
+            </EllipsisOverflow>
+          ) : (
+            <EditableName
+              value={input}
+              disabled={disabled}
+              onClick={(e) => e.preventDefault()}
+              ref={inputRef}
+              onBlur={handleBlur}
+              onChange={(e) => set_input(e.target.value)}
+              onKeyUp={handleEnterPress}
+            />
+          )}
         </div>
       </SidebarButton>
     </Container>

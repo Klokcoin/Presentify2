@@ -6,18 +6,33 @@ import { useDrag, useGesture } from "react-use-gesture";
 import { clamp } from "lodash";
 
 let List = styled.div`
+  // position: relative;
   display: flex;
   flex-direction: column-reverse;
   justify-content: flex-end;
   width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 100%;
 `;
 
-const ITEM_HEIGHT = 50;
+const ITEM_HEIGHT = 40;
 
 let Container = styled.div`
   position: relative;
-  height: ${(props) => props.length + ITEM_HEIGHT};
+  height: ${(props) => props.length * ITEM_HEIGHT}px;
+  width: 100%;
+  border: 1px solid red;
+`;
+
+let PreventMouseEvents = styled.div`
+  position: absolute;
+  background: rgba(255, 0, 0, 0.5);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  z-index: ${(props) => props.preventBelowZ};
 `;
 
 export function LayerList(props) {
@@ -27,6 +42,7 @@ export function LayerList(props) {
     select_item,
     change_itemOrder,
     change_item,
+    remove_item,
   } = props;
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
@@ -51,7 +67,7 @@ export function LayerList(props) {
       onDrag: ({ args: [originalIndex, id], down, movement: [, y] }) => {
         const curIndex = originalIndex;
         const curRow = clamp(
-          Math.round((curIndex * 100 + y) / 100),
+          Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
           0,
           items.length - 1
         );
@@ -96,15 +112,25 @@ export function LayerList(props) {
               z={z}
               id={item.id}
               index={i}
+              isBeingDragged={isBeingDragged && isBeingDragged.id === item.id}
               // set_isBeingDragged={set_isBeingDragged}
               handle_dragEnd={handle_dragEnd}
               active={item.id === selected_id}
               select_item={() => select_item(item.id)}
               name={item.name}
               change_itemName={change_itemName}
+              remove_item={remove_item}
             ></ListItem>
           );
         })}
+        {isBeingDragged && (
+          <PreventMouseEvents
+            preventBelowZ={50}
+            // onMouseEnter={(e) => e.stopPropagation()}
+            // onMouseLeave={(e) => e.stopPropagation()}
+            // onMouseMove={(e) => e.stopPropagation()}
+          ></PreventMouseEvents>
+        )}
       </List>
     </Container>
   );
