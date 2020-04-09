@@ -3,7 +3,7 @@ import styled from "styled-components/macro";
 import { SidebarButton, EllipsisOverflow } from "../../Workspace";
 import { ListItem } from "./ListItem";
 import { useDrag, useGesture } from "react-use-gesture";
-import { useSprings, animated } from "react-spring";
+import { useSprings, animated, useTransition } from "react-spring";
 import { clamp } from "lodash";
 
 let List = styled.div`
@@ -43,6 +43,7 @@ const AnimatedListItem = styled(animated.div)`
   width: 100%;
   height: ${ITEM_HEIGHT}px;
   // background: green;
+  top: ${(props) => props.y || 100}px;
 `;
 
 const fn = (newOrder, oldOrder, down, originalIndex, curIndex, y) => (index) =>
@@ -65,29 +66,34 @@ export function LayerList(props) {
   } = props;
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
-  let [insertIndex, set_insertIndex] = useState(null);
   const order = useRef(items.map((i, index) => i.id)); // Store indicies as a local ref, this represents the item order
+  let [localOrder, set_localOrder] = useState(
+    items.map((item, index) => ({ ...item, y: index * ITEM_HEIGHT }))
+  );
+
+  let [draggedItem, set_draggedItem] = useState(0);
 
   useEffect(() => {
     order.current = items.map((i, index) => i.id);
-    setSprings(fn(order.current, order.current));
+    set_localOrder(
+      items.map((item, index) => ({
+        ...item,
+        listY: index * ITEM_HEIGHT,
+        listZ: 0,
+      }))
+    );
+    // setSprings(fn(order.current, order.current));
   }, [items]);
 
-  function handle_dragEnd(id, currentIndex) {
-    console.log("DRAG_END", isBeingDragged.id, "newIndex", insertIndex);
-    if (insertIndex !== null) change_itemOrder(id, insertIndex);
-    set_isBeingDragged(false);
-  }
+  useEffect(() => {
+    console.log("local", localOrder);
+  }, [localOrder]);
 
   let change_itemName = (id, newName) => {
     change_item(id, { name: newName });
   };
 
   function swap(currentOrder, from, to) {
-    console.log("swap", currentOrder, from, to);
-
-    // return currentOrder;
-
     let swappedItem = currentOrder[from];
     // console.log("swappedItem", swappedItem);
 
@@ -98,24 +104,53 @@ export function LayerList(props) {
     return reOrdered_items;
   }
 
-  const [springs, setSprings] = useSprings(
-    items.length,
-    fn(order.current, order.current)
-  ); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
+  const transitions = useTransition(localOrder, (item) => item.id, {
+    from: { opacity: 0 },
+    leave: { opacity: 0 },
+    enter: ({ listY, listZ }) => ({ y: listY, z: listZ, opacity: 1 }),
+    update: ({ listY, listZ }) => ({ y: listY, z: listZ }),
+  });
+
+  // const [springs, setSprings] = useSprings(
+  //   items.length,
+  //   fn(order.current, order.current)
+  // ); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
+
   const bind = useDrag(
     ({ args: [originalIndex, id], down, movement: [, y] }) => {
-      console.log("draggin");
-      const curIndex = order.current.indexOf(id);
+      const curIndex = localOrder.indexOf(localOrder.find((x) => x.id === id));
       const curRow = clamp(
         Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
         0,
         items.length - 1
       );
-      const newOrder = swap(order.current, curIndex, curRow);
+      const newOrder = swap(localOrder, curIndex, curRow);
 
-      setSprings(fn(newOrder, order.current, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
+      let newLocalOrder = items.map((item, index) => {
+        let newY, newZ;
+
+        if (id === item.id) {
+          // newY = 0;
+          newY = curRow * ITEM_HEIGHT + y;
+          newZ = 99;
+
+          console.log("newy", newY);
+          set_draggedItem(newY);
+        } else {
+          newY = newOrder.indexOf(localOrder[index]) * ITEM_HEIGHT;
+          newZ = 0;
+        }
+
+        return { id: item.id, listY: newY, listZ: newZ };
+      });
+
+      // console.log("new local ordre", newLocalOrder);
+
+      set_localOrder([...newLocalOrder]);
+
+      // localOrdersetSprings(fn(newOrder, order.current, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
       if (!down) {
-        change_itemOrder(newOrder);
+        change_itemOrder(newOrder.map((x) => x.id));
         // order.current = newOrder;
         // set_localOrder(newOrder);
         select_item(id);
@@ -128,14 +163,16 @@ export function LayerList(props) {
       <List>
         {/* THE ITEMS */}
 
-        {springs.map(({ zIndex, shadow, y, scale }, i) => {
-          let item = items[i];
+        {transitions.map(({ item, props }, i) => {
+          // let item = items[i];
 
+          // console.log("jo", props);
           return (
             <AnimatedListItem
               {...bind(i, item.id)}
               key={item.id}
-              style={{ top: y }}
+              // y={props.y}
+              style={{ top: props.y, zIndex: props.z, opacity: props.opacity }}
             >
               <ListItem
                 id={item.id}
@@ -187,6 +224,7 @@ export function LayerList(props) {
           ></PreventMouseEvents>
         )} */}
       </List>
+      dragged: {draggedItem}
     </Container>
   );
 }
