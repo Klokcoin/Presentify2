@@ -43,17 +43,17 @@ const AnimatedListItem = styled(animated.div)`
   width: 100%;
   height: ${ITEM_HEIGHT}px;
   // background: green;
-  top: ${(props) => props.y || 100}px;
+  // top: ${(props) => props.y || 100}px;
 `;
 
-const fn = (newOrder, oldOrder, down, originalIndex, curIndex, y) => (index) =>
-  down && index === originalIndex
-    ? {
-        y: curIndex * ITEM_HEIGHT + y,
-      }
-    : {
-        y: newOrder.indexOf(oldOrder[index]) * ITEM_HEIGHT,
-      };
+function swap(currentOrder, from, to) {
+  let swappedItem = currentOrder[from];
+  let reOrdered_items = [...currentOrder];
+  reOrdered_items.splice(from, 1);
+  reOrdered_items.splice(to, 0, swappedItem);
+
+  return reOrdered_items;
+}
 
 export function LayerList(props) {
   let {
@@ -93,31 +93,16 @@ export function LayerList(props) {
     change_item(id, { name: newName });
   };
 
-  function swap(currentOrder, from, to) {
-    let swappedItem = currentOrder[from];
-    // console.log("swappedItem", swappedItem);
-
-    let reOrdered_items = [...currentOrder];
-    reOrdered_items.splice(from, 1);
-    reOrdered_items.splice(to, 0, swappedItem);
-
-    return reOrdered_items;
-  }
-
-  const transitions = useTransition(localOrder, (item) => item.id, {
+  let transitions = useTransition(localOrder, (item) => item.id, {
     from: { opacity: 0 },
     leave: { opacity: 0 },
     enter: ({ listY, listZ }) => ({ y: listY, z: listZ, opacity: 1 }),
     update: ({ listY, listZ }) => ({ y: listY, z: listZ }),
   });
 
-  // const [springs, setSprings] = useSprings(
-  //   items.length,
-  //   fn(order.current, order.current)
-  // ); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
-
-  const bind = useDrag(
-    ({ args: [originalIndex, id], down, movement: [, y] }) => {
+  const bind = useGesture({
+    onDragStart: () => {},
+    onDrag: ({ args: [originalIndex, id], down, movement: [, y] }) => {
       const curIndex = localOrder.indexOf(localOrder.find((x) => x.id === id));
       const curRow = clamp(
         Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
@@ -130,12 +115,9 @@ export function LayerList(props) {
         let newY, newZ;
 
         if (id === item.id) {
-          // newY = 0;
           newY = curRow * ITEM_HEIGHT + y;
           newZ = 99;
-
           console.log("newy", newY);
-          set_draggedItem(newY);
         } else {
           newY = newOrder.indexOf(localOrder[index]) * ITEM_HEIGHT;
           newZ = 0;
@@ -144,19 +126,14 @@ export function LayerList(props) {
         return { id: item.id, listY: newY, listZ: newZ };
       });
 
-      // console.log("new local ordre", newLocalOrder);
-
       set_localOrder([...newLocalOrder]);
 
-      // localOrdersetSprings(fn(newOrder, order.current, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
       if (!down) {
         change_itemOrder(newOrder.map((x) => x.id));
-        // order.current = newOrder;
-        // set_localOrder(newOrder);
         select_item(id);
       }
-    }
-  );
+    },
+  });
 
   return (
     <Container length={items.length}>
@@ -169,20 +146,21 @@ export function LayerList(props) {
           // console.log("jo", props);
           return (
             <AnimatedListItem
-              {...bind(i, item.id)}
               key={item.id}
               // y={props.y}
               style={{ top: props.y, zIndex: props.z, opacity: props.opacity }}
             >
-              <ListItem
-                id={item.id}
-                index={i}
-                active={item.id === selected_id}
-                select_item={() => select_item(item.id)}
-                name={item.name}
-                change_itemName={change_itemName}
-                remove_item={remove_item}
-              ></ListItem>
+              <div {...bind(i, item.id)}>
+                <ListItem
+                  id={item.id}
+                  index={i}
+                  active={item.id === selected_id}
+                  select_item={() => select_item(item.id)}
+                  name={item.name}
+                  change_itemName={change_itemName}
+                  remove_item={remove_item}
+                ></ListItem>
+              </div>
             </AnimatedListItem>
           );
         })}
