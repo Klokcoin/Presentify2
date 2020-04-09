@@ -45,13 +45,13 @@ const AnimatedListItem = styled(animated.div)`
   // background: green;
 `;
 
-const fn = (order, down, originalIndex, curIndex, y) => (index) =>
+const fn = (newOrder, oldOrder, down, originalIndex, curIndex, y) => (index) =>
   down && index === originalIndex
     ? {
         y: curIndex * ITEM_HEIGHT + y,
       }
     : {
-        y: order.indexOf(index) * ITEM_HEIGHT,
+        y: newOrder.indexOf(oldOrder[index]) * ITEM_HEIGHT,
       };
 
 export function LayerList(props) {
@@ -66,10 +66,11 @@ export function LayerList(props) {
 
   let [isBeingDragged, set_isBeingDragged] = useState(false);
   let [insertIndex, set_insertIndex] = useState(null);
-  const order = useRef(items.map((_, index) => index)); // Store indicies as a local ref, this represents the item order
+  const order = useRef(items.map((i, index) => i.id)); // Store indicies as a local ref, this represents the item order
 
   useEffect(() => {
-    order.current = items.map((_, index) => index);
+    order.current = items.map((i, index) => i.id);
+    setSprings(fn(order.current, order.current));
   }, [items]);
 
   function handle_dragEnd(id, currentIndex) {
@@ -97,20 +98,30 @@ export function LayerList(props) {
     return reOrdered_items;
   }
 
-  const [springs, setSprings] = useSprings(items.length, fn(order.current)); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
-  const bind = useDrag(({ args: [originalIndex], down, movement: [, y] }) => {
-    console.log("draggin");
-    const curIndex = order.current.indexOf(originalIndex);
-    const curRow = clamp(
-      Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
-      0,
-      items.length - 1
-    );
-    const newOrder = swap(order.current, curIndex, curRow);
-    setSprings(fn(newOrder, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
-    if (!down) {order.current = newOrder;
-    change_itemOrder(items[originalIndex].id)};
-  });
+  const [springs, setSprings] = useSprings(
+    items.length,
+    fn(order.current, order.current)
+  ); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
+  const bind = useDrag(
+    ({ args: [originalIndex, id], down, movement: [, y] }) => {
+      console.log("draggin");
+      const curIndex = order.current.indexOf(id);
+      const curRow = clamp(
+        Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
+        0,
+        items.length - 1
+      );
+      const newOrder = swap(order.current, curIndex, curRow);
+
+      setSprings(fn(newOrder, order.current, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
+      if (!down) {
+        change_itemOrder(newOrder);
+        // order.current = newOrder;
+        // set_localOrder(newOrder);
+        select_item(id);
+      }
+    }
+  );
 
   return (
     <Container length={items.length}>
@@ -121,7 +132,11 @@ export function LayerList(props) {
           let item = items[i];
 
           return (
-            <AnimatedListItem {...bind(i)} key={i} style={{ top: y }}>
+            <AnimatedListItem
+              {...bind(i, item.id)}
+              key={item.id}
+              style={{ top: y }}
+            >
               <ListItem
                 id={item.id}
                 index={i}

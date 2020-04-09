@@ -253,24 +253,22 @@ let Workspace = () => {
     });
   };
 
-  let change_itemOrder = (id, newIndex) => {
+  let change_itemOrder = (newOrder) => {
     let { items } = sheet;
 
-    //first remove item, then move it to new position
-    let reOrdered_items = items.filter((x) => x.id !== id);
-
-    reOrdered_items.splice(
-      newIndex,
-      0,
-      items.find((x) => x.id === id)
-    );
+    let reOrderedItems = newOrder.map((id) => {
+      let item = items.find((x) => x.id === id);
+      return item;
+    });
 
     set_sheet({
       ...sheet,
-      items: reOrdered_items,
+      items: reOrderedItems,
     });
 
-    select_item(id);
+    // console.log("reOrderedItems", reOrderedItems);
+
+    // select_item(id);
   };
 
   return (
