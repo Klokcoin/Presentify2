@@ -26,13 +26,13 @@
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "rescripts start",
+    "build": "rescripts build",
+    "test": "rescripts test"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "parser": "babel-eslint"
   },
   "browserslist": {
     "production": [
@@ -46,7 +46,29 @@
       "last 1 safari version"
     ]
   },
-  "prettier": {
-    "trailingComma": "es5"
+  "devDependencies": {
+    "@babel/plugin-proposal-pipeline-operator": "^7.8.3",
+    "@rescripts/cli": "0.0.14",
+    "@rescripts/rescript-env": "0.0.12",
+    "@rescripts/rescript-use-babel-config": "0.0.10",
+    "babel-eslint": "^10.1.0",
+    "babel-preset-react-app": "^9.1.2",
+    "eslint": "^6.8.0"
+  },
+  "rescripts": [
+    "env"
+  ],
+  "babel": {
+    "presets": [
+      "react-app"
+    ],
+    "plugins": [
+      [
+        "@babel/plugin-proposal-pipeline-operator",
+        {
+          "proposal": "fsharp"
+        }
+      ]
+    ]
   }
 }
