@@ -21,7 +21,7 @@ let Container = styled.div.attrs((props) => ({
   //   transform: scale(1.05);
   // }
 
-  border: 1px solid green;
+  // border: 1px solid green;
 `;
 
 let EditableName = styled.input`

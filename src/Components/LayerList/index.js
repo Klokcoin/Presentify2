@@ -7,13 +7,14 @@ import { useSprings, animated, useTransition } from "react-spring";
 import { clamp } from "lodash";
 
 let List = styled.div`
-  // position: relative;
+  position: absolute;
   display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
+  // flex-direction: column-reverse;
+  // justify-content: flex-end;
   width: 100%;
-  overflow: hidden;
+  // overflow-x: hidden;
   height: 100%;
+  z-index: 0;
 `;
 
 const ITEM_HEIGHT = 40;
@@ -25,35 +26,15 @@ let Container = styled.div`
   border: 1px solid red;
 `;
 
-let PreventMouseEvents = styled.div`
-  position: absolute;
-  background: rgba(255, 0, 0, 0.5);
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-
-  z-index: ${(props) => props.preventBelowZ};
-`;
-
 const AnimatedListItem = styled(animated.div)`
   position: absolute;
 
   left: 0;
   width: 100%;
   height: ${ITEM_HEIGHT}px;
-  // background: green;
+  background: ${(props) => (props.isBeingDragged ? "lightgrey" : "none")};
   top: ${(props) => props.y || 100}px;
 `;
-
-const fn = (newOrder, oldOrder, down, originalIndex, curIndex, y) => (index) =>
-  down && index === originalIndex
-    ? {
-        y: curIndex * ITEM_HEIGHT + y,
-      }
-    : {
-        y: newOrder.indexOf(oldOrder[index]) * ITEM_HEIGHT,
-      };
 
 export function LayerList(props) {
   let {
@@ -65,56 +46,23 @@ export function LayerList(props) {
     remove_item,
   } = props;
 
-  let [isBeingDragged, set_isBeingDragged] = useState(false);
-  const order = useRef(items.map((i, index) => i.id)); // Store indicies as a local ref, this represents the item order
   let [localOrder, set_localOrder] = useState(
     items.map((item, index) => ({ ...item, y: index * ITEM_HEIGHT }))
   );
 
-  let [draggedItem, set_draggedItem] = useState(0);
-
   useEffect(() => {
-    order.current = items.map((i, index) => i.id);
     set_localOrder(
       items.map((item, index) => ({
         ...item,
         listY: index * ITEM_HEIGHT,
-        listZ: 0,
+        isBeingDragged: false,
       }))
     );
-    // setSprings(fn(order.current, order.current));
   }, [items]);
-
-  useEffect(() => {
-    console.log("local", localOrder);
-  }, [localOrder]);
 
   let change_itemName = (id, newName) => {
     change_item(id, { name: newName });
   };
-
-  function swap(currentOrder, from, to) {
-    let swappedItem = currentOrder[from];
-    // console.log("swappedItem", swappedItem);
-
-    let reOrdered_items = [...currentOrder];
-    reOrdered_items.splice(from, 1);
-    reOrdered_items.splice(to, 0, swappedItem);
-
-    return reOrdered_items;
-  }
-
-  const transitions = useTransition(localOrder, (item) => item.id, {
-    from: { opacity: 0 },
-    leave: { opacity: 0 },
-    enter: ({ listY, listZ }) => ({ y: listY, z: listZ, opacity: 1 }),
-    update: ({ listY, listZ }) => ({ y: listY, z: listZ }),
-  });
-
-  // const [springs, setSprings] = useSprings(
-  //   items.length,
-  //   fn(order.current, order.current)
-  // ); // Create springs, each corresponds to an item, controlling its transform, scale, etc.
 
   const bind = useDrag(
     ({ args: [originalIndex, id], down, movement: [, y] }) => {
@@ -122,109 +70,149 @@ export function LayerList(props) {
       const curRow = clamp(
         Math.round((curIndex * ITEM_HEIGHT + y) / ITEM_HEIGHT),
         0,
-        items.length - 1
+        localOrder.length - 1
       );
       const newOrder = swap(localOrder, curIndex, curRow);
 
-      let newLocalOrder = items.map((item, index) => {
-        let newY, newZ;
+      let newLocalOrder = localOrder.map((item, index) => {
+        let newY, isBeingDragged;
 
         if (id === item.id) {
-          // newY = 0;
-          newY = curRow * ITEM_HEIGHT + y;
-          newZ = 99;
-
-          console.log("newy", newY);
-          set_draggedItem(newY);
+          newY = index * ITEM_HEIGHT + y;
+          isBeingDragged = true;
         } else {
           newY = newOrder.indexOf(localOrder[index]) * ITEM_HEIGHT;
-          newZ = 0;
+          isBeingDragged = false;
         }
 
-        return { id: item.id, listY: newY, listZ: newZ };
+        return { id: item.id, name: item.name, listY: newY, isBeingDragged };
       });
 
-      // console.log("new local ordre", newLocalOrder);
+      console.log("new local ordre", newLocalOrder);
 
       set_localOrder([...newLocalOrder]);
 
-      // localOrdersetSprings(fn(newOrder, order.current, down, originalIndex, curIndex, y)); // Feed springs new style data, they'll animate the view without causing a single render
       if (!down) {
+        set_localOrder(newOrder);
         change_itemOrder(newOrder.map((x) => x.id));
-        // order.current = newOrder;
-        // set_localOrder(newOrder);
         select_item(id);
       }
     }
   );
 
   return (
-    <Container length={items.length}>
-      <List>
-        {/* THE ITEMS */}
+    <Container
+      length={items.length}
+      // onMouseDown={() => set_dragEnabled(true)}
+      // onMouseUp={() => set_dragEnabled(false)}
+    >
+      <DragOverlay>
+        {items.map(({ id }, i) => (
+          <HandleDrag key={id} {...bind(i, id)} y={i * ITEM_HEIGHT} />
+        ))}
+      </DragOverlay>
 
-        {transitions.map(({ item, props }, i) => {
-          // let item = items[i];
-
-          // console.log("jo", props);
-          return (
-            <AnimatedListItem
-              {...bind(i, item.id)}
-              key={item.id}
-              // y={props.y}
-              style={{ top: props.y, zIndex: props.z, opacity: props.opacity }}
-            >
-              <ListItem
-                id={item.id}
-                index={i}
-                active={item.id === selected_id}
-                select_item={() => select_item(item.id)}
-                name={item.name}
-                change_itemName={change_itemName}
-                remove_item={remove_item}
-              ></ListItem>
-            </AnimatedListItem>
-          );
-        })}
-        {/* {items.map((item, i) => {
-          let y, z;
-
-          if (isBeingDragged && isBeingDragged.id === item.id) {
-            y = isBeingDragged.originalIndex * ITEM_HEIGHT + isBeingDragged.y;
-            z = 99;
-          } else {
-            y = i * ITEM_HEIGHT;
-            z = 0;
-          }
-          return (
-            <ListItem
-              key={item.id}
-              bind={bind}
-              y={y}
-              z={z}
-              id={item.id}
-              index={i}
-              isBeingDragged={isBeingDragged && isBeingDragged.id === item.id}
-              // set_isBeingDragged={set_isBeingDragged}
-              handle_dragEnd={handle_dragEnd}
-              active={item.id === selected_id}
-              select_item={() => select_item(item.id)}
-              name={item.name}
-              change_itemName={change_itemName}
-              remove_item={remove_item}
-            ></ListItem>
-          );
-        })} */}
-        {/* {isBeingDragged && (
-          <PreventMouseEvents
-            preventBelowZ={50}
-            // onMouseEnter={(e) => e.stopPropagation()}
-            // onMouseLeave={(e) => e.stopPropagation()}
-            // onMouseMove={(e) => e.stopPropagation()}
-          ></PreventMouseEvents>
-        )} */}
-      </List>
-      dragged: {draggedItem}
+      <AnimatedList localOrder={localOrder} />
     </Container>
   );
 }
+
+let DragOverlay = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  z-index: 999;
+`;
+
+let HandleDrag = styled.div`
+  position: absolute;
+  top: ${(props) => props.y}px;
+  // background: rgba(50, 50, 0, 0.5);
+  height: ${ITEM_HEIGHT}px;
+  width: 100%;
+  user-select: none;
+`;
+
+function swap(currentOrder, from, to) {
+  let swappedItem = currentOrder[from];
+  let reOrdered_items = [...currentOrder];
+  reOrdered_items.splice(from, 1);
+  reOrdered_items.splice(to, 0, swappedItem);
+
+  return reOrdered_items;
+}
+
+let AnimatedList = (props) => {
+  let { localOrder, set_draggedItem, set_localOrder } = props;
+
+  //animated styles
+  let style = (y) => ({
+    y,
+    z: 1,
+    opacity: 1,
+    shadow: 0,
+    scale: 1,
+  });
+
+  let dragStyle = (y) => ({
+    y,
+    z: 2,
+    opacity: 1,
+    shadow: 1,
+    scale: 1.05,
+  });
+
+  const transitions = useTransition(
+    // localOrder.map((item, i) => ({ ...item, listY: i * ITEM_HEIGHT })),
+    localOrder,
+    (item) => item.id,
+    {
+      from: { opacity: 0 },
+      leave: { opacity: 0 },
+      enter: ({ listY, isBeingDragged }) =>
+        isBeingDragged ? dragStyle(listY) : style(listY),
+
+      update: ({ listY, isBeingDragged }) =>
+        isBeingDragged ? dragStyle(listY) : style(listY),
+    }
+  );
+
+  return (
+    <List>
+      {/* THE ITEMS */}
+
+      {transitions.map(({ item, props }, i) => {
+        let { y, z, opacity, shadow, scale, background } = props;
+        let { isBeingDragged } = item;
+
+        return (
+          <AnimatedListItem
+            key={item.id}
+            style={{
+              top: y,
+              zIndex: z,
+              opacity,
+              boxShadow: shadow.interpolate(
+                (s) =>
+                  `rgba(0, 0, 0, ${0.75 * s}) 0px 0px ${14 * s}px ${2 * s}px `
+              ),
+              transform: scale.interpolate((s) => `scale(${s})`),
+            }}
+            isBeingDragged={isBeingDragged}
+          >
+            <ListItem
+              id={item.id}
+              index={i}
+              // active={item.id === selected_id}
+              // select_item={() => select_item(item.id)}
+              name={item.name}
+              // change_itemName={change_itemName}
+              // remove_item={remove_item}
+            ></ListItem>
+          </AnimatedListItem>
+        );
+      })}
+    </List>
+  );
+};
