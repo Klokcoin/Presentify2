@@ -1,4 +1,4 @@
-import React, { Component, useState } from "react";
+import React from "react";
 import { Draggable, DraggingCircle, Absolute } from "../Elements";
 import { Unzoom } from "../Components/Canvas";
 import { memoize } from "lodash";
@@ -197,7 +197,7 @@ export const CanvasItemOverlay = ({
   children,
   /* inverseScale, */
 }) => {
-  const [movement_state, set_movement_state] = useState(null);
+  const [movement_state, set_movement_state] = React.useState(null);
 
   let act_like_selected = selected || movement_state != null;
 

@@ -10,136 +10,125 @@ On mount it will bind to a document event, and it will clean up on unmount
   />
 */
 
-/*:flow
-type T_documentevent_props = {
-  handler: (e: any) => mixed,
-  name: string,
-  passive?: boolean,
+export const DocumentEvent = ({
+  handler,
+  name,
+  passive = false,
+  capture = false,
+}) => {
+  let fn = React.useCallback(
+    (event) => {
+      if (!passive) {
+        event.preventDefault();
+      }
+      handler(event);
+    },
+    [passive, handler]
+  );
+
+  React.useEffect(() => {
+    document.addEventListener(name, fn, { capture });
+
+    return function cleanup() {
+      // the { capture } options obj is necessary for it to remove the correct listener!
+      document.removeEventListener(name, fn, { capture });
+    };
+  }, [fn, name, capture]);
+
+  return null;
 };
-*/
 
-export class DocumentEvent extends React.Component /*:<T_documentevent_props>*/ {
-  /*:flow
-  unbind: () => void
-  */
+export const Draggable = ({
+  onMove,
+  onMoveEnd,
+  cursor,
+  style,
+  children,
+  ...props
+}) => {
+  const [dragging_state, set_dragging_state] = React.useState(null);
 
-  componentDidMount() {
-    let fn = (e) => {
-      if (!this.props.passive) e.preventDefault();
-      this.props.handler(e);
-    };
-    document.addEventListener(this.props.name, fn, {
-      capture: this.props.capture,
-    });
-    this.unbind = () => {
-      document.removeEventListener(this.props.name, fn);
-    };
-  }
-
-  componentWillUnmount() {
-    this.unbind();
-  }
-
-  render() {
-    return null;
-  }
-}
-
-export class Draggable extends React.Component {
-  state = {
-    dragging_state: null,
-  };
-
-  // screen_position = null;
-
-  render() {
-    let { dragging_state } = this.state;
-    let { onMove, onMoveEnd, children, cursor, style, ...props } = this.props;
-
-    return (
-      <React.Fragment>
-        {dragging_state && cursor && (
-          <ComponentComponent
-            key={cursor} // So it re-mounts on cursor change
-            didMount={({ setState }) => {
-              let previous_cursor = document.body.style.cursor;
-              document.body.style.cursor = cursor;
-              setState({ previous_cursor });
-            }}
-            willUnmount={({ state }) => {
-              document.body.style.cursor = state.previous_cursor;
-            }}
-          />
-        )}
-        <div
-          style={{
-            cursor: cursor,
-            ...style,
+  return (
+    <>
+      {dragging_state && cursor && (
+        <ComponentComponent
+          key={cursor} // So it re-mounts on cursor change
+          didMount={({ setState }) => {
+            let previous_cursor = document.body.style.cursor;
+            document.body.style.cursor = cursor;
+            setState({ previous_cursor });
           }}
-          data-what-is-this="Draggable"
-          onMouseDown={(e) => {
-            this.setState({
-              dragging_state: {
-                start_mouse_x: e.pageX,
-                start_mouse_y: e.pageY,
-              },
-            });
+          willUnmount={({ state }) => {
+            document.body.style.cursor = state.previous_cursor;
           }}
-          {...props}
-        >
-          {children}
-        </div>
+        />
+      )}
+      <div
+        style={{
+          cursor: cursor,
+          ...style,
+        }}
+        data-what-is-this="Draggable"
+        onMouseDown={(e) => {
+          set_dragging_state({
+            start_mouse_x: e.pageX,
+            start_mouse_y: e.pageY,
+          });
+        }}
+        {...props}
+      >
+        {children}
+      </div>
 
-        {dragging_state != null && (
-          <DocumentEvent
-            name="mousemove"
-            handler={(e) => {
-              if (dragging_state != null) {
-                const { x, y } = {
-                  x: e.pageX - dragging_state.start_mouse_x,
-                  y: e.pageY - dragging_state.start_mouse_y,
-                };
-
-                const { x: absolute_x, y: absolute_y } = {
-                  x: e.pageX,
-                  y: e.pageY,
-                };
-
-                onMove({
-                  y,
-                  x,
-                  absolute_y,
-                  absolute_x,
-                });
-              }
-            }}
-          />
-        )}
-
-        {dragging_state != null && (
-          <DocumentEvent
-            name="mouseup"
-            handler={(e) => {
-              document.body.style.cursor = null;
-              this.setState({ dragging_state: null });
+      {dragging_state != null && (
+        <DocumentEvent
+          name="mousemove"
+          handler={(e) => {
+            if (dragging_state != null) {
               const { x, y } = {
                 x: e.pageX - dragging_state.start_mouse_x,
                 y: e.pageY - dragging_state.start_mouse_y,
               };
 
-              onMoveEnd({
-                x,
-                y,
-              });
-            }}
-          />
-        )}
-      </React.Fragment>
-    );
-  }
-}
+              const { x: absolute_x, y: absolute_y } = {
+                x: e.pageX,
+                y: e.pageY,
+              };
 
-export let Absolute = ({
+              onMove({
+                y,
+                x,
+                absolute_y,
+                absolute_x,
+              });
+            }
+          }}
+        />
+      )}
+
+      {dragging_state != null && (
+        <DocumentEvent
+          name="mouseup"
+          handler={(e) => {
+            document.body.style.cursor = null;
+            set_dragging_state(null);
+            const { x, y } = {
+              x: e.pageX - dragging_state.start_mouse_x,
+              y: e.pageY - dragging_state.start_mouse_y,
+            };
+
+            onMoveEnd({
+              x,
+              y,
+            });
+          }}
+        />
+      )}
+    </>
+  );
+};
+
+export const Absolute = ({
   left,
   right,
   top,
@@ -164,7 +153,7 @@ export let Absolute = ({
   );
 };
 
-export let DraggingCircle = ({ style }) => {
+export const DraggingCircle = ({ style }) => {
   return (
     <div
       style={{
@@ -187,7 +176,7 @@ export let DraggingCircle = ({ style }) => {
   );
 };
 
-export let Whitespace = ({ height, width }) => {
+export const Whitespace = ({ height, width }) => {
   return (
     <div
       style={{
@@ -200,7 +189,7 @@ export let Whitespace = ({ height, width }) => {
   );
 };
 
-export let Layer = ({ style, children }) => {
+export const Layer = ({ style, children }) => {
   return (
     <Absolute
       top={0}

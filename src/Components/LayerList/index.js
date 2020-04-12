@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React from "react";
 import styled from "styled-components/macro";
 import { SidebarButton, EllipsisOverflow } from "../../Workspace";
 import { ListItem } from "./ListItem";
@@ -45,6 +45,7 @@ let DragContainer = styled.div.attrs((props) => ({
 
 const HITBOX_HEIGHT = 25;
 const HITBOX_PADDING = 10;
+
 let DetectAbove = styled.div`
   z-index: 99;
   position: absolute;
@@ -69,26 +70,28 @@ let HitboxContainer = styled.div`
   transition-timing-function: ease;
 `;
 
-function InsertArea(props) {
-  let { set_insertIndex, draggedItemIndex, listItemIndex, set_mouse } = props;
-  let [expand, set_expand] = useState(false);
+const InsertArea = ({
+  set_insert_index,
+  draggedItemIndex,
+  listItemIndex,
+  set_mouse,
+}) => {
+  let [expand, set_expand] = React.useState(false);
 
-  function isHoveringItself() {
-    if (draggedItemIndex === listItemIndex) return true;
-    if (draggedItemIndex === listItemIndex + 1) return true;
-    return false;
-  }
+  let is_hovering =
+    draggedItemIndex === listItemIndex ||
+    draggedItemIndex === listItemIndex + 1;
 
   let handleMouseOver = () => {
-    if (isHoveringItself()) {
-      set_insertIndex(null);
+    if (is_hovering) {
+      set_insert_index(null);
       set_expand(false);
     } else {
       set_expand(true);
       if (draggedItemIndex > listItemIndex) {
-        set_insertIndex(listItemIndex + 1);
+        set_insert_index(listItemIndex + 1);
       } else {
-        set_insertIndex(listItemIndex);
+        set_insert_index(listItemIndex);
       }
     }
   };
@@ -108,44 +111,45 @@ function InsertArea(props) {
       ></DetectAbove>
     </HitboxContainer>
   );
-}
+};
 
-export function LayerList(props) {
-  let {
-    items,
-    selected_id,
-    select_item,
-    change_itemOrder,
-    change_item,
-    remove_item,
-  } = props;
+export const LayerList = ({
+  items,
+  selected_id,
+  select_item,
+  change_itemOrder,
+  change_item,
+  remove_item,
+}) => {
+  let [insert_index, set_insert_index] = React.useState(null);
+  let [is_dragging, set_is_dragging] = React.useState(false);
+  let [mouse, set_mouse] = React.useState(0);
 
-  let [isBeingDragged, set_isBeingDragged] = useState(false);
-  let [mouse, set_mouse] = useState(0);
-  let [insertIndex, set_insertIndex] = useState(null);
+  const handleDragEnd = (id, current_index) => {
+    console.log("DRAG_END", is_dragging.id, "newIndex", insert_index);
+    if (insert_index !== null) {
+      change_itemOrder(id, insert_index);
+    }
 
-  function handle_dragEnd(id, currentIndex) {
-    console.log("DRAG_END", isBeingDragged.id, "newIndex", insertIndex);
-    if (insertIndex !== null) change_itemOrder(id, insertIndex);
-    set_isBeingDragged(false);
-    set_insertIndex(null);
-  }
+    set_is_dragging(false);
+    set_insert_index(null);
+  };
 
   let change_itemName = (id, newName) => {
     change_item(id, { name: newName });
   };
 
-  // Listitem handles dragStart, dragEnd
+  // Listitem handles dragStart, drag_end
   // Insert area sets newIndex
 
   return (
     <Container>
       <List>
-        {isBeingDragged && (
+        {is_dragging && (
           <InsertArea
             listItemIndex={-1}
-            draggedItemIndex={isBeingDragged.index}
-            set_insertIndex={set_insertIndex}
+            draggedItemIndex={is_dragging.index}
+            set_insert_index={set_insert_index}
             id="bottomLayerInsert"
             set_mouse={set_mouse}
           />
@@ -154,13 +158,13 @@ export function LayerList(props) {
         {/* THE ITEMS */}
         {items.map((item, i) => (
           <>
-            {/* {insertIndex === i && <InsertArea />} */}
+            {/* {insert_index === i && <InsertArea />} */}
 
             <ListItem
               id={item.id}
               index={i}
-              set_isBeingDragged={set_isBeingDragged}
-              handle_dragEnd={handle_dragEnd}
+              set_is_dragging={set_is_dragging}
+              handleDragEnd={handleDragEnd}
               active={item.id === selected_id}
               select_item={() => select_item(item.id)}
               name={item.name}
@@ -174,11 +178,11 @@ export function LayerList(props) {
                 <EllipsisOverflow>{item.name}</EllipsisOverflow>
               </SidebarButton> */}
             </ListItem>
-            {isBeingDragged && (
+            {is_dragging && (
               <InsertArea
                 listItemIndex={i}
-                draggedItemIndex={isBeingDragged.index}
-                set_insertIndex={set_insertIndex}
+                draggedItemIndex={is_dragging.index}
+                set_insert_index={set_insert_index}
                 set_mouse={set_mouse}
               />
             )}
@@ -186,15 +190,15 @@ export function LayerList(props) {
         ))}
       </List>
 
-      {isBeingDragged && (
+      {is_dragging && (
         <DragOverlay
           // ref={overlayRef}
-          onMouseUp={() => set_isBeingDragged(false)}
+          onMouseUp={() => set_is_dragging(false)}
           onMouseMove={(e) => set_mouse({ y: e.clientY, x: e.clientX })}
         >
           <DragContainer y={mouse.y} x={mouse.x}>
             {items.map((item) => {
-              if (item.id === isBeingDragged.id) {
+              if (item.id === is_dragging.id) {
                 return (
                   <SidebarButton
                     style={{ cursor: "grabbing" }}
@@ -211,4 +215,4 @@ export function LayerList(props) {
       )}
     </Container>
   );
-}
+};

@@ -42,57 +42,55 @@ let fixup_react_event = (mapCoords, e) => {
   }
 };
 
-export class IsolateCoordinatesForElement extends React.Component {
-  currently_mousedown_in_my_hood = false;
+export const IsolateCoordinatesForElement = ({ element, mapCoords }) => {
+  let currently_mousedown_in_my_hood = React.useRef(false);
 
-  render() {
-    let { element, mapCoords } = this.props;
-    let path = (event) => {
-      return event.path || (event.composedPath && event.composedPath());
-    };
-    return (
-      <React.Fragment>
-        <DocumentEvent
-          // So `capture` makes it so this event is taken before it is even really an event
-          // https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/05/1495534508eventflow.svg
-          capture
-          passive
-          name="mousedown"
-          handler={(e) => {
-            if (path(e).includes(element)) {
-              this.currently_mousedown_in_my_hood = true;
-              fixup_react_event(mapCoords, e);
-            }
-          }}
-        />
-        <DocumentEvent
-          capture
-          passive
-          name="mousemove"
-          handler={(e) => {
-            if (
-              this.currently_mousedown_in_my_hood ||
-              path(e).includes(element)
-            ) {
-              fixup_react_event(mapCoords, e);
-            }
-          }}
-        />
-        <DocumentEvent
-          capture
-          passive
-          name="mouseup"
-          handler={(e) => {
-            if (
-              this.currently_mousedown_in_my_hood ||
-              path(e).includes(element)
-            ) {
-              this.currently_mousedown_in_my_hood = false;
-              fixup_react_event(mapCoords, e);
-            }
-          }}
-        />
-      </React.Fragment>
-    );
-  }
-}
+  let path = (event) => {
+    return event.path || event.composedPath?.();
+  };
+
+  return (
+    <>
+      <DocumentEvent
+        // So `capture` makes it so this event is taken before it is even really an event
+        // https://dab1nmslvvntp.cloudfront.net/wp-content/uploads/2017/05/1495534508eventflow.svg
+        capture
+        passive
+        name="mousedown"
+        handler={(e) => {
+          if (path(e).includes(element)) {
+            currently_mousedown_in_my_hood.current = true;
+            fixup_react_event(mapCoords, e);
+          }
+        }}
+      />
+      <DocumentEvent
+        capture
+        passive
+        name="mousemove"
+        handler={(e) => {
+          if (
+            currently_mousedown_in_my_hood.current ||
+            path(e).includes(element)
+          ) {
+            fixup_react_event(mapCoords, e);
+          }
+        }}
+      />
+      <DocumentEvent
+        capture
+        passive
+        name="mouseup"
+        handler={(e) => {
+          if (
+            currently_mousedown_in_my_hood.current ||
+            path(e).includes(element)
+          ) {
+            currently_mousedown_in_my_hood.current = false;
+            fixup_react_event(mapCoords, e);
+          }
+        }}
+      />
+    </>
+  );
+};

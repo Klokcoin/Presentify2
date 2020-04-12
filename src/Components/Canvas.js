@@ -1,17 +1,17 @@
-import React, { Component } from "react";
+import React, { createContext, useContext, useRef, useEffect } from "react";
 import { mapValues, clamp } from "lodash";
 
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement.js";
 import { Transformation2DMatrix } from "../Data/TransformationMatrix.js";
 
-const isWhole = number => number % 1 === 0;
+const isWhole = (number) => number % 1 === 0;
 
-let ZoomContext = React.createContext({ scale: 1 });
+let ZoomContext = createContext({ scale: 1 });
 
 export let Unzoom = ({ children, ...props }) => {
-  let { scale } = React.useContext(ZoomContext);
+  let { scale } = useContext(ZoomContext);
   if (typeof children === "function") {
-    return children({ scale, ...mapValues(props, x => scale * x) });
+    return children({ scale, ...mapValues(props, (x) => scale * x) });
   } else {
     return <div style={{ transform: `scale(${scale})` }} children={children} />;
   }
@@ -22,13 +22,20 @@ let Canvas = ({
   onTransformChange,
   onBackgroundClick,
   children,
-  maxZoom,
-  minZoom,
-  maxTranslation,
-  initialTranslation,
+  maxZoom = 256, // Took these from sketch
+  minZoom = 0.01, // https://sketchapp.com/docs/canvas/#zooming
+  maxTranslation = {
+    // I don't yet see a reason to limit this...
+    x: Infinity,
+    y: Infinity,
+  },
+  initialTranslation = {
+    x: 0,
+    y: 0,
+  },
 }) => {
-  let isolateRef = React.useRef(null);
-  let measureRef = React.useRef(null);
+  let isolateRef = useRef(null);
+  let measureRef = useRef(null);
 
   let doTranslation = ({ deltaX, deltaY }) => {
     onTransformChange(({ transform }) => {
@@ -123,12 +130,12 @@ let Canvas = ({
   let invert = initial_transform.multiply(transform.inverse());
 
   // This is necessary for the onWheel={() => {}} event, because we can
-  React.useEffect(() => {
+  useEffect(() => {
     if (measureRef.current == null) {
       return;
     }
 
-    measureRef.current.addEventListener("wheel", event => {
+    measureRef.current.addEventListener("wheel", (event) => {
       event.preventDefault();
       const { deltaX, deltaY } = event;
 
@@ -155,7 +162,7 @@ let Canvas = ({
           width: "100%",
         }}
         ref={measureRef}
-        onMouseDown={e => {
+        onMouseDown={(e) => {
           // Only reset selected_item if the click is **only** on the canvas,
           // and not actually on one of the divs inside
           if (e.target === e.currentTarget) {
@@ -173,7 +180,7 @@ let Canvas = ({
             transformStyle: `preserve-3d`,
             transformOrigin: "0% 0%",
           }}
-          onMouseDown={e => {
+          onMouseDown={(e) => {
             // Only trigger onBackgroundClick if the click is **only** on the canvas,
             // and not actually on one of the divs inside
             if (e.target === e.currentTarget) {
@@ -186,7 +193,7 @@ let Canvas = ({
             // NOTE Ik weet dat je het zo hebt gemaakt dat ik in principe
             // .... mapCoords={invert.applyToCoords}
             // .... kan doen maar dat vind ik hekka onleesbaar(der)
-            mapCoords={coords => invert.applyToCoords(coords)}
+            mapCoords={(coords) => invert.applyToCoords(coords)}
           />
 
           {/* A gray shape to show the bounds, also just for reference */}
@@ -210,21 +217,6 @@ let Canvas = ({
       </div>
     </ZoomContext.Provider>
   );
-};
-Canvas.defaultProps = {
-  maxTranslation: {
-    // I don't yet see a reason to limit this...
-    x: Infinity,
-    y: Infinity,
-  },
-  // Took these from sketch
-  // https://sketchapp.com/docs/canvas/#zooming
-  minZoom: 0.01,
-  maxZoom: 256,
-  initialTranslation: {
-    x: 0,
-    y: 0,
-  },
 };
 
 export default Canvas;

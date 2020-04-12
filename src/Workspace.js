@@ -75,9 +75,11 @@ export let FilesContext = React.createContext({
     throw new Error(`Need a provider for FilesContext.Consumer`);
   },
 });
+
 let BLOBURL = Symbol(
   "The blob url, but only valid in the document it was created in"
 );
+
 export let LoadFile = ({ url, children }) => {
   let { getFile } = React.useContext(FilesContext);
   let local_match = url.match(/canvas-local:\/\/(.*)/);

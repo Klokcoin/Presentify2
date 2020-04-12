@@ -35,19 +35,17 @@ let TrashContainer = styled.div`
   }
 `;
 
-export function ListItem(props) {
-  let {
-    set_isBeingDragged,
-    id,
-    name,
-    handle_dragEnd,
-    index,
-    active,
-    select_item,
-    change_itemName,
-    remove_item,
-  } = props;
-
+export const ListItem = ({
+  set_is_dragging,
+  id,
+  name,
+  handleDragEnd,
+  index,
+  active,
+  select_item,
+  change_itemName,
+  remove_item,
+}) => {
   let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
   let [hover, set_hover] = useState(false);
@@ -56,9 +54,11 @@ export function ListItem(props) {
   const bind = useGesture(
     {
       onDrag: ({ down, movement: [x, y] }) => {
-        if (down) set_isBeingDragged({ id, index, x, y });
+        if (down) {
+          set_is_dragging({ id, index, x, y });
+        }
       },
-      onDragEnd: () => handle_dragEnd(id, index),
+      onDragEnd: () => handleDragEnd(id, index),
     },
     {
       drag: {
@@ -76,7 +76,9 @@ export function ListItem(props) {
   //default behavoir of the input field is overwritten
   // now it needs to focus after a double click
   useEffect(() => {
-    if (!disabled) inputRef.current.focus();
+    if (!disabled) {
+      inputRef.current.focus();
+    }
   }, [disabled]);
 
   let handleBlur = () => {
@@ -108,7 +110,11 @@ export function ListItem(props) {
         <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
           {disabled ? (
             <EllipsisOverflow
-              style={{ height: "100%", width: "100%", position: "relative" }}
+              style={{
+                height: "100%",
+                width: "100%",
+                position: "relative",
+              }}
             >
               {name}
 
@@ -133,4 +139,4 @@ export function ListItem(props) {
       </SidebarButton>
     </Container>
   );
-}
+};
