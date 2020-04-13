@@ -249,6 +249,7 @@ let Workspace = () => {
   };
 
   let select_item = (id) => {
+    // console.log("trying to select", id);
     set_sheet_view({
       ...sheet_view,
       selected_id: id,
@@ -273,6 +274,75 @@ let Workspace = () => {
     });
 
     select_item(id);
+  };
+
+  let add_itemGroup = (itemId) => {
+    let item = sheet.items.find((x) => x.id === itemId);
+    add_component({ type: "group", groupItems: [item] });
+  };
+
+  let RecursiveMap = (items, crumbs, handleChange) => {
+    return items.map((item) => {
+      let component_info = component_map[item.type];
+
+      if (item.type === "group") {
+        let group = item;
+
+        let nested_change = (nestedId, change) => {
+          console.log("nested change", nestedId, change);
+          let index = group.groupItems.findIndex((x) => x.id === nestedId);
+          if (index !== -1) {
+            let newGroupItems = [...group.groupItems];
+            newGroupItems[index] = { ...newGroupItems[index], ...change };
+
+            handleChange(group.id, { groupItems: newGroupItems });
+          }
+        };
+
+        //recursive case
+        return (
+          <CanvasItemOverlay
+            key={group.id}
+            selected={sheet_view.selected_id === group.id}
+            onSelect={() => {
+              select_item(group.id);
+            }}
+            item={group}
+            onChange={(next_item) => {
+              handleChange(group.id, next_item);
+            }}
+          >
+            {RecursiveMap(
+              group.groupItems,
+              [...crumbs, group.id],
+              nested_change
+            )}
+          </CanvasItemOverlay>
+        );
+      }
+      //base case
+      else
+        return (
+          <CanvasItemOverlay
+            key={item.id}
+            selected={sheet_view.selected_id === item.id}
+            onSelect={() => {
+              select_item(item.id);
+            }}
+            item={item}
+            onChange={(next_item) => {
+              handleChange(item.id, next_item);
+            }}
+          >
+            <Layer style={{ pointerEvents: "none" }}>
+              <component_info.Component
+                size={item}
+                options={item.options || {}}
+              />
+            </Layer>
+          </CanvasItemOverlay>
+        );
+    });
   };
 
   return (
@@ -382,6 +452,14 @@ let Workspace = () => {
             <SidebarLine />
 
             <SidebarTitle> Layer list </SidebarTitle>
+
+            <button
+              disabled={!sheet_view.selected_id}
+              onClick={() => add_itemGroup(sheet_view.selected_id)}
+            >
+              add group
+            </button>
+
             <div style={{ overflowY: "auto", height: "100%" }}>
               <LayerList
                 items={sheet.items}
@@ -442,29 +520,7 @@ let Workspace = () => {
                         select_item(null);
                       }}
                     >
-                      {sheet.items.map((item) => {
-                        let component_info = component_map[item.type];
-                        return (
-                          <CanvasItemOverlay
-                            key={item.id}
-                            selected={sheet_view.selected_id === item.id}
-                            onSelect={() => {
-                              select_item(item.id);
-                            }}
-                            item={item}
-                            onChange={(next_item) => {
-                              change_item(item.id, next_item);
-                            }}
-                          >
-                            <Layer style={{ pointerEvents: "none" }}>
-                              <component_info.Component
-                                size={item}
-                                options={item.options || {}}
-                              />
-                            </Layer>
-                          </CanvasItemOverlay>
-                        );
-                      })}
+                      {RecursiveMap(sheet.items, [], change_item)}
                     </Canvas>
                   )}
                 </div>

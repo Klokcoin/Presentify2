@@ -222,7 +222,8 @@ export const CanvasItemOverlay = ({
     <Absolute
       top={current_item.y}
       left={current_item.x}
-      onMouseDown={() => {
+      onMouseDown={(e) => {
+        e.stopPropagation();
         onSelect();
       }}
       style={{

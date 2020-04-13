@@ -145,4 +145,22 @@ export let component_map = {
       );
     },
   },
+  group: {
+    icon: <i className="fas fa-circle" />,
+    name: "Group",
+    default_options: {
+      backgroundColor: "#B50004",
+    },
+    Component: ({ size, options }) => {
+      return (
+        <div
+          style={{
+            height: "100%",
+            width: "100%",
+            border: "1px solid red",
+          }}
+        />
+      );
+    },
+  },
 };
