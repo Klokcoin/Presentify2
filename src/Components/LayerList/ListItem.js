@@ -45,10 +45,13 @@ export const ListItem = ({
   select_item,
   change_itemName,
   remove_item,
+  groupItems,
+  children,
 }) => {
   let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
   let [hover, set_hover] = useState(false);
+  let [collapsed, set_collapsed] = useState(true);
   let inputRef = useRef(null);
 
   const bind = useGesture(
@@ -109,21 +112,34 @@ export const ListItem = ({
       <SidebarButton active={active} onClick={select_item}>
         <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
           {disabled ? (
-            <EllipsisOverflow
-              style={{
-                height: "100%",
-                width: "100%",
-                position: "relative",
-              }}
-            >
-              {name}
+            <div>
+              <EllipsisOverflow
+                style={{
+                  height: "100%",
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {groupItems && (
+                  <span onClick={() => set_collapsed(!collapsed)}>
+                    {collapsed ? (
+                      <i class="fas fa-chevron-down"></i>
+                    ) : (
+                      <i class="fas fa-chevron-right"></i>
+                    )}
+                  </span>
+                )}
+                {name}
 
-              {hover && (
-                <TrashContainer title="Delete layer" onClick={handleRemove}>
-                  <i class="fas fa-trash-alt"></i>
-                </TrashContainer>
-              )}
-            </EllipsisOverflow>
+                {hover && (
+                  <TrashContainer title="Delete layer" onClick={handleRemove}>
+                    <i class="fas fa-trash-alt"></i>
+                  </TrashContainer>
+                )}
+              </EllipsisOverflow>
+
+              {collapsed && children}
+            </div>
           ) : (
             <EditableName
               value={input}

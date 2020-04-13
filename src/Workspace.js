@@ -281,7 +281,7 @@ let Workspace = () => {
     add_component({ type: "group", groupItems: [item] });
   };
 
-  let RecursiveMap = (items, crumbs, handleChange) => {
+  let RecursiveMap = (items, handle_change) => {
     return items.map((item) => {
       let component_info = component_map[item.type];
 
@@ -295,7 +295,7 @@ let Workspace = () => {
             let newGroupItems = [...group.groupItems];
             newGroupItems[index] = { ...newGroupItems[index], ...change };
 
-            handleChange(group.id, { groupItems: newGroupItems });
+            handle_change(group.id, { groupItems: newGroupItems });
           }
         };
 
@@ -309,14 +309,10 @@ let Workspace = () => {
             }}
             item={group}
             onChange={(next_item) => {
-              handleChange(group.id, next_item);
+              handle_change(group.id, next_item);
             }}
           >
-            {RecursiveMap(
-              group.groupItems,
-              [...crumbs, group.id],
-              nested_change
-            )}
+            {RecursiveMap(group.groupItems, nested_change)}
           </CanvasItemOverlay>
         );
       }
@@ -331,7 +327,7 @@ let Workspace = () => {
             }}
             item={item}
             onChange={(next_item) => {
-              handleChange(item.id, next_item);
+              handle_change(item.id, next_item);
             }}
           >
             <Layer style={{ pointerEvents: "none" }}>
@@ -520,7 +516,7 @@ let Workspace = () => {
                         select_item(null);
                       }}
                     >
-                      {RecursiveMap(sheet.items, [], change_item)}
+                      {RecursiveMap(sheet.items, change_item)}
                     </Canvas>
                   )}
                 </div>

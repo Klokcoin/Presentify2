@@ -156,38 +156,20 @@ export const LayerList = ({
         )}
 
         {/* THE ITEMS */}
-        {items.map((item, i) => (
-          <>
-            {/* {insert_index === i && <InsertArea />} */}
-
-            <ListItem
-              id={item.id}
-              index={i}
-              set_is_dragging={set_is_dragging}
-              handleDragEnd={handleDragEnd}
-              active={item.id === selected_id}
-              select_item={() => select_item(item.id)}
-              name={item.name}
-              change_itemName={change_itemName}
-              remove_item={remove_item}
-            >
-              {/* <SidebarButton
-                active={item.id === selected_id}
-                onClick={() => select_item(item.id)}
-              >
-                <EllipsisOverflow>{item.name}</EllipsisOverflow>
-              </SidebarButton> */}
-            </ListItem>
-            {is_dragging && (
-              <InsertArea
-                listItemIndex={i}
-                draggedItemIndex={is_dragging.index}
-                set_insert_index={set_insert_index}
-                set_mouse={set_mouse}
-              />
-            )}
-          </>
-        ))}
+        {
+          <RecursiveList
+            items={items}
+            set_is_dragging={set_is_dragging}
+            handleDragEnd={handleDragEnd}
+            selected_id={selected_id}
+            select_item={select_item}
+            is_dragging={is_dragging}
+            change_itemName={change_itemName}
+            remove_item={remove_item}
+            set_mouse={set_mouse}
+            set_insert_index={set_insert_index}
+          />
+        }
       </List>
 
       {is_dragging && (
@@ -215,4 +197,53 @@ export const LayerList = ({
       )}
     </Container>
   );
+};
+
+let RecursiveList = (props) => {
+  let {
+    is_dragging,
+    items,
+    selected_id,
+    select_item,
+    set_mouse,
+    set_insert_index,
+    ...listItemProps
+  } = props;
+  return items.map((item, i) => {
+    let isGroup = item.groupItems && item.groupItems.length > 0;
+    return (
+      <>
+        {/* {insert_index === i && <InsertArea />} */}
+
+        <ListItem
+          {...listItemProps}
+          id={item.id}
+          index={i}
+          active={item.id === selected_id}
+          select_item={() => select_item(item.id)}
+          name={item.name}
+          groupItems={isGroup ? item.groupItems : false}
+        >
+          {isGroup && (
+            <RecursiveList
+              {...listItemProps}
+              items={item.groupItems}
+              select_item={select_item}
+              is_dragging={is_dragging}
+              set_mouse={set_mouse}
+              set_insert_index={set_insert_index}
+            />
+          )}
+        </ListItem>
+        {is_dragging && (
+          <InsertArea
+            listItemIndex={i}
+            draggedItemIndex={is_dragging.index}
+            set_insert_index={set_insert_index}
+            set_mouse={set_mouse}
+          />
+        )}
+      </>
+    );
+  });
 };
