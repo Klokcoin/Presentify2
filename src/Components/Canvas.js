@@ -3,6 +3,7 @@ import { mapValues, clamp } from "lodash";
 
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement.js";
 import { Transformation2DMatrix } from "../Data/TransformationMatrix.js";
+import { PresentifyContext } from "../PresentifyContext.js";
 
 const isWhole = (number) => number % 1 === 0;
 
@@ -18,9 +19,6 @@ export let Unzoom = ({ children, ...props }) => {
 };
 
 let Canvas = ({
-  transform,
-  onTransformChange,
-  onBackgroundClick,
   children,
   maxZoom = 256, // Took these from sketch
   minZoom = 0.01, // https://sketchapp.com/docs/canvas/#zooming
@@ -34,92 +32,87 @@ let Canvas = ({
     y: 0,
   },
 }) => {
+  const {
+    sheet_view: { transform },
+    select_item,
+    change_transform,
+  } = useContext(PresentifyContext);
   let isolateRef = useRef(null);
   let measureRef = useRef(null);
 
   let doTranslation = ({ deltaX, deltaY }) => {
-    onTransformChange(({ transform }) => {
-      // 'Normalize' the translation speed, we multiply our deltas by the current scale,
-      // so we pan slower at close zooms & faster at far zooms
-      const {
-        x: relativeDeltaX,
-        y: relativeDeltaY,
-      } = transform.inverseScale().applyToCoords({
-        x: deltaX,
-        y: deltaY,
-      });
-
-      let new_transform = transform
-        .multiply(
-          new Transformation2DMatrix({
-            e: -relativeDeltaX,
-            f: -relativeDeltaY,
-          })
-        )
-        .clampTranslation({
-          x: [-maxTranslation.x, maxTranslation.x],
-          y: [-maxTranslation.y, maxTranslation.y],
-        });
-
-      return {
-        transform: new_transform,
-      };
+    const {
+      x: relativeDeltaX,
+      y: relativeDeltaY,
+    } = transform.inverseScale().applyToCoords({
+      x: deltaX,
+      y: deltaY,
     });
-  };
 
-  let doZoom = ({ clientX, clientY, deltaY }) => {
-    onTransformChange(({ transform, zoom }) => {
-      let initial_transform = new Transformation2DMatrix({
-        e: -initialTranslation.x,
-        f: -initialTranslation.y,
-      });
-
-      const scale = 1 - (1 / 110) * deltaY;
-
-      let { top, left } = measureRef.current.getBoundingClientRect();
-      // NOTE So learnt now, need to apply the initial_transform AFTER the invert... which now
-      // .... I think about it.. is quite obvious from the fact that it is reversed
-      const click_inside_canvas = transform
-        .inverse()
-        .multiply(initial_transform)
-        .applyToCoords({
-          x: clientX - left,
-          y: clientY - top,
-        });
-
-      let current_zoom = transform.getScale().x;
-      let zoom_diff =
-        current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
-      let new_transform = transform
-        .multiply(
-          new Transformation2DMatrix({
-            e: click_inside_canvas.x,
-            f: click_inside_canvas.y,
-          })
-        )
-        .multiply(
-          new Transformation2DMatrix({
-            a: 1 / zoom_diff,
-            d: 1 / zoom_diff,
-          })
-        )
-        .multiply(
-          new Transformation2DMatrix({
-            e: -click_inside_canvas.x,
-            f: -click_inside_canvas.y,
-          })
-        );
-
-      // After zoom fix, we check if we happen to go over the translation bounds still
-      new_transform = new_transform.clampTranslation({
+    let new_transform = transform
+      .multiply(
+        new Transformation2DMatrix({
+          e: -relativeDeltaX,
+          f: -relativeDeltaY,
+        })
+      )
+      .clampTranslation({
         x: [-maxTranslation.x, maxTranslation.x],
         y: [-maxTranslation.y, maxTranslation.y],
       });
 
-      return {
-        transform: new_transform,
-      };
+    change_transform(new_transform);
+  };
+
+  let doZoom = ({ clientX, clientY, deltaY }) => {
+    let initial_transform = new Transformation2DMatrix({
+      e: -initialTranslation.x,
+      f: -initialTranslation.y,
     });
+
+    const scale = 1 - (1 / 110) * deltaY;
+
+    let { top, left } = measureRef.current.getBoundingClientRect();
+    // NOTE So learnt now, need to apply the initial_transform AFTER the invert... which now
+    // .... I think about it.. is quite obvious from the fact that it is reversed
+    const click_inside_canvas = transform
+      .inverse()
+      .multiply(initial_transform)
+      .applyToCoords({
+        x: clientX - left,
+        y: clientY - top,
+      });
+
+    let current_zoom = transform.getScale().x;
+    let zoom_diff =
+      current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
+    let new_transform = transform
+      .multiply(
+        new Transformation2DMatrix({
+          e: click_inside_canvas.x,
+          f: click_inside_canvas.y,
+        })
+      )
+      .multiply(
+        new Transformation2DMatrix({
+          a: 1 / zoom_diff,
+          d: 1 / zoom_diff,
+        })
+      )
+      .multiply(
+        new Transformation2DMatrix({
+          e: -click_inside_canvas.x,
+          f: -click_inside_canvas.y,
+        })
+      );
+
+    // After zoom fix, we check if we happen to go over the translation bounds still
+    new_transform = new_transform.clampTranslation({
+      x: [-maxTranslation.x, maxTranslation.x],
+      y: [-maxTranslation.y, maxTranslation.y],
+    });
+
+    change_transform(new_transform);
   };
 
   let initial_transform = new Transformation2DMatrix({
@@ -153,6 +146,10 @@ let Canvas = ({
     });
   }, [measureRef.current]);
 
+  const handleBackgroundClick = () => {
+    select_item(null);
+  };
+
   return (
     <ZoomContext.Provider value={{ scale: invert.getScale().x }}>
       <div
@@ -166,7 +163,7 @@ let Canvas = ({
           // Only reset selected_item if the click is **only** on the canvas,
           // and not actually on one of the divs inside
           if (e.target === e.currentTarget) {
-            onBackgroundClick();
+            handleBackgroundClick();
           }
         }}
       >
@@ -181,10 +178,10 @@ let Canvas = ({
             transformOrigin: "0% 0%",
           }}
           onMouseDown={(e) => {
-            // Only trigger onBackgroundClick if the click is **only** on the canvas,
+            // Only trigger handleBackgroundClick if the click is **only** on the canvas,
             // and not actually on one of the divs inside
             if (e.target === e.currentTarget) {
-              onBackgroundClick();
+              handleBackgroundClick();
             }
           }}
         >

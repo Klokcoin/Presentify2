@@ -2,6 +2,7 @@ import React from "react";
 import { Draggable, DraggingCircle, Absolute } from "../Elements";
 import { Unzoom } from "../Components/Canvas";
 import { memoize } from "lodash";
+import { PresentifyContext } from "../PresentifyContext";
 
 let vector = {
   rotate: ([x, y], rotation) => {
@@ -189,15 +190,23 @@ let width_height_movement = (direction, movement_state, item) => {
   };
 };
 
-export const CanvasItemOverlay = ({
-  item,
-  selected,
-  onSelect,
-  onChange,
-  children,
-  /* inverseScale, */
-}) => {
+export const CanvasItemOverlay = ({ item, children }) => {
+  const {
+    sheet_view: { selected_id },
+    select_item,
+    change_item,
+  } = React.useContext(PresentifyContext);
   const [movement_state, set_movement_state] = React.useState(null);
+
+  let selected = selected_id === item.id;
+
+  const onChange = (changes) => {
+    change_item(item.id, changes);
+  };
+
+  const onSelect = () => {
+    select_item(item.id);
+  };
 
   let act_like_selected = selected || movement_state != null;
 

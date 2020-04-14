@@ -86,6 +86,10 @@ export class Transformation2DMatrix {
     this.f = f;
   }
 
+  [Symbol.toPrimitive]() {
+    return { a: this.a, b: this.b, c: this.c, d: this.d, e: this.e, f: this.f };
+  }
+
   toMatrix3D() {
     return new Transformation3DMatrix({
       a: this.a,
@@ -108,13 +112,13 @@ export class Transformation2DMatrix {
   }
 
   // String for transform style prop
-  toString = () => {
+  toString() {
     const { a, b, c, d, e, f } = this;
     return `matrix(${a}, ${b}, ${c}, ${d}, ${e}, ${f})`;
-  };
+  }
 
   // Multiplying two matrices to get a third matrix, which does both transformations
-  multiply = (otherMatrix) => {
+  multiply(otherMatrix) {
     if (!(otherMatrix instanceof Transformation2DMatrix)) {
       throw new Error("Can't multiply a non-Matrix object!");
     }
@@ -131,10 +135,10 @@ export class Transformation2DMatrix {
       e: a * e2 + c * f2 + e,
       f: b * e2 + d * f2 + f,
     });
-  };
+  }
 
   // Computing the inverse of a matrix
-  inverse = () => {
+  inverse() {
     const { a, b, c, d, e, f } = this;
     const determinant = a * d - c * b;
 
@@ -151,36 +155,36 @@ export class Transformation2DMatrix {
       e: (c * f - e * d) / determinant,
       f: (e * b - a * f) / determinant,
     });
-  };
+  }
 
   // Inversing only the scale
-  inverseScale = () => {
+  inverseScale() {
     const { a, b, c, d, e, f } = this;
     return new Transformation2DMatrix({
       a: 1 / a,
       d: 1 / d,
     });
-  };
+  }
 
   // Applying the matrix transformation to x and y coordinates
-  applyToCoords = ({ x, y }) => {
+  applyToCoords({ x, y }) {
     const { a, b, c, d, e, f } = this;
     return {
       x: a * x + c * y + e,
       y: b * x + d * y + f,
     };
-  };
+  }
 
-  getScale = () => {
+  getScale() {
     let point_zero = this.applyToCoords({ x: 0, y: 0 });
     let point_one = this.applyToCoords({ x: 1, y: 1 });
     return {
       x: point_one.x - point_zero.x,
       y: point_one.y - point_zero.y,
     };
-  };
+  }
 
-  equals = (otherMatrix) => {
+  equals(otherMatrix) {
     return (
       this.a === otherMatrix.a &&
       this.b === otherMatrix.b &&
@@ -189,9 +193,9 @@ export class Transformation2DMatrix {
       this.e === otherMatrix.e &&
       this.f === otherMatrix.f
     );
-  };
+  }
 
-  clampTranslation = ({ x, y }) => {
+  clampTranslation({ x, y }) {
     let revertscale = this.inverseScale();
     let point_zero = revertscale.applyToCoords(
       this.applyToCoords({ x: 0, y: 0 })
@@ -208,7 +212,7 @@ export class Transformation2DMatrix {
         f: y_overhead,
       })
     );
-  };
+  }
 }
 
 export const Transformation2DMatrixFromString = (string) => {
