@@ -16,6 +16,7 @@
     "md5": "^2.2.1",
     "memoize-one": "^4.0.2",
     "prettier": "^2.0.2",
+    "ramda": "^0.27.0",
     "react": "^16.13.1",
     "react-color": "^2.14.1",
     "react-dom": "^16.13.1",

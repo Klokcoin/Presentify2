@@ -47,6 +47,7 @@ export const ListItem = ({
   remove_item,
   groupItems,
   children,
+  crumbs,
 }) => {
   let [input, set_input] = useState(name);
   let [disabled, set_disabled] = useState(true);
@@ -58,7 +59,7 @@ export const ListItem = ({
     {
       onDrag: ({ down, movement: [x, y] }) => {
         if (down) {
-          set_is_dragging({ id, index, x, y });
+          set_is_dragging({ id, index, x, y, crumbs });
         }
       },
       onDragEnd: () => handleDragEnd(id, index),
@@ -106,8 +107,14 @@ export const ListItem = ({
   return (
     <Container
       {...bind()}
-      onMouseEnter={() => set_hover(true)}
-      onMouseLeave={() => set_hover(false)}
+      onMouseEnter={(e) => {
+        e.stopPropagation();
+        set_hover(true);
+      }}
+      onMouseLeave={(e) => {
+        e.stopPropagation();
+        set_hover(false);
+      }}
     >
       <SidebarButton active={active} onClick={select_item}>
         <div onDoubleClick={handleDoubleClick} style={{ width: "100%" }}>
