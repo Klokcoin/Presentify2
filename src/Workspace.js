@@ -19,7 +19,7 @@ import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
 import { component_map } from "./PresentifyComponents/";
-import { LayerList, LayerListItem } from "./Components/LayerList";
+import LayerList from "./Components/LayerList.js";
 
 let Sidebar = styled.div`
   width: 232px;
@@ -256,24 +256,30 @@ let Workspace = () => {
     });
   };
 
-  let change_itemOrder = (id, newIndex) => {
-    let { items } = sheet;
+  let remove_item = (id) => {
+    set_sheet({
+      ...sheet,
+      items: sheet.items.filter((x) => x.id !== id),
+    });
 
-    //first remove item, then move it to new position
-    let reOrdered_items = items.filter((x) => x.id !== id);
+    if (sheet_view.selected_id === id) {
+      // Just for concistency, deselect the removed item (probably not necessary tho)
+      set_sheet_view({
+        ...sheet_view,
+        selected_id: null,
+      });
+    }
+  };
 
-    reOrdered_items.splice(
-      newIndex,
-      0,
-      items.find((x) => x.id === id)
-    );
+  let reorder_item = (oldIndex, newIndex) => {
+    let new_items = [...sheet.items];
+    let [removed] = new_items.splice(oldIndex, 1);
+    new_items.splice(newIndex, 0, removed);
 
     set_sheet({
       ...sheet,
-      items: reOrdered_items,
+      items: new_items,
     });
-
-    select_item(id);
   };
 
   let add_itemGroup = (itemId) => {
@@ -393,12 +399,7 @@ let Workspace = () => {
 
               if (e.key === "Backspace" || e.key === "Delete") {
                 if (sheet_view.selected_id != null) {
-                  set_sheet({
-                    ...sheet,
-                    items: sheet.items.filter(
-                      (x) => x.id !== sheet_view.selected_id
-                    ),
-                  });
+                  remove_item(sheet_view.selected_id);
                 }
               }
 
@@ -461,14 +462,9 @@ let Workspace = () => {
                 items={sheet.items}
                 selected_id={sheet_view.selected_id}
                 select_item={select_item}
-                change_itemOrder={change_itemOrder}
+                remove_item={remove_item}
+                reorder_item={reorder_item}
                 change_item={change_item}
-                remove_item={(id) =>
-                  set_sheet({
-                    ...sheet,
-                    items: sheet.items.filter((x) => x.id !== id),
-                  })
-                }
               />
             </div>
           </Sidebar>
@@ -529,7 +525,7 @@ let Workspace = () => {
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
             {sheet.items
-              .filter((x) => x.id === sheet_view.selected_id)
+              .filter((item) => item.id === sheet_view.selected_id)
               .map((item) => {
                 let component_info = component_map[item.type];
 
