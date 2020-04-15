@@ -159,6 +159,8 @@ let Workspace = () => {
   ) => {
     let component_info = component_map[type];
 
+    console.log("info", component_info);
+
     let result = sheet_view.transform.inverse().applyToCoords({ x: 0, y: 0 });
     let scale = sheet_view.transform.inverse().getScale().x;
     let next_id = uuid();
@@ -176,6 +178,7 @@ let Workspace = () => {
           options: component_info.default_options || {},
           ...info,
 
+          groupItems: component_info.groupItems || null,
           z: next_id * 10, // * 10 ???
           id: next_id,
         });
@@ -271,21 +274,16 @@ let Workspace = () => {
     }
   };
 
-  let reorder_item = (oldIndex, newIndex) => {
-    let new_items = [...sheet.items];
-    let [removed] = new_items.splice(oldIndex, 1);
-    new_items.splice(newIndex, 0, removed);
+  // let reorder_item = (oldIndex, newIndex) => {
+  //   let new_items = [...sheet.items];
+  //   let [removed] = new_items.splice(oldIndex, 1);
+  //   new_items.splice(newIndex, 0, removed);
 
-    set_sheet({
-      ...sheet,
-      items: new_items,
-    });
-  };
-
-  let add_itemGroup = (itemId) => {
-    let item = sheet.items.find((x) => x.id === itemId);
-    add_component({ type: "group", groupItems: [item] });
-  };
+  //   set_sheet({
+  //     ...sheet,
+  //     items: new_items,
+  //   });
+  // };
 
   let RecursiveMap = (items, handle_change) => {
     return items.map((item) => {
@@ -295,7 +293,7 @@ let Workspace = () => {
         let group = item;
 
         let nested_change = (nestedId, change) => {
-          console.log("nested change", nestedId, change);
+          // console.log("nested change", nestedId, change);
           let index = group.groupItems.findIndex((x) => x.id === nestedId);
           if (index !== -1) {
             let newGroupItems = [...group.groupItems];
@@ -450,13 +448,6 @@ let Workspace = () => {
 
             <SidebarTitle> Layer list </SidebarTitle>
 
-            <button
-              disabled={!sheet_view.selected_id}
-              onClick={() => add_itemGroup(sheet_view.selected_id)}
-            >
-              add group
-            </button>
-
             <div style={{ overflowY: "auto", height: "100%" }}>
               <LayerList
                 items={sheet.items}
@@ -470,7 +461,7 @@ let Workspace = () => {
                 selected_id={sheet_view.selected_id}
                 select_item={select_item}
                 remove_item={remove_item}
-                reorder_item={reorder_item}
+                // reorder_item={reorder_item}
                 change_item={change_item}
               />
             </div>

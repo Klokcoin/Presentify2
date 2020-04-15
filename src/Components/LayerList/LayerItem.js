@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { EllipsisOverflow } from "../../Workspace";
 import styled, { css } from "styled-components/macro";
+import { Whitespace } from "../../Elements";
+
+let colors = {
+  hover: "hsl(210, 20%, 27%)",
+};
 
 let EditableName = styled.input`
   background: none;
@@ -15,7 +20,11 @@ const TrashBin = styled.div`
   position: absolute;
   right: 0;
   top: 0;
-  padding: 0 0.1rem;
+  padding: 0 0.5rem;
+
+  i {
+    box-shadow: -8px 0px 6px 4px ${colors.hover};
+  }
 
   :hover {
     color: FireBrick;
@@ -31,12 +40,12 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
 
-  padding: 12px 16px;
+  padding: 0.5rem 0 0.5rem 0.5rem;
   transform: none;
 
   background-color: ${({ dragging, hovering, selected }) => {
     if (hovering || selected) {
-      return "hsl(210, 20%, 27%)";
+      return colors.hover;
     } else {
       return "hsl(0, 0%, 20%)";
     }
@@ -51,7 +60,19 @@ const Container = styled.div`
 
 const NestedListContainer = styled.div`
   width: 100%;
+  margin-top: 0.5rem;
   // border: 1px solid red;
+`;
+
+const NameContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: relative;
+`;
+
+const Icon = styled.div`
+  // margin: 0 5px;
 `;
 
 export const LayerItem = ({
@@ -63,13 +84,14 @@ export const LayerItem = ({
   selected,
   children,
 }) => {
-  const [input_enabled, set_input_enabled] = React.useState(false);
-  const [hovering, set_hovering] = React.useState(false);
-  const [input, set_input] = React.useState(item.name);
+  const [input_enabled, set_input_enabled] = useState(false);
+  const [hovering, set_hovering] = useState(false);
+  const [input, set_input] = useState(item.name);
+  const [collapsed, set_collapsed] = useState(true);
 
-  let inputRef = React.useRef(null);
+  let inputRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     // We have to focus up here (instead of in onDoubleClick) b/c the input only mounts when input_enabled is updated
     if (input_enabled) {
       inputRef.current.focus();
@@ -84,7 +106,10 @@ export const LayerItem = ({
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            onDoubleClick={() => set_input_enabled(true)}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              set_input_enabled(true);
+            }}
             onClick={() => select_item(item.id)}
             onMouseEnter={() => set_hovering(true)}
             onMouseLeave={() => set_hovering(false)}
@@ -111,34 +136,54 @@ export const LayerItem = ({
                 }}
               />
             ) : (
-              <EllipsisOverflow
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  position: "relative",
-                }}
-              >
-                {item.name}
+              <NameContainer>
+                {children && (
+                  <>
+                    <Icon onClick={() => set_collapsed(!collapsed)}>
+                      {collapsed ? (
+                        <i class="fas fa-chevron-down"></i>
+                      ) : (
+                        <i class="fas fa-chevron-right"></i>
+                      )}
+                    </Icon>
 
-                {hovering && (
-                  <TrashBin
-                    title="Delete layer"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      remove_item(item.id);
-                    }}
-                    style={{
-                      cursor: "pointer",
-                    }}
-                  >
-                    <i className="fas fa-trash-alt"></i>
-                  </TrashBin>
+                    <Whitespace width="0.5rem" />
+                  </>
                 )}
-              </EllipsisOverflow>
+                <EllipsisOverflow
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    paddingRight: "0.5rem",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {item.name}
+
+                  {hovering && (
+                    <TrashBin
+                      title="Delete layer"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        remove_item(item.id);
+                      }}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    >
+                      <i className="fas fa-trash-alt"></i>
+                    </TrashBin>
+                  )}
+                </EllipsisOverflow>
+              </NameContainer>
             )}
 
             {/* possible recursive list items, when this layer is a layerGroup */}
-            {children && <NestedListContainer>{children}</NestedListContainer>}
+            {children && collapsed && (
+              <>
+                <NestedListContainer>{children}</NestedListContainer>
+              </>
+            )}
           </Container>
         );
       }}

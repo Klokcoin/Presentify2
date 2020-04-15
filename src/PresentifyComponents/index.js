@@ -146,8 +146,9 @@ export let component_map = {
     },
   },
   group: {
-    icon: <i className="fas fa-circle" />,
+    icon: <i class="fas fa-object-group"></i>,
     name: "Group",
+    groupItems: [],
     default_options: {
       backgroundColor: "#B50004",
     },

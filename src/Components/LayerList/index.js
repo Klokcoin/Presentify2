@@ -12,6 +12,12 @@ const GROUP_ITEMS_KEY = "groupItems"; // currently this is determined in Workspa
 const ListContainer = styled.div`
   pointer-events: auto; // to re-enable mouseEvents
   background: ${(props) => (props.draggingOver ? "SeaGreen" : null)};
+  // padding: 5px;
+
+  min-height: 25px; // make it possible to drag an item into an empty group
+`;
+
+const Container = styled.div`
   padding: 5px;
 `;
 
@@ -126,18 +132,19 @@ const LayerList = ({
       onDragEnd={onDragEnd}
       // onDragUpdate={onDragUpdate}
     >
-      <RecursiveList
-        level={0}
-        focusList={focusList}
-        set_focusList={set_focusList}
-        listId={BASE_LIST_ID}
-        destinationId={destinationId}
-        items={items}
-        selected_id={selected_id}
-        select_item={select_item} //handleItem
-        remove_item={remove_item} //handleItem
-        change_item={change_item} //handleItem
-      />
+      <Container>
+        <RecursiveList
+          focusList={focusList}
+          set_focusList={set_focusList}
+          listId={BASE_LIST_ID}
+          destinationId={destinationId}
+          items={items}
+          selected_id={selected_id}
+          select_item={select_item} //handleItem
+          remove_item={remove_item} //handleItem
+          change_item={change_item} //handleItem
+        />
+      </Container>
     </DragDropContext>
   );
 };
@@ -183,7 +190,8 @@ const RecursiveList = (props) => {
             draggingOver={snapshot.isDraggingOver}
           >
             {items.map((item, index) => {
-              let isGroup = item.groupItems && item.groupItems.length > 0;
+              // let isGroup = item.groupItems && item.groupItems.length > 0;
+              let isGroup = item.groupItems;
 
               return (
                 <LayerItem
