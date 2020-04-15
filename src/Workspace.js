@@ -19,7 +19,7 @@ import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
 import { component_map } from "./PresentifyComponents/";
-import LayerList from "./Components/LayerList.js";
+import LayerList from "./Components/LayerList";
 
 let Sidebar = styled.div`
   width: 232px;
