@@ -141,9 +141,9 @@ export const LayerItem = ({
                   <>
                     <Icon onClick={() => set_collapsed(!collapsed)}>
                       {collapsed ? (
-                        <i class="fas fa-chevron-down"></i>
+                        <i className="fas fa-chevron-down"></i>
                       ) : (
-                        <i class="fas fa-chevron-right"></i>
+                        <i className="fas fa-chevron-right"></i>
                       )}
                     </Icon>
 
