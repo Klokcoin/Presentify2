@@ -2,17 +2,17 @@ import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SidebarButton, EllipsisOverflow } from "../Workspace";
 import styled, { css } from "styled-components/macro";
+import * as R from "ramda";
 
 const List = styled.div`
   display: flex;
   flex-direction: column;
 
-  flex-grow: 1;
+  // flex-grow: 1;
 
   background: ${(props) => (props.draggingOver ? "SeaGreen" : null)};
   border: 1px solid red;
   padding: 5px;
-  // z-index: ${(props) => props.level};
 `;
 
 let EditableName = styled.input`
@@ -171,6 +171,7 @@ const Layer = ({
 
 const LayerList = ({
   items,
+  set_items,
   selected_id,
   select_item,
   reorder_item,
@@ -178,41 +179,25 @@ const LayerList = ({
   change_item,
 }) => {
   let reversed_items = [...items].reverse();
+  // let reversed_items = [...items].reverse();
 
   let [destinationId, set_destinationId] = useState(null);
 
-  let [focusList, set_focusList] = useState(null);
-
-  function setGroupTree(list) {
-    list.forEach((i) => {
-      if (i.groupItems && i.groupItems.length > 0) {
-        groupTree[i.id] = { isGroup: true };
-        setGroupTree(i.groupItems);
-      } else groupTree[i.id] = { isGroup: false };
-    });
-  }
-
-  let groupTree = {};
-  setGroupTree(items);
-
-  // useEffect(() => {
-  //   if (items) {
-  //     console.log(items);
-  //     setGroupTree(items);
-  //   }
-  // }, [items]);
-
-  // useEffect(() => {
-  //   if (!combineState.dragId) console.log("uncombined");
-  // }, [combineState]);
+  let [focusList, set_focusList] = useState("base_list");
 
   // Since we are reversing the array, this way we can get the index in the original, unreversed items (for drag ordering)
   const original_index = React.useCallback(
     (index) => {
-      return Math.abs(index - (items.length - 1));
+      return items;
     },
     [items]
   );
+  // const original_index = React.useCallback(
+  //   (index) => {
+  //     return Math.abs(index - (items.length - 1));
+  //   },
+  //   [items]
+  // );
 
   const onDragStart = (start, provided) => {
     // NOTE: we can do this bc right now we have draggable/droppable id's === item.id, but they don't _have_ to be equal!
@@ -221,54 +206,120 @@ const LayerList = ({
     console.log("item_id", item_id);
   };
 
-  const onDragUpdate = (update) => {
-    let { combine, source, destination } = update;
+  // const onDragUpdate = (update) => {
+  //   let { combine, source, destination } = update;
 
-    // can change a destination list when trying to combine
-    if (combine) {
-      // console.log("combine", update);
-      // console.log("tree", groupTree);
+  //   // can change a destination list when trying to combine
+  //   if (combine) {
+  //     // console.log("combine", update);
+  //     // console.log("tree", groupTree);
 
-      let { draggableId } = combine;
+  //     let { draggableId } = combine;
 
-      //check if the item is combinable
-      let combinable = groupTree[draggableId].isGroup;
-      if (combinable) set_destinationId(draggableId);
-    } else {
-      // console.log("uncombine", update);
+  //     //check if the item is combinable
+  //     let combinable = groupTree[draggableId].isGroup;
+  //     if (combinable) set_destinationId(draggableId);
+  //   } else {
+  //     // console.log("uncombine", update);
 
-      if (destination) set_destinationId(destination.droppableId);
-    }
-  };
+  //     if (destination) set_destinationId(destination.droppableId);
+  //   }
+  // };
 
   const onDragEnd = (result) => {
     const { source, destination } = result;
 
-    if (result.combine) {
-      console.log("trying to combine");
-    }
+    // don't update items if nothing changed
+    if (!destination) return;
+    if (
+      source.index === destination.index &&
+      source.droppableId === destination.droppableId
+    )
+      return;
 
+    console.log("sroucce", source, "dest", destination);
     // dropped outside the layer list
     if (!destination) {
       return;
     }
 
-    let oldIndex = original_index(source.index);
-    let newIndex = original_index(destination.index);
+    // let oldIndex = original_index(source.index);
+    // let newIndex = original_index(destination.index);
+    let oldIndex = source.index;
+    let newIndex = destination.index;
 
     // don't update items if nothing changed
-    if (oldIndex === newIndex) {
-      return;
+    // if (oldIndex === newIndex) {
+    //   return;
+    // }
+
+    function findPathForId(resultObj, path, list) {
+      let { index, droppableId } = resultObj;
+
+      // let invertedIndex = Math.abs(index - (list.length - 1));
+
+      if (droppableId === "base_list") return [index];
+
+      for (let i = 0; i < list.length; i += 1) {
+        // let iinverted = Math.abs(i - (list.length - 1)); //??????????
+        let item = list[i];
+        if (item.id === droppableId) {
+          return [...path, i, "groupItems", index];
+        } else if (item.groupItems)
+          return findPathForId(
+            resultObj,
+            [...path, i, "groupItems"],
+            item.groupItems
+          );
+      }
+
+      console.log("couldnt find id:", droppableId);
     }
 
-    reorder_item(oldIndex, newIndex);
+    let sourcePath = findPathForId(source, [], items);
+    // console.log("from", from, "to", to);
+    // console.log("flat", flat);
+
+    let item = R.view(R.lensPath(sourcePath), items);
+    //first remove at old position
+    let newOrder = R.dissocPath(sourcePath, items);
+    newOrder = Object.values(newOrder);
+
+    // console.log("sourcePath", sourcePath);
+    // console.log("item", item);
+    console.log("og", JSON.parse(JSON.stringify(items)));
+    console.log("-source", newOrder);
+
+    let destPath = findPathForId(destination, [], newOrder);
+    // console.log("destPath", destPath);
+
+    let insertPath = destPath.slice(0, destPath.length - 1);
+    console.log("insert", insertPath, "dest", destPath);
+
+    //view items in itemgroup
+    let newItems = Object.values(R.view(R.lensPath(insertPath), newOrder));
+    console.log("new items 1", newItems);
+    let lastIndex = destPath[destPath.length - 1];
+    console.log("added item", item, lastIndex);
+
+    //insert item in itemgroup
+    // let jo = [...newItems].splice(destPath[destPath.length - 1], 0, item);
+
+    newItems.splice(lastIndex, 0, item);
+
+    let finalOrder = R.set(R.lensPath(insertPath), newItems, newOrder);
+    console.log("+dest", finalOrder, typeof finalOrder);
+
+    // reorder_item(oldIndex, newIndex);
+
+    set_items(finalOrder);
   };
 
   return (
     <DragDropContext
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      onDragUpdate={onDragUpdate}
+      // onDragUpdate={onDragUpdate}
     >
       <RecursiveList
         level={0}
@@ -276,7 +327,7 @@ const LayerList = ({
         set_focusList={set_focusList}
         listId="base_list"
         destinationId={destinationId}
-        items={reversed_items}
+        items={items}
         selected_id={selected_id}
         select_item={select_item} //handleItem
         remove_item={remove_item} //handleItem
@@ -329,9 +380,9 @@ let RecursiveList = (props) => {
       {(provided, snapshot) => {
         return (
           <List
-            style={{ pointerEvents: "auto" }} // to re-enable mouseOver
+            style={{ pointerEvents: "auto" }} // to re-enable mouseEvents
             onMouseOver={(e) => {
-              console.log("over ", listId);
+              // console.log("over ", listId);
               e.stopPropagation();
               set_focusList(listId);
             }}

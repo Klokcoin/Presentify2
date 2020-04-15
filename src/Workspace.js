@@ -460,6 +460,13 @@ let Workspace = () => {
             <div style={{ overflowY: "auto", height: "100%" }}>
               <LayerList
                 items={sheet.items}
+                set_items={(newItems) =>
+                  set_sheet(
+                    immer((sheet) => {
+                      sheet.items = newItems;
+                    })
+                  )
+                }
                 selected_id={sheet_view.selected_id}
                 select_item={select_item}
                 remove_item={remove_item}
