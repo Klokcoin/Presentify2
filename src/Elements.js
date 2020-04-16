@@ -1,5 +1,6 @@
 import React from "react";
 import ComponentComponent from "@reach/component-component";
+import styled, { css } from "styled-components";
 
 /*
 Simple component that will not render anything.
@@ -201,3 +202,13 @@ export const Layer = ({ style, children }) => {
     />
   );
 };
+
+export const Center = styled.div`
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;

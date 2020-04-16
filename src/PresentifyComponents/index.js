@@ -1,6 +1,7 @@
 import React from "react";
 import { SketchPicker } from "react-color";
 import styled from "styled-components/macro";
+import { Webcam, SelectVideoDevice } from "./Webcam";
 
 import { LoadFile } from "../Workspace.js";
 
@@ -142,6 +143,39 @@ export let component_map = {
             backgroundColor: options.backgroundColor || "rgb(127, 146, 245)",
           }}
         />
+      );
+    },
+  },
+  "jwestendorp/webcam": {
+    icon: <i className="fas fa-video"></i>,
+    name: "Webcam",
+    default_options: {
+      backgroundColor: "#B50004",
+      deviceId:
+        "4123d24322d3a54dcdf471793c511e94dd5bea5b5be2b8a6fd7d9c504d8019ea",
+    },
+    ConfigScreen: ({ value, onChange }) => {
+      return (
+        <div style={{ padding: 8, flexShrink: 0 }}>
+          <SelectVideoDevice
+            value={value}
+            onChange={(deviceId) => onChange({ deviceId })}
+          />
+        </div>
+      );
+    },
+    Component: ({ size, options }) => {
+      return (
+        <div
+          style={{
+            height: "100%",
+            width: "100%",
+            background: "rgba(112,128,144,0.5)",
+            position: "relative",
+          }}
+        >
+          <Webcam size={size} deviceId={options.deviceId} />
+        </div>
       );
     },
   },
