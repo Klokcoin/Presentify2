@@ -7,7 +7,7 @@ import { YamlViewer } from "./AppComponents/YamlViewer.js";
 import { DocumentEvent, Whitespace } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
 import { Droptarget } from "./Components/Droptarget.js";
-import { Dropoverlay } from "./AppComponents/DropOverlay.js";
+import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import LayerList from "./Components/LayerList.js";
 import { PresentifyContext } from "./PresentifyContext.js";
@@ -137,7 +137,7 @@ let Workspace = () => {
             flexDirection: "row",
           }}
         >
-          <Dropoverlay is_dragging={is_dragging} />
+          <DropOverlay is_dragging={is_dragging} />
 
           <DocumentEvent
             name="keydown"

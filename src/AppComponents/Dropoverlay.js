@@ -11,7 +11,7 @@ let TextBox = styled.div`
   border: white dashed 10px;
 `;
 
-export let Dropoverlay = ({ is_dragging }) => {
+export let DropOverlay = ({ is_dragging }) => {
   return (
     <Layer
       style={{
