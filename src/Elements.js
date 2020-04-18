@@ -154,21 +154,21 @@ export const Absolute = ({
   );
 };
 
-export const DraggingCircle = ({ style }) => {
+export const DraggingCircle = ({ size = 8, style }) => {
   return (
     <div
       style={{
-        padding: 16,
-        margin: -16,
+        padding: size * 2,
+        margin: -size * 2,
       }}
     >
       <div
         style={{
-          margin: -4,
+          margin: -size / 2,
           border: `solid 1px black`,
           backgroundColor: "white",
-          height: 8,
-          width: 8,
+          height: size,
+          width: size,
           borderRadius: "50%",
           ...style,
         }}

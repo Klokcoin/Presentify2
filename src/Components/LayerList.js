@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { SidebarButton, EllipsisOverflow } from "../Workspace";
 import styled, { css } from "styled-components/macro";
+import { PresentifyContext } from "../PresentifyContext";
 
 const List = styled.div`
   display: flex;
@@ -54,18 +55,19 @@ const LayerItem = styled.div`
     `};
 `;
 
-const Layer = ({
-  item,
-  index,
-  select_item,
-  remove_item,
-  change_item,
-  selected,
-}) => {
+const Layer = ({ item, index }) => {
+  const {
+    sheet_view: { selected_id },
+    select_item,
+    remove_item,
+    change_item,
+  } = React.useContext(PresentifyContext);
   const [input_enabled, set_input_enabled] = React.useState(false);
   const [hovering, set_hovering] = React.useState(false);
   const [input, set_input] = React.useState(item.name);
   let inputRef = React.useRef(null);
+
+  let selected = selected_id === item.id;
 
   React.useEffect(() => {
     // We have to focus up here (instead of in onDoubleClick) b/c the input only mounts when input_enabled is updated
@@ -139,14 +141,13 @@ const Layer = ({
   );
 };
 
-const LayerList = ({
-  items,
-  selected_id,
-  select_item,
-  reorder_item,
-  remove_item,
-  change_item,
-}) => {
+const LayerList = () => {
+  const {
+    sheet: { items },
+    select_item,
+    reorder_item,
+  } = React.useContext(PresentifyContext);
+
   let reversed_items = [...items].reverse();
 
   // Since we are reversing the array, this way we can get the index in the original, unreversed items (for drag ordering)
@@ -188,15 +189,7 @@ const LayerList = ({
         {(provided) => (
           <List ref={provided.innerRef} {...provided.droppableProps}>
             {reversed_items.map((item, index) => (
-              <Layer
-                item={item}
-                index={index}
-                key={item.id}
-                select_item={select_item}
-                remove_item={remove_item}
-                change_item={change_item}
-                selected={selected_id === item.id}
-              />
+              <Layer item={item} index={index} key={item.id} />
             ))}
             {provided.placeholder}
           </List>
