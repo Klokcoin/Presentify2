@@ -165,7 +165,7 @@ let Workspace = () => {
       console.log(payload.message)
       setCurrentRoom(payload.room)
     })
-    
+
   }, [])
 
   let last_socket_sheet = React.useRef(null);
@@ -175,9 +175,8 @@ let Workspace = () => {
       console.log(data.sheet)
       setSheet(data.sheet)
       last_socket_sheet.current = data.sheet;
-    //  set_sheet_view({...sheet_view})
     })
-    
+
   })
 
   React.useEffect(() => {
@@ -190,7 +189,7 @@ let Workspace = () => {
    setSheet(data)
   }
 
-  
+
 
   let handleRoomSubmit = () => {
     socket.emit('room', {room: roomInput})
