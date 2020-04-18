@@ -45,7 +45,6 @@ export const PresentifyProvider = ({ children }) => {
 
   // Store every change to localstorage
   React.useEffect(() => {
-    console.log("storing", sheet);
     if (!sheet || loading.current) {
       return;
     }
