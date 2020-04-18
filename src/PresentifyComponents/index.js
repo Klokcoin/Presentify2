@@ -151,8 +151,7 @@ export let component_map = {
     name: "Webcam",
     default_options: {
       backgroundColor: "#B50004",
-      deviceId:
-        "4123d24322d3a54dcdf471793c511e94dd5bea5b5be2b8a6fd7d9c504d8019ea",
+      deviceId: "",
     },
     ConfigScreen: ({ value, onChange }) => {
       return (
