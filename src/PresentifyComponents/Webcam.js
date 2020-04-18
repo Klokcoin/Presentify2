@@ -88,9 +88,13 @@ export const SelectVideoDevice = ({ value, onChange }) => {
     });
   }, []);
 
+  useEffect(() => {
+    if (selectedValue) onchange(selectedValue);
+  }, [selectedValue]);
+
   let handle_select = (e) => {
     set_selectedValue(e.target.value);
-    onChange(e.target.value);
+    // onChange(e.target.value);
   };
 
   return (
@@ -99,6 +103,7 @@ export const SelectVideoDevice = ({ value, onChange }) => {
       <select value={selectedValue} onChange={handle_select}>
         {videoDevices.map((device) => (
           <option key={device.deviceId} value={device.deviceId}>
+            <option>hello</option>
             {device.label}
           </option>
         ))}
