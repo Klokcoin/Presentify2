@@ -6,6 +6,7 @@ import md5 from "md5";
 import ComponentComponent from "@reach/component-component";
 import immer from "immer";
 import localforage from "localforage";
+import io from 'socket.io-client'
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
 import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
@@ -20,6 +21,9 @@ import { Droptarget } from "./Components/Droptarget.js";
 import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import LayerList from "./Components/LayerList.js";
+
+
+const socket = io('http://localhost:3011');
 
 let Sidebar = styled.div`
   width: 232px;
@@ -105,7 +109,7 @@ export let LoadFile = ({ url, children }) => {
 
 let Workspace = () => {
   let [clipboard, set_clipboard] = React.useState([]);
-  let [sheet, set_sheet] = React.useState({
+  let [sheet, setSheet] = React.useState({
     items: [],
     // Keep these separate from the canvas items, so they can be used multiple times for example
     // TODO We also need ways to check these both ways (canvas item -> files, but also file -> canvas items)
@@ -117,6 +121,9 @@ let Workspace = () => {
     // TODO Make the transform a simple object so it is serializable into localstorage
     transform: new Transformation2DMatrix(),
   });
+
+  let [roomInput, setRoomInput] = React.useState(0)
+  let [currentRoom, setCurrentRoom] = React.useState(undefined)
 
   // The order of these matters! If the sheet is retrieved before the transform, items are rendered once with the
   // default transform, before updating to the retrieved transform -> which we don't want
@@ -152,6 +159,42 @@ let Workspace = () => {
       localforage.setItem("transform", sheet_view.transform.toString());
     }
   }, [sheet_view.transform]);
+
+  React.useEffect(() => {
+    socket.on('message', payload => {
+      console.log(payload.message)
+      setCurrentRoom(payload.room)
+    })
+    
+  }, [])
+
+  let last_socket_sheet = React.useRef(null);
+  React.useEffect(() => {
+    socket.on('change', data => {
+      console.log('sheetreceived')
+      console.log(data.sheet)
+      setSheet(data.sheet)
+      last_socket_sheet.current = data.sheet;
+    //  set_sheet_view({...sheet_view})
+    })
+    
+  })
+
+  React.useEffect(() => {
+    if (sheet !== last_socket_sheet.current) {
+      socket.emit('change', {sheet: sheet, room: currentRoom})
+    }
+  }, [sheet])
+
+  let set_sheet =  (data) => {
+   setSheet(data)
+  }
+
+  
+
+  let handleRoomSubmit = () => {
+    socket.emit('room', {room: roomInput})
+  }
 
   let add_component = (
     { type, ...info },
@@ -368,6 +411,11 @@ let Workspace = () => {
           <Sidebar>
             <SidebarTitle>Add layer</SidebarTitle>
             <Whitespace height={16} />
+               <label>
+                room:
+                 <input type="number" onChange={e => setRoomInput(e.target.value)}/>
+                 </label>
+                <button onClick={() => handleRoomSubmit()}> join room </button>
             <div style={{ flexShrink: 0 }}>
               {Object.entries(component_map).map(([key, comp]) => (
                 <SidebarButton onClick={() => add_component({ type: key })}>
