@@ -4,11 +4,10 @@ import styled from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
-import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
+import { DocumentEvent, Whitespace } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
-import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
-import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
+import { Dropoverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import LayerList from "./Components/LayerList.js";
 import { PresentifyContext } from "./PresentifyContext.js";
@@ -230,31 +229,12 @@ let Workspace = () => {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    backgroundColor: "#ccc",
+                    backgroundColor: "white",
                   }}
                   ref={measureRef}
                 >
                   {contentRect.bounds.height && (
-                    <Canvas
-                      initialTranslation={{
-                        x: contentRect.bounds.width / 2,
-                        y: contentRect.bounds.height / 2,
-                      }}
-                    >
-                      {items.map((item) => {
-                        let component_info = component_map[item.type];
-                        return (
-                          <CanvasItemOverlay key={item.id} item={item}>
-                            <Layer style={{ pointerEvents: "none" }}>
-                              <component_info.Component
-                                size={item}
-                                options={item.options || {}}
-                              />
-                            </Layer>
-                          </CanvasItemOverlay>
-                        );
-                      })}
-                    </Canvas>
+                    <Canvas bounds={contentRect.bounds} items={items} />
                   )}
                 </div>
               )}

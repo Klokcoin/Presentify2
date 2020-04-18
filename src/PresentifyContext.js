@@ -5,34 +5,30 @@ import md5 from "md5";
 import immer from "immer";
 import { Dataurl, Dimensions, get_image_info } from "./Data/Files.js";
 import { component_map } from "./PresentifyComponents";
-import { Transformation2DMatrix } from "./Data/TransformationMatrix";
+import { identity_matrix, getScale, inverse } from "./utils/linear_algebra";
 
 export const PresentifyContext = React.createContext();
 
 export const PresentifyConsumer = PresentifyContext.Consumer;
 
-let initial_sheet = { items: [], files: [] };
-
-let initial_sheet_view = {
-  selected_id: null,
-  transform: new Transformation2DMatrix(),
-};
-
 export const PresentifyProvider = ({ children }) => {
-  const [sheet, set_sheet] = React.useState(initial_sheet);
-  const [sheet_view, set_sheet_view] = React.useState(initial_sheet_view);
+  const [sheet, set_sheet] = React.useState({ items: [], files: [] });
+  const [sheet_view, set_sheet_view] = React.useState({
+    selected_id: null,
+    transform: identity_matrix(),
+  });
+  let loading = React.useRef(true);
 
+  // TODO: we get a nasty flicker when our old sheet & sheet_view load :/ REACT SUSPENSE?!1
   React.useEffect(() => {
     // Load initial data from localstorage
     const fetchData = async () => {
       let stored_sheet_view = await localforage.getItem("sheet_view");
       let stored_sheet = await localforage.getItem("sheet");
+      loading.current = false;
 
       if (stored_sheet_view != null) {
-        set_sheet_view({
-          ...stored_sheet_view,
-          transform: new Transformation2DMatrix(stored_sheet_view.transform),
-        });
+        set_sheet_view(stored_sheet_view);
       }
 
       if (stored_sheet != null) {
@@ -49,17 +45,20 @@ export const PresentifyProvider = ({ children }) => {
 
   // Store every change to localstorage
   React.useEffect(() => {
-    // NOTE: if we don't check for this here, we will store the default sheet before we can load our stored one, overwriting it...;
-    if (JSON.stringify(sheet) !== JSON.stringify(initial_sheet)) {
-      localforage.setItem("sheet", sheet);
+    console.log("storing", sheet);
+    if (!sheet || loading.current) {
+      return;
     }
+
+    localforage.setItem("sheet", sheet);
   }, [sheet]);
 
   React.useEffect(() => {
-    // NOTE: if we don't check for this here, we will store the default sheet before we can load our stored one, overwriting it...
-    if (JSON.stringify(sheet_view) !== JSON.stringify(initial_sheet_view)) {
-      localforage.setItem("sheet_view", sheet_view);
+    if (!sheet_view || loading.current) {
+      return;
     }
+
+    localforage.setItem("sheet_view", sheet_view);
   }, [sheet_view]);
 
   const add_file = async (file) => {
@@ -113,8 +112,7 @@ export const PresentifyProvider = ({ children }) => {
     { viewportWidth = 100, viewportHeight = 100 } = {}
   ) => {
     let component_info = component_map[type];
-    let result = sheet_view.transform.inverse().applyToCoords({ x: 0, y: 0 });
-    let scale = sheet_view.transform.inverse().getScale().x;
+    let scale = getScale(inverse(sheet_view.transform));
     let next_id = uuid();
 
     set_sheet(
@@ -122,8 +120,8 @@ export const PresentifyProvider = ({ children }) => {
         sheet.items.push({
           name: `${component_info.name} #${next_id}`,
           type: type,
-          x: result.x,
-          y: result.y,
+          x: 0,
+          y: 0,
           rotation: 0,
           height: viewportHeight * scale,
           width: viewportWidth * scale,
@@ -135,10 +133,12 @@ export const PresentifyProvider = ({ children }) => {
         });
       })
     );
-    set_sheet_view({
-      ...sheet_view,
-      selected_id: next_id,
-    });
+
+    set_sheet_view(
+      immer((sheet_view) => {
+        sheet_view.selected_id = next_id;
+      })
+    );
   };
 
   const change_item = (id, change) => {
@@ -158,24 +158,28 @@ export const PresentifyProvider = ({ children }) => {
   };
 
   const select_item = (id) => {
-    set_sheet_view({
-      ...sheet_view,
-      selected_id: id,
-    });
+    set_sheet_view(
+      immer((sheet_view) => {
+        sheet_view.selected_id = id;
+      })
+    );
   };
 
   const remove_item = (id) => {
-    set_sheet({
-      ...sheet,
-      items: sheet.items.filter((x) => x.id !== id),
-    });
+    set_sheet(
+      immer((sheet) => {
+        let index = sheet.items.findIndex((x) => x.id === id);
+        sheet.items.splice(index, 1);
+      })
+    );
 
     if (sheet_view.selected_id === id) {
       // Just for concistency, deselect the removed item (probably not necessary tho)
-      set_sheet_view({
-        ...sheet_view,
-        selected_id: null,
-      });
+      set_sheet_view(
+        immer((sheet_view) => {
+          sheet_view.selected_id = null;
+        })
+      );
     }
   };
 
@@ -188,16 +192,12 @@ export const PresentifyProvider = ({ children }) => {
     );
   };
 
-  const change_transform = (arg) => {
-    let new_transform =
-      typeof arg === "function" ? arg(sheet_view.transform) : arg;
-
-    if (new_transform) {
-      set_sheet_view({
-        ...sheet_view,
-        transform: new_transform,
-      });
-    }
+  const change_transform = (new_transform) => {
+    set_sheet_view(
+      immer((sheet_view) => {
+        sheet_view.transform = new_transform;
+      })
+    );
   };
 
   return (

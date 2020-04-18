@@ -18,7 +18,7 @@ export let component_map = {
   "dralletje/artboard": {
     icon: <i className="fas fa-chess-board" />,
     name: "Canvas",
-    Component: ({ size }) => {
+    Component: () => {
       return (
         <div
           style={{
@@ -38,7 +38,7 @@ export let component_map = {
       url:
         "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
     },
-    Component: ({ size, options }) => {
+    Component: ({ options }) => {
       return (
         <LoadFile url={options.url}>
           {({ url }) => (
@@ -67,7 +67,7 @@ export let component_map = {
     default_options: {
       url: "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1",
     },
-    Component: ({ size, options }) => {
+    Component: ({ options }) => {
       return (
         <iframe
           title="iFrame"
@@ -113,7 +113,7 @@ export let component_map = {
         </div>
       );
     },
-    Component: ({ size, options }) => {
+    Component: ({ options }) => {
       return (
         <div
           style={{
@@ -132,7 +132,7 @@ export let component_map = {
     default_options: {
       backgroundColor: "#B50004",
     },
-    Component: ({ size, options }) => {
+    Component: ({ options }) => {
       return (
         <div
           style={{

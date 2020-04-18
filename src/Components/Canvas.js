@@ -1,218 +1,257 @@
-import React, { createContext, useContext, useRef, useEffect } from "react";
-import { mapValues, clamp } from "lodash";
+import React, { useContext, useRef, useEffect } from "react";
+import { PresentifyContext } from "../PresentifyContext";
+import ItemOverlay from "../AppComponents/ItemOverlay";
+import { component_map } from "../PresentifyComponents";
+import {
+  translation_matrix,
+  scale_matrix,
+  toString,
+  multiply,
+  getScale,
+  inverse,
+  apply,
+} from "../utils/linear_algebra";
+import styled from "styled-components";
+import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
+import { Absolute } from "../Elements";
 
-import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement.js";
-import { Transformation2DMatrix } from "../Data/TransformationMatrix.js";
-import { PresentifyContext } from "../PresentifyContext.js";
-
-const isWhole = (number) => number % 1 === 0;
-
-let ZoomContext = createContext({ scale: 1 });
-
-export let Unzoom = ({ children, ...props }) => {
-  let { scale } = useContext(ZoomContext);
-  if (typeof children === "function") {
-    return children({ scale, ...mapValues(props, (x) => scale * x) });
-  } else {
-    return <div style={{ transform: `scale(${scale})` }} children={children} />;
-  }
+const CELL_SIZE = 100;
+const LINE_THICKNESS = 3;
+const WORLD = {
+  width: 500 * 2,
+  height: 500 * 2,
 };
 
-let Canvas = ({
-  children,
-  maxZoom = 256, // Took these from sketch
-  minZoom = 0.01, // https://sketchapp.com/docs/canvas/#zooming
-  maxTranslation = {
-    // I don't yet see a reason to limit this...
-    x: Infinity,
-    y: Infinity,
+const Background = styled.div`
+  background: #ccc;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+`;
+
+const GRID_COLOR = "hsl(213, 20%, 75%)";
+// Our "coordinate system"; the grid background is just for reference (and can totally be removed)
+const Grid = styled.div`
+  overflow: visible;
+  transform-origin: 0% 0%;
+  transform-style: flat;
+  transform: ${({ transform }) => transform && toString(transform)};
+  height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
+  width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
+
+  background: repeating-linear-gradient(
+      90deg,
+      ${GRID_COLOR},
+      ${GRID_COLOR} ${LINE_THICKNESS}px,
+      transparent ${LINE_THICKNESS}px,
+      transparent ${CELL_SIZE}px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      ${GRID_COLOR},
+      ${GRID_COLOR} ${LINE_THICKNESS}px,
+      transparent ${LINE_THICKNESS}px,
+      transparent ${CELL_SIZE}px
+    );
+`;
+
+const Inner = styled.div`
+  position: relative;
+  transform: ${({ transform }) => transform && toString(transform)};
+`;
+
+const Origin = styled.div`
+  transform: translate(-50%, -50%);
+  width: ${LINE_THICKNESS}px;
+  height: ${LINE_THICKNESS}px;
+  background: hsl(30, 91%, 67%);
+`;
+
+export const options = {
+  minZoom: 0.15,
+  maxZoom: 7, // I feel like beyond this pixel calculations start being imprecise :/
+  minTranslation: {
+    x: -WORLD.width / 2, // NOT ACTUALLY IMPLEMENTED RIGHT NOW!
+    y: -WORLD.height / 2, // ^
   },
-  initialTranslation = {
-    x: 0,
-    y: 0,
+  maxTranslation: {
+    x: WORLD.width / 2, // ^
+    y: WORLD.height / 2, // ^
   },
-}) => {
+};
+
+const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   const {
     sheet_view: { transform },
     select_item,
     change_transform,
   } = useContext(PresentifyContext);
-  let isolateRef = useRef(null);
-  let measureRef = useRef(null);
+  const measureRef = useRef(null);
+  const gridRef = useRef(null);
 
-  let doTranslation = ({ deltaX, deltaY }) => {
-    const {
-      x: relativeDeltaX,
-      y: relativeDeltaY,
-    } = transform.inverseScale().applyToCoords({
-      x: deltaX,
-      y: deltaY,
-    });
+  // Translate our "absolute" origin by the width of the SideBar (for mouse events only, canvas already sits next to it)
+  let page_to_canvas = translation_matrix([left, top]);
+  // Translate the grid such that its origin is now at its center, no longer its top-left!
+  let grid_to_origin = translation_matrix([
+    -WORLD.width / 2 - 1.3, // these small factors make the grid align with the center
+    -WORLD.height / 2 - 1, // don't really know why they have to be here TODO: find this out
+  ]);
+  // Translate the grid such that its origin (its top-left) is at the center of the screen
+  let origin_to_center = translation_matrix([width / 2, height / 2]);
 
-    let new_transform = transform
-      .multiply(
-        new Transformation2DMatrix({
-          e: -relativeDeltaX,
-          f: -relativeDeltaY,
-        })
-      )
-      .clampTranslation({
-        x: [-maxTranslation.x, maxTranslation.x],
-        y: [-maxTranslation.y, maxTranslation.y],
-      });
+  const mouse_to_grid = ([clientX, clientY]) => {
+    // First inverse the move from the "absolute" origin to the canvas: now our mouse will treat the top-left of the canvas as (0, 0)
+    let click_inside_canvas = apply(inverse(page_to_canvas), [
+      clientX,
+      clientY,
+    ]);
 
-    change_transform(new_transform);
+    /*
+      NOTE: matrix multiplication works from right to left: the right (bottom, if vertically formatted) transforms are applied FIRST!
+      If you look at our Components below, you will see the transformations on:
+        `Grid`: multiply(origin_to_center, grid_to_origin, transform)
+        `Inner`: inverse(grid_to_origin) -> b/c this happens first, we must also inverse it first
+      So the total transforms applied are (in CORRECT order): inverse(grid_to_origin), transform, grid_to_origin, origin_to_center
+      We inverse this complete transformation to get the click_inside_grid
+    */
+    let click_inside_grid = apply(
+      inverse(
+        multiply(
+          origin_to_center,
+          grid_to_origin,
+          transform,
+          inverse(grid_to_origin)
+        )
+      ),
+      click_inside_canvas
+    );
+
+    return click_inside_grid;
   };
 
-  let doZoom = ({ clientX, clientY, deltaY }) => {
-    let initial_transform = new Transformation2DMatrix({
-      e: -initialTranslation.x,
-      f: -initialTranslation.y,
-    });
-
-    const scale = 1 - (1 / 110) * deltaY;
-
-    let { top, left } = measureRef.current.getBoundingClientRect();
-    // NOTE So learnt now, need to apply the initial_transform AFTER the invert... which now
-    // .... I think about it.. is quite obvious from the fact that it is reversed
-    const click_inside_canvas = transform
-      .inverse()
-      .multiply(initial_transform)
-      .applyToCoords({
-        x: clientX - left,
-        y: clientY - top,
-      });
-
-    let current_zoom = transform.getScale().x;
-    let zoom_diff =
-      current_zoom / clamp(current_zoom * scale, minZoom, maxZoom);
-    let new_transform = transform
-      .multiply(
-        new Transformation2DMatrix({
-          e: click_inside_canvas.x,
-          f: click_inside_canvas.y,
-        })
-      )
-      .multiply(
-        new Transformation2DMatrix({
-          a: 1 / zoom_diff,
-          d: 1 / zoom_diff,
-        })
-      )
-      .multiply(
-        new Transformation2DMatrix({
-          e: -click_inside_canvas.x,
-          f: -click_inside_canvas.y,
-        })
-      );
-
-    // After zoom fix, we check if we happen to go over the translation bounds still
-    new_transform = new_transform.clampTranslation({
-      x: [-maxTranslation.x, maxTranslation.x],
-      y: [-maxTranslation.y, maxTranslation.y],
-    });
-
-    change_transform(new_transform);
-  };
-
-  let initial_transform = new Transformation2DMatrix({
-    e: -initialTranslation.x,
-    f: -initialTranslation.y,
-  });
-
-  let invert = initial_transform.multiply(transform.inverse());
-
-  // This is necessary for the onWheel={() => {}} event, because we can
+  // We can't attach the listener on the Background like `onWheel={onWheel}` b/c it needs to know its size first... (I think)
   useEffect(() => {
     if (measureRef.current == null) {
       return;
     }
 
-    measureRef.current.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      const { deltaX, deltaY } = event;
+    let listener = ["wheel", onWheel, { capture: true, passive: false }];
 
-      // NOTE It might actually be that this `isWhole` thing makes
-      // .... For a more uniform experience for laptops that don't have
-      // .... propper touchpads (like we do 👩🏿‍💻 (Yes that is a black women in tech LOOK I AM SO PROGRESSIVE (VIRTUE SIGNALLING +10)))
-      // .... So we might have to try that out
-      // let is_pinch = !(isWhole(deltaX) && isWhole(deltaY));
-      let is_pinch = event.ctrlKey;
-      if (event.ctrlKey) {
-        doZoom(event);
-      } else {
-        doTranslation(event);
-      }
-    });
-  }, [measureRef.current]);
+    measureRef.current.addEventListener(...listener);
+    let oldRef = measureRef.current;
 
-  const handleBackgroundClick = () => {
-    select_item(null);
+    return function cleanup() {
+      oldRef.removeEventListener(...listener);
+    };
+  });
+
+  const translate = ({ deltaX, deltaY }) => {
+    let scale = getScale(transform);
+    // "Normalize" the distance by which we have translated
+    let [relativeDeltaX, relativeDeltaY] = apply(
+      inverse(scale_matrix([scale, scale])),
+      [deltaX, deltaY]
+    );
+
+    let new_transform = multiply(
+      transform,
+      translation_matrix([-relativeDeltaX, -relativeDeltaY])
+    );
+
+    change_transform(new_transform);
+  };
+
+  const zoom = ({ clientX, clientY, deltaY }) => {
+    const ZOOM_SPEED_MULTIPLIER = 1;
+    const MAX_ZOOM_SPEED = 0.25;
+    let speed = Math.min(
+      MAX_ZOOM_SPEED,
+      Math.abs((ZOOM_SPEED_MULTIPLIER * deltaY) / 128)
+    );
+    let zoom = 1 - Math.sign(deltaY) * speed;
+    let new_scale = getScale(transform) * zoom;
+
+    if (new_scale > options.maxZoom || new_scale < options.minZoom) {
+      zoom = 1;
+    }
+
+    // First translate the center of our zoom to the origin (by [-clientX, -clientY] that is)
+    // translate the grid back to its original origin (top-left), scale, and inverse the previous two operations again
+    let zoom_matrix = multiply(
+      inverse(translation_matrix([-clientX, -clientY])),
+      inverse(grid_to_origin),
+      scale_matrix([zoom, zoom]),
+      grid_to_origin,
+      translation_matrix([-clientX, -clientY])
+    );
+
+    let new_transform = multiply(transform, zoom_matrix);
+
+    change_transform(new_transform);
+  };
+
+  const on_canvas_click = ({ target, currentTarget }) => {
+    // Only deselect item if the click is **only** on the canvas, and not actually on one of the divs inside
+    if (target === currentTarget) {
+      select_item(null);
+    }
+  };
+
+  // NOTE: we are fixing this react event up using IsolateCoordinatesForElement, so the coords are already relative to the grid!
+  const onWheel = (event) => {
+    event.preventDefault();
+
+    if (event.ctrlKey) {
+      let { clientX, clientY, deltaY } = event;
+      zoom({ clientX, clientY, deltaY });
+    } else {
+      let { deltaX, deltaY } = event;
+      translate({ deltaX, deltaY });
+    }
   };
 
   return (
-    <ZoomContext.Provider value={{ scale: invert.getScale().x }}>
-      <div
-        style={{
-          overflow: "hidden",
-          height: "100%",
-          width: "100%",
+    <Background ref={measureRef} onMouseDown={on_canvas_click}>
+      {/* Michiel dit is echt geniaal */}
+      <IsolateCoordinatesForElement
+        element={measureRef.current}
+        mapCoords={({ x, y }) => {
+          let coords_in_grid = mouse_to_grid([x, y]);
+          return {
+            x: coords_in_grid[0],
+            y: coords_in_grid[1],
+          };
         }}
-        ref={measureRef}
-        onMouseDown={(e) => {
-          // Only reset selected_item if the click is **only** on the canvas,
-          // and not actually on one of the divs inside
-          if (e.target === e.currentTarget) {
-            handleBackgroundClick();
-          }
-        }}
+      />
+      {/* Grid is our "coordinate system" (with gridlines as a background for reference) */}
+      <Grid
+        ref={gridRef}
+        onMouseDown={on_canvas_click}
+        transform={multiply(origin_to_center, grid_to_origin, transform)} // the right transformation happens first!
       >
-        <div
-          ref={isolateRef}
-          style={{
-            transform: `
-              ${initial_transform.inverse().toString()}
-              ${transform.toMatrix3D().toString()}
-            `,
-            transformStyle: `preserve-3d`,
-            transformOrigin: "0% 0%",
-          }}
-          onMouseDown={(e) => {
-            // Only trigger handleBackgroundClick if the click is **only** on the canvas,
-            // and not actually on one of the divs inside
-            if (e.target === e.currentTarget) {
-              handleBackgroundClick();
+        {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
+        <Inner transform={inverse(grid_to_origin)}>
+          {items.map((item) => {
+            let component_info = component_map[item.type];
+            let Item = component_info.Component;
+
+            if (!Item) {
+              return null;
             }
-          }}
-        >
-          <IsolateCoordinatesForElement
-            element={isolateRef.current}
-            // NOTE Ik weet dat je het zo hebt gemaakt dat ik in principe
-            // .... mapCoords={invert.applyToCoords}
-            // .... kan doen maar dat vind ik hekka onleesbaar(der)
-            mapCoords={(coords) => invert.applyToCoords(coords)}
-          />
 
-          {/* A gray shape to show the bounds, also just for reference */}
-          <div
-            style={{
-              pointerEvents: "none",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              border: "solid 1px white",
-              borderRadius: 5,
-              transform: `translateX(-50%) translateY(-50%)`,
-              width: maxTranslation.x * 2,
-              height: maxTranslation.y * 2,
-            }}
-          />
-
-          {/* Render canvas items or whatever */}
-          {children}
-        </div>
-      </div>
-    </ZoomContext.Provider>
+            return (
+              <ItemOverlay item={item} key={item.id}>
+                <Item options={item.options || {}} />
+              </ItemOverlay>
+            );
+          })}
+          {/* Put a little orange rectangle at the origin for reference */}
+          <Absolute left={0} top={0} style={{ zIndex: -1 }}>
+            <Origin />
+          </Absolute>
+        </Inner>
+      </Grid>
+    </Background>
   );
 };
 

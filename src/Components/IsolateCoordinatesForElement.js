@@ -18,6 +18,12 @@ let fixup_react_event = (mapCoords, e) => {
     x: e.pageX,
     y: e.pageY,
   });
+
+  let client = mapCoords({
+    x: e.clientX,
+    y: e.clientY,
+  });
+
   let type = e.type;
 
   // TODO More than just pageX and pageY
@@ -29,6 +35,14 @@ let fixup_react_event = (mapCoords, e) => {
   Object.defineProperty(e, "pageY", {
     get: () => page.y,
   });
+  Object.defineProperty(e, "clientX", {
+    get: () => {
+      return client.x;
+    },
+  });
+  Object.defineProperty(e, "clientY", {
+    get: () => client.y,
+  });
 
   if (e.nativeEvent) {
     Object.defineProperty(e.nativeEvent, "pageX", {
@@ -37,6 +51,14 @@ let fixup_react_event = (mapCoords, e) => {
       },
     });
     Object.defineProperty(e.nativeEvent, "pageY", {
+      get: () => page.y,
+    });
+    Object.defineProperty(e.nativeEvent, "clientX", {
+      get: () => {
+        return page.x;
+      },
+    });
+    Object.defineProperty(e.nativeEvent, "clientY", {
       get: () => page.y,
     });
   }
@@ -89,6 +111,14 @@ export const IsolateCoordinatesForElement = ({ element, mapCoords }) => {
             currently_mousedown_in_my_hood.current = false;
             fixup_react_event(mapCoords, e);
           }
+        }}
+      />
+      <DocumentEvent
+        capture
+        passive
+        name="wheel"
+        handler={(e) => {
+          fixup_react_event(mapCoords, e);
         }}
       />
     </>
