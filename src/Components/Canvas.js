@@ -270,7 +270,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       <div
         onMouseDown={on_canvas_click}
         style={{
-          transform: `${toString(multiply(origin_to_center, transform))}`,
+          transform: `${toString(full_transform)}`,
           transformOrigin: "0 0",
         }}
       >
