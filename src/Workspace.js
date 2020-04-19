@@ -308,7 +308,7 @@ let Workspace = () => {
           <CanvasItemOverlay
             key={group.id}
             selected={sheet_view.selected_id === group.id}
-            onSelect={() => {
+            onSelect={(id) => {
               select_item(group.id);
             }}
             item={group}

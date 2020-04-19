@@ -110,7 +110,10 @@ export const LayerItem = ({
               e.stopPropagation();
               set_input_enabled(true);
             }}
-            onClick={() => select_item(item.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              select_item(item.id);
+            }}
             onMouseEnter={() => set_hovering(true)}
             onMouseLeave={() => set_hovering(false)}
             dragging={snapshot.isDragging}

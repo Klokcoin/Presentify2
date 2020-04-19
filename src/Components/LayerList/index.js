@@ -152,7 +152,6 @@ const LayerList = ({
 const RecursiveList = (props) => {
   let {
     items,
-    level,
     listId,
     destinationId,
     selected_id,
