@@ -63,7 +63,7 @@ const LayerList = ({
     // NOTE: we can do this bc right now we have draggable/droppable id's === item.id, but they don't _have_ to be equal!
     let { draggableId: item_id } = start;
     select_item(item_id);
-    // console.log("item_id", item_id);
+    console.log("item_id", item_id);
   };
 
   const onDragEnd = (result) => {
@@ -101,18 +101,16 @@ const LayerList = ({
       // NOTE For loop? We can do better - DRAL
       for (let i = 0; i < list.length; i += 1) {
         let item = list[i];
-
         if (item.id === id) {
           return [...initialPath, i, GROUP_ITEMS_KEY];
-        } else if (item.groupItems) {
-          let result = findCrumbsOfId(id, item.groupItems, [
+        } else if (item.groupItems)
+          return findCrumbsOfId(id, item.groupItems, [
             ...initialPath,
             i,
             GROUP_ITEMS_KEY,
           ]);
-          if (result) return result;
-        }
       }
+
       console.log("couldnt find id:", id);
     }
 
