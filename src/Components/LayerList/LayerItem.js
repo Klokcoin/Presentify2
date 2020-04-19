@@ -28,21 +28,22 @@ let EditableName = styled.input`
 
 // Replaced SidebarButton with a separate component for layers, b/c of dragging stuff
 const Container = styled.div`
+  transition: background 200ms;
   cursor: pointer;
 
   display: flex;
   flex-direction: column;
   align-items: stretch;
 
-  background-color: hsl(0, 0%, 20%);
-  color: white;
+  background-color: ${({ theme }) => theme.ui.layerList.layer.backgroundColor};
+  color: ${({ theme }) => theme.ui.layerList.layer.textColor};
 
   ${styled_if((p) => !p.selected)}:hover {
-    background-color: ${colors.hover};
+    background-color: ${({ theme }) => theme.ui.layerList.layer.hoverColor};
   }
 
   ${styled_if((p) => p.selected)} {
-    background-color: rgb(163, 163, 163);
+    background-color: ${({ theme }) => theme.ui.layerList.layer.selectedColor};
     color: black;
     position: sticky;
     top: 0;

@@ -1,6 +1,6 @@
 import React from "react";
 import Measure from "react-measure";
-import styled from "styled-components/macro";
+import styled, { css } from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
@@ -15,12 +15,24 @@ import { PresentifyContext } from "./PresentifyContext.js";
 let Sidebar = styled.div`
   width: 232px;
   flex-shrink: 0;
-  background-color: rgb(39, 39, 39);
   display: flex;
   flex-direction: column;
+  z-index: 1;
 
-  color: white;
-  --color: white;
+  ${({ theme }) => css`
+    background-color: ${theme.ui.backgroundColor};
+    font-family: '${theme.ui.text.fontFamily}', sans-serif;
+    color: ${theme.ui.text.color};
+    --color: ${theme.ui.text.color};
+  `};
+
+  &:nth-child(2) {
+    box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
+  }
+
+  &:last-child {
+    box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
+  }
 `;
 
 export let EllipsisOverflow = styled.div`
@@ -33,9 +45,13 @@ export let EllipsisOverflow = styled.div`
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
-  text-transform: capitalize;
-  font-family: fantasy;
+  text-transform: uppercase;
   font-weight: bold;
+
+  ${({ theme }) => css`
+    color: ${theme.ui.heading.color};
+    font-family: '${theme.ui.heading.fontFamily}', sans-serif;
+  `}
 `;
 
 let SidebarLine = styled.div`
@@ -47,7 +63,6 @@ let SidebarLine = styled.div`
 
 export let SidebarButton = styled.div`
   transition: background-color 0.2s;
-  background-color: ${(p) => (p.active ? "#8e8e8e" : "rgba(255, 255, 255, 0)")};
   cursor: pointer;
 
   display: flex;
@@ -57,7 +72,7 @@ export let SidebarButton = styled.div`
   padding: 8px 16px;
 
   &:hover {
-    background-color: #ccc;
+    background-color: ${({ theme }) => theme.ui.layerList.layer.hoverColor};
   }
 `;
 
@@ -230,7 +245,6 @@ let Workspace = () => {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    backgroundColor: "white",
                   }}
                   ref={measureRef}
                 >

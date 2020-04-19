@@ -2,6 +2,7 @@ import React from "react";
 import prettier from "prettier/standalone.js";
 import json5Parser from "prettier/parser-babel.js";
 import JSON5 from "json5";
+import { useTheme } from "styled-components";
 import { PresentifyContext } from "../PresentifyContext";
 
 export let JSON_parse_safe = (json) => {
@@ -30,6 +31,7 @@ export let YamlViewer = ({ value, id }) => {
   const { change_item } = React.useContext(PresentifyContext);
   let [text, set_text] = React.useState(JSON_stringify(value));
   let [error, set_error] = React.useState(null);
+  const theme = useTheme();
 
   let [parse_error, parsed_value] = React.useMemo(() => {
     return JSON_parse_safe(text);
@@ -57,9 +59,9 @@ export let YamlViewer = ({ value, id }) => {
         padding: 16,
         backgroundColor: "transparent",
         color: "white",
-        fontSize: 14,
+        fontSize: theme.ui.mono.fontSize,
         height: 400,
-        fontFamily: `"Menlo", "monospace"`,
+        fontFamily: `'${theme.ui.mono.fontFamily}', monospace`,
       }}
       value={text}
       onChange={(e) => {

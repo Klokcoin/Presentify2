@@ -8,6 +8,7 @@ import { getScale, vector } from "../utils/linear_algebra";
 import { render_cursor, get_cursor_direction } from "../utils/cursors";
 
 import * as Algebra from "../utils/linear_algebra";
+import { useTheme } from "styled-components";
 
 const ItemOverlay = ({ item }) => {
   const {
@@ -15,6 +16,7 @@ const ItemOverlay = ({ item }) => {
     select_item,
     change_item,
   } = React.useContext(PresentifyContext);
+  const theme = useTheme();
 
   let { preview, set_preview } = React.useContext(ItemPreviewContext);
   let set_movement_state = (movement_state) => {
@@ -147,9 +149,9 @@ const ItemOverlay = ({ item }) => {
             `,
           // Made this and outline such that it can be offset to be inside the element (so that we can already drag while hovering over the outline)
           outline: act_like_selected
-            ? `${1 + 3 * (1 / scale)}px dashed white`
+            ? `${1 + 2 * (1 / scale)}px dashed ${theme.canvas.selectionColor}`
             : "none",
-          outlineOffset: `-${1 + 3 * (1 / scale)}px`,
+          outlineOffset: `-${1 + 2 * (1 / scale)}px`,
         }}
       >
         {/* Grab area, here we can drag the element & move it */}
