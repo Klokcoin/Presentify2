@@ -1,25 +1,16 @@
 import React from "react";
 import Measure from "react-measure";
 import styled from "styled-components/macro";
-import uuid from "uuid/v1";
-import md5 from "md5";
 import ComponentComponent from "@reach/component-component";
-import immer from "immer";
-import localforage from "localforage";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
-import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
+import { DocumentEvent, Whitespace } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
-import { Dataurl, Dimensions, get_image_info } from "./Data/Files.js";
-import {
-  Transformation2DMatrix,
-  Transformation2DMatrixFromString,
-} from "./Data/TransformationMatrix.js";
-import { CanvasItemOverlay } from "./AppComponents/TransformationOverlay.js";
 import { Droptarget } from "./Components/Droptarget.js";
-import { Dropoverlay } from "./AppComponents/Dropoverlay.js";
+import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
-import LayerList from "./Components/LayerList";
+import LayerList from "./Components/LayerList.js";
+import { PresentifyContext } from "./PresentifyContext.js";
 
 let Sidebar = styled.div`
   width: 232px;
@@ -105,174 +96,15 @@ export let LoadFile = ({ url, children }) => {
 
 let Workspace = () => {
   let [clipboard, set_clipboard] = React.useState([]);
-  let [sheet, set_sheet] = React.useState({
-    items: [],
-    // Keep these separate from the canvas items, so they can be used multiple times for example
-    // TODO We also need ways to check these both ways (canvas item -> files, but also file -> canvas items)
-    files: [],
-  });
-
-  let [sheet_view, set_sheet_view] = React.useState({
-    selected_id: null,
-    // TODO Make the transform a simple object so it is serializable into localstorage
-    transform: new Transformation2DMatrix(),
-  });
-
-  // The order of these matters! If the sheet is retrieved before the transform, items are rendered once with the
-  // default transform, before updating to the retrieved transform -> which we don't want
-  React.useEffect(() => {
-    localforage.getItem("transform").then((transform) => {
-      if (transform != null) {
-        set_sheet_view({
-          transform: Transformation2DMatrixFromString(transform),
-        });
-      }
-    });
-  }, []);
-
-  // Load initial sheet from localstorage
-  React.useEffect(() => {
-    localforage.getItem("sheet").then((stored_sheet) => {
-      if (stored_sheet != null) {
-        set_sheet(stored_sheet);
-      }
-    });
-  }, []);
-
-  // Store every change to localstorage
-  React.useEffect(() => {
-    if (sheet != null) {
-      localforage.setItem("sheet", sheet);
-    }
-  }, [sheet]);
-
-  React.useEffect(() => {
-    if (sheet_view.transform != null) {
-      // Store the TransformationMatrix as a string
-      localforage.setItem("transform", sheet_view.transform.toString());
-    }
-  }, [sheet_view.transform]);
-
-  let add_component = (
-    { type, ...info },
-    { viewportWidth = 100, viewportHeight = 100 } = {}
-  ) => {
-    let component_info = component_map[type];
-
-    console.log("info", component_info);
-
-    let result = sheet_view.transform.inverse().applyToCoords({ x: 0, y: 0 });
-    let scale = sheet_view.transform.inverse().getScale().x;
-    let next_id = uuid();
-
-    set_sheet(
-      immer((sheet) => {
-        sheet.items.push({
-          name: `${component_info.name} #${next_id}`,
-          type: type,
-          x: result.x,
-          y: result.y,
-          rotation: 0,
-          height: viewportHeight * scale,
-          width: viewportWidth * scale,
-          options: component_info.default_options || {},
-          ...info,
-
-          groupItems: component_info.groupItems || null,
-          z: next_id * 10, // * 10 ???
-          id: next_id,
-        });
-      })
-    );
-    set_sheet_view({
-      ...sheet_view,
-      selected_id: next_id,
-    });
-  };
-
-  let add_file = async (file) => {
-    let samesize_files = sheet.files.filter((x) => x.size === file.size);
-    if (samesize_files.length !== 0) {
-      let md5_hash = md5(await Dataurl.from_file(file));
-      // Find *possibly* the matching file
-      for (let samesize of samesize_files) {
-        if (samesize.md5_hash == null) {
-          samesize.md5_hash = md5(await Dataurl.from_file(samesize.file));
-        }
-        if (samesize.md5_hash === md5_hash) {
-          return samesize;
-        }
-      }
-    }
-
-    let object_url = URL.createObjectURL(file);
-    let image_info = await get_image_info(object_url);
-    let { width, height } = Dimensions.contain({
-      dimensions: image_info,
-      bounds: {
-        width: 200,
-        height: 200,
-      },
-    });
-    URL.revokeObjectURL(object_url);
-
-    let new_file = {
-      id: uuid(),
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      file: file,
-      image: {
-        width: width,
-        height: height,
-      },
-    };
-
-    set_sheet(
-      immer((sheet) => {
-        sheet.files.push(new_file);
-      })
-    );
-    return new_file;
-  };
-
-  let change_item = (id, change) => {
-    console.log("change", id, change);
-    set_sheet(
-      immer((sheet) => {
-        let index = sheet.items.findIndex((x) => x.id === id);
-        if (index !== -1) {
-          sheet.items[index] = {
-            ...sheet.items[index],
-            ...change,
-          };
-        }
-      })
-    );
-  };
-
-  let select_item = (id) => {
-    // console.log("trying to select", id);
-    set_sheet_view({
-      ...sheet_view,
-      selected_id: id,
-    });
-  };
-
-  let remove_item = (id) => {
-    set_sheet({
-      ...sheet,
-      items: sheet.items.filter((x) => x.id !== id),
-    });
-
-    if (sheet_view.selected_id === id) {
-      // Just for concistency, deselect the removed item (probably not necessary tho)
-      set_sheet_view({
-        ...sheet_view,
-        selected_id: null,
-      });
-    }
-  };
+  const {
+    sheet: { items, files },
+    sheet_view: { selected_id },
+    add_file,
+    add_item,
+    change_item,
+    select_item,
+    remove_item,
+  } = React.useContext(PresentifyContext);
 
   // let reorder_item = (oldIndex, newIndex) => {
   //   let new_items = [...sheet.items];
@@ -285,72 +117,12 @@ let Workspace = () => {
   //   });
   // };
 
-  let RecursiveMap = (items, handle_change) => {
-    return items.map((item) => {
-      let component_info = component_map[item.type];
-
-      if (item.type === "group") {
-        let group = item;
-
-        let nested_change = (nestedId, change) => {
-          // console.log("nested change", nestedId, change);
-          let index = group.groupItems.findIndex((x) => x.id === nestedId);
-          if (index !== -1) {
-            let newGroupItems = [...group.groupItems];
-            newGroupItems[index] = { ...newGroupItems[index], ...change };
-
-            handle_change(group.id, { groupItems: newGroupItems });
-          }
-        };
-
-        //recursive case
-        return (
-          <CanvasItemOverlay
-            key={group.id}
-            selected={sheet_view.selected_id === group.id}
-            onSelect={(id) => {
-              select_item(group.id);
-            }}
-            item={group}
-            onChange={(next_item) => {
-              handle_change(group.id, next_item);
-            }}
-          >
-            {RecursiveMap(group.groupItems, nested_change)}
-          </CanvasItemOverlay>
-        );
-      }
-      //base case
-      else
-        return (
-          <CanvasItemOverlay
-            key={item.id}
-            selected={sheet_view.selected_id === item.id}
-            onSelect={() => {
-              select_item(item.id);
-            }}
-            item={item}
-            onChange={(next_item) => {
-              handle_change(item.id, next_item);
-            }}
-          >
-            <Layer style={{ pointerEvents: "none" }}>
-              <component_info.Component
-                size={item}
-                options={item.options || {}}
-              />
-            </Layer>
-          </CanvasItemOverlay>
-        );
-    });
-  };
-
   return (
     <Droptarget
       onDrop={async (e) => {
         let file = e.dataTransfer.items[0].getAsFile();
         let canvas_file = await add_file(file);
-        add_component(
+        add_item(
           {
             type: "dralletje/image",
             options: {
@@ -376,7 +148,7 @@ let Workspace = () => {
             flexDirection: "row",
           }}
         >
-          <Dropoverlay is_dragging={is_dragging} />
+          <DropOverlay is_dragging={is_dragging} />
 
           <DocumentEvent
             name="keydown"
@@ -389,22 +161,18 @@ let Workspace = () => {
               }
 
               if (e.key === "Escape") {
-                set_sheet_view({
-                  ...sheet_view,
-                  selected_id: null,
-                });
+                select_item(null);
               }
 
               if (e.key === "Backspace" || e.key === "Delete") {
-                if (sheet_view.selected_id != null) {
-                  remove_item(sheet_view.selected_id);
+                if (selected_id != null) {
+                  remove_item(selected_id);
                 }
               }
 
               if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
                 let item =
-                  sheet_view.selected_id &&
-                  sheet.items.find((x) => x.id === sheet_view.selected_id);
+                  selected_id && items.find((x) => x.id === selected_id);
                 if (item) {
                   // TODO Maybe later, append?
                   set_clipboard([{ ...item, id: null }]);
@@ -419,7 +187,7 @@ let Workspace = () => {
                     y: clipboard[0].y + clipboard[0].height / 2,
                     name: `${clipboard[0].name} Copy`,
                   };
-                  add_component(next_element);
+                  add_item(next_element);
                   // NOTE This should never append, but always overwrite
                   set_clipboard([next_element]);
                 }
@@ -434,7 +202,7 @@ let Workspace = () => {
             <Whitespace height={16} />
             <div style={{ flexShrink: 0 }}>
               {Object.entries(component_map).map(([key, comp]) => (
-                <SidebarButton onClick={() => add_component({ type: key })}>
+                <SidebarButton onClick={() => add_item({ type: key })}>
                   <span>{comp.icon}</span>
                   <Whitespace width={16} />
                   <EllipsisOverflow>{comp.name}</EllipsisOverflow>
@@ -449,21 +217,7 @@ let Workspace = () => {
             <SidebarTitle> Layer list </SidebarTitle>
 
             <div style={{ overflowY: "auto", height: "100%" }}>
-              <LayerList
-                items={sheet.items}
-                set_items={(newItems) =>
-                  set_sheet(
-                    immer((sheet) => {
-                      sheet.items = newItems;
-                    })
-                  )
-                }
-                selected_id={sheet_view.selected_id}
-                select_item={select_item}
-                remove_item={remove_item}
-                // reorder_item={reorder_item}
-                change_item={change_item}
-              />
+              <LayerList />
             </div>
           </Sidebar>
 
@@ -472,7 +226,7 @@ let Workspace = () => {
             value={{
               getFile: (file_id) => {
                 // TODO Need way to load in the file into blob when loading
-                let file = sheet.files.find((x) => x.id === file_id);
+                let file = files.find((x) => x.id === file_id);
                 if (file == null) {
                   throw new Error(`No file found for id '${file_id}'`);
                 }
@@ -487,31 +241,12 @@ let Workspace = () => {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    backgroundColor: "#ccc",
+                    backgroundColor: "white",
                   }}
                   ref={measureRef}
                 >
                   {contentRect.bounds.height && (
-                    <Canvas
-                      initialTranslation={{
-                        x: contentRect.bounds.width / 2,
-                        y: contentRect.bounds.height / 2,
-                      }}
-                      transform={sheet_view.transform}
-                      onTransformChange={(change) => {
-                        set_sheet_view((state) => {
-                          let x = change({ transform: state.transform });
-                          if (x != null) {
-                            return { ...state, transform: x.transform };
-                          }
-                        });
-                      }}
-                      onBackgroundClick={() => {
-                        select_item(null);
-                      }}
-                    >
-                      {RecursiveMap(sheet.items, change_item)}
-                    </Canvas>
+                    <Canvas bounds={contentRect.bounds} items={items} />
                   )}
                 </div>
               )}
@@ -522,8 +257,8 @@ let Workspace = () => {
           <Sidebar>
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
-            {sheet.items
-              .filter((item) => item.id === sheet_view.selected_id)
+            {items
+              .filter((item) => item.id === selected_id)
               .map((item) => {
                 let component_info = component_map[item.type];
 
@@ -542,14 +277,7 @@ let Workspace = () => {
                         }}
                       />
                     )}
-                    <YamlViewer
-                      value={item.options}
-                      onChange={(options) => {
-                        change_item(item.id, {
-                          options: options,
-                        });
-                      }}
-                    />
+                    <YamlViewer value={item.options} id={item.id} />
                   </div>
                 );
               })}

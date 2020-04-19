@@ -2,6 +2,7 @@ import React from "react";
 import prettier from "prettier/standalone.js";
 import json5Parser from "prettier/parser-babel.js";
 import JSON5 from "json5";
+import { PresentifyContext } from "../PresentifyContext";
 
 export let JSON_parse_safe = (json) => {
   try {
@@ -25,13 +26,20 @@ let JSON_stringify = (value) => {
     .trim();
 };
 
-export let YamlViewer = ({ value, onChange }) => {
+export let YamlViewer = ({ value, id }) => {
+  const { change_item } = React.useContext(PresentifyContext);
   let [text, set_text] = React.useState(JSON_stringify(value));
   let [error, set_error] = React.useState(null);
 
   let [parse_error, parsed_value] = React.useMemo(() => {
     return JSON_parse_safe(text);
   }, [text]);
+
+  const onChange = (options) => {
+    change_item(id, {
+      options: options,
+    });
+  };
 
   // Debounce
   React.useEffect(() => {

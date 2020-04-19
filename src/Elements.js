@@ -1,5 +1,6 @@
 import React from "react";
 import ComponentComponent from "@reach/component-component";
+import styled, { css } from "styled-components";
 
 /*
 Simple component that will not render anything.
@@ -153,21 +154,21 @@ export const Absolute = ({
   );
 };
 
-export const DraggingCircle = ({ style }) => {
+export const DraggingCircle = ({ size = 8, style }) => {
   return (
     <div
       style={{
-        padding: 16,
-        margin: -16,
+        padding: size * 2,
+        margin: -size * 2,
       }}
     >
       <div
         style={{
-          margin: -4,
+          margin: -size / 2,
           border: `solid 1px black`,
           backgroundColor: "white",
-          height: 8,
-          width: 8,
+          height: size,
+          width: size,
           borderRadius: "50%",
           ...style,
         }}
@@ -201,3 +202,13 @@ export const Layer = ({ style, children }) => {
     />
   );
 };
+
+export const Center = styled.div`
+  margin: auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+`;
