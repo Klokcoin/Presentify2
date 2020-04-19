@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 
 import { Loading } from "../Components/LoadingSpinner";
 import { Center, Layer } from "../Elements";
@@ -12,34 +12,25 @@ const Container = styled.div`
 export const Webcam = (props) => {
   const { deviceId } = props;
 
-  console.log("optioms", deviceId, props.options);
-
-  const videoEl = useRef(null);
   let [isPlaying, set_isPlaying] = useState(false);
-
-  function initCamera() {
-    navigator.mediaDevices
-      .getUserMedia({
-        video: {
-          deviceId: {
-            exact: deviceId,
-          },
-        },
-        audio: false,
-      })
-      .then((stream) => {
-        let video = videoEl.current;
-        video.srcObject = stream;
-        video.play();
-      })
-      .catch((error) => {
-        console.error("onRejected function called: " + error.message);
-      });
-  }
+  let [stream, set_stream] = useState(null);
 
   //   updating webcam
   useEffect(() => {
-    if (deviceId) initCamera();
+    if (deviceId) {
+      navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            deviceId: {
+              exact: deviceId,
+            },
+          },
+          audio: false,
+        })
+        .then((stream) => {
+          set_stream(stream);
+        });
+    }
   }, [deviceId]);
 
   return (
@@ -47,9 +38,21 @@ export const Webcam = (props) => {
       {deviceId ? (
         <>
           <video
-            width={"100%"}
-            height={"100%"}
-            ref={videoEl}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+            ref={(videoEl) => {
+              if (
+                videoEl != null &&
+                stream != null &&
+                videoEl.srcObject !== stream
+              ) {
+                videoEl.srcObject = stream;
+                videoEl.play();
+              }
+            }}
             onPlay={() => set_isPlaying(true)}
             allow="camera"
           />
@@ -71,7 +74,6 @@ export const Webcam = (props) => {
 export const SelectVideoDevice = ({ value, onChange }) => {
   let [videoDevices, set_videoDevices] = useState([]);
   let [selectedValue, set_selectedValue] = useState(null);
-  console.log("props", value);
 
   useEffect(() => {
     // to get cameraId!!
@@ -79,7 +81,6 @@ export const SelectVideoDevice = ({ value, onChange }) => {
       let newDevices = devices
         .filter((device) => device.kind === "videoinput")
         .map((device) => {
-          console.log("device_id:", device);
           let { deviceId, label } = device;
           return { deviceId, label };
         });
@@ -88,12 +89,11 @@ export const SelectVideoDevice = ({ value, onChange }) => {
     });
   }, []);
 
-  useEffect(() => {
-    if (selectedValue) onChange(selectedValue);
-  }, [selectedValue]);
-
   let handle_select = (e) => {
     set_selectedValue(e.target.value);
+    if (e.target.value) {
+      onChange(selectedValue);
+    }
   };
 
   return (

@@ -173,15 +173,7 @@ export let component_map = {
     },
     Component: ({ size, options }) => {
       return (
-        <div
-          style={{
-            height: "100%",
-            width: "100%",
-            border: "1px solid red",
-            background: "rgba(112,128,144,0.5)",
-            position: "relative",
-          }}
-        >
+        <div style={{ height: "100%", width: "100%" }}>
           <Webcam size={size} deviceId={options.deviceId} />
         </div>
       );
