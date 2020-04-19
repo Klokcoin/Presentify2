@@ -35,7 +35,6 @@ const Grid = styled.div`
   overflow: visible;
   transform-origin: 0% 0%;
   transform-style: flat;
-  transform: ${({ transform }) => transform && toString(transform)};
   height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
   width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
 
@@ -55,10 +54,7 @@ const Grid = styled.div`
     );
 `;
 
-const Inner = styled.div`
-  position: relative;
-  transform: ${({ transform }) => transform && toString(transform)};
-`;
+const Inner = styled.div``;
 
 const Origin = styled.div`
   transform: translate(-50%, -50%);
@@ -69,7 +65,7 @@ const Origin = styled.div`
 
 export const options = {
   minZoom: 0.15,
-  maxZoom: 7, // I feel like beyond this pixel calculations start being imprecise :/
+  maxZoom: 9900, // I feel like beyond this pixel calculations start being imprecise :/
   minTranslation: {
     x: -WORLD.width / 2, // NOT ACTUALLY IMPLEMENTED RIGHT NOW!
     y: -WORLD.height / 2, // ^
@@ -227,10 +223,14 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       <Grid
         ref={gridRef}
         onMouseDown={on_canvas_click}
-        transform={multiply(origin_to_center, grid_to_origin, transform)} // the right transformation happens first!
+        style={{
+          transform: `${toString(
+            multiply(origin_to_center, grid_to_origin, transform)
+          )}`,
+        }} // the right transformation happens first!
       >
         {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
-        <Inner transform={inverse(grid_to_origin)}>
+        <Inner style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
           {items.map((item) => {
             let component_info = component_map[item.type];
             let Item = component_info.Component;
