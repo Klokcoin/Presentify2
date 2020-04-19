@@ -103,12 +103,14 @@ const LayerList = ({
         let item = list[i];
         if (item.id === id) {
           return [...initialPath, i, GROUP_ITEMS_KEY];
-        } else if (item.groupItems)
-          return findCrumbsOfId(id, item.groupItems, [
+        } else if (item.groupItems) {
+          let result = findCrumbsOfId(id, item.groupItems, [
             ...initialPath,
             i,
             GROUP_ITEMS_KEY,
           ]);
+          if (result) return result;
+        }
       }
 
       console.log("couldnt find id:", id);
@@ -199,7 +201,7 @@ const RecursiveList = (props) => {
   // NOTE becomes this:
   let isDropDisabled = focusList !== listId;
 
-  console.log(`sheet_view:`, sheet_view);
+  // console.log(`sheet_view:`, sheet_view);
 
   return (
     <Droppable
