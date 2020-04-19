@@ -23,11 +23,6 @@ export let MemoItemOverlay = ({ item, children }) => {
   const { sheet_view, select_item, change_item } = useContext(
     PresentifyContext
   );
-  console.log(
-    `getScale(sheet_view.transform):`,
-    getScale(sheet_view.transform)
-  );
-  console.log(`item:`, item);
   return React.useMemo(
     () => (
       <ItemOverlayWithoutContext
