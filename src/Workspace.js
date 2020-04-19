@@ -9,7 +9,7 @@ import Canvas from "./Components/Canvas.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
-import LayerList from "./Components/LayerList/index.js";
+import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
 
 let Sidebar = styled.div`
@@ -206,7 +206,7 @@ let Workspace = () => {
             <SidebarTitle> Layer list </SidebarTitle>
 
             <div style={{ overflowY: "auto", height: "100%" }}>
-              <LayerList />
+              <MemoLayerList />
             </div>
           </Sidebar>
 

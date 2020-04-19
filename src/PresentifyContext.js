@@ -145,14 +145,17 @@ export const PresentifyProvider = ({ children }) => {
     console.log("change", id, change);
     set_sheet(
       immer((sheet) => {
-        let index = sheet.items.findIndex((x) => x.id === id);
-
-        if (index !== -1) {
-          sheet.items[index] = {
-            ...sheet.items[index],
-            ...change,
-          };
-        }
+        let item = find_in_group(sheet.items, id);
+        console.log(`item:`, item);
+        Object.assign(item, change);
+        // let index = sheet.items.findIndex((x) => x.id === id);
+        //
+        // if (index !== -1) {
+        //   sheet.items[index] = {
+        //     ...sheet.items[index],
+        //     ...change,
+        //   };
+        // }
       })
     );
   };
@@ -165,13 +168,38 @@ export const PresentifyProvider = ({ children }) => {
     );
   };
 
+  let remove_from_group = (array, id) => {
+    return array
+      .filter((item) => item.id !== id)
+      .map((item) =>
+        item.groupItems
+          ? { ...item, groupItems: remove_from_group(item.groupItems, id) }
+          : item
+      );
+  };
+  let find_in_group = (array, id) => {
+    for (let item of array) {
+      if (item.id === id) {
+        return item;
+      } else {
+        if (item.groupItems) {
+          let sub_item = find_in_group(item.groupItems, id);
+          if (sub_item != null) {
+            return sub_item;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
   const remove_item = (id) => {
-    set_sheet(
-      immer((sheet) => {
-        let index = sheet.items.findIndex((x) => x.id === id);
-        sheet.items.splice(index, 1);
-      })
-    );
+    set_sheet((sheet) => {
+      return {
+        ...sheet,
+        items: remove_from_group(sheet.items, id),
+      };
+    });
 
     if (sheet_view.selected_id === id) {
       // Just for concistency, deselect the removed item (probably not necessary tho)

@@ -20,16 +20,39 @@ const Container = styled.div`
   padding: 5px;
 `;
 
-const LayerList = () => {
+export let MemoLayerList = () => {
   let {
-    sheet: { items },
-    sheet_view: { selected_id },
+    sheet,
     set_sheet,
     select_item,
     remove_item,
     change_item,
+    sheet_view,
   } = React.useContext(PresentifyContext);
 
+  return React.useMemo(() => {
+    console.log("He hey hey");
+    return (
+      <LayerList
+        sheet={sheet}
+        set_sheet={set_sheet}
+        select_item={select_item}
+        remove_item={remove_item}
+        change_item={change_item}
+        sheet_view={sheet_view}
+      />
+    );
+  }, [sheet, sheet_view.selected_id]);
+};
+
+const LayerList = ({
+  sheet: { items },
+  set_sheet,
+  select_item,
+  remove_item,
+  change_item,
+  sheet_view,
+}) => {
   // let reversed_items = [...items].reverse();
 
   let [destinationId, set_destinationId] = useState(null);
@@ -126,6 +149,10 @@ const LayerList = () => {
     >
       <Container>
         <RecursiveList
+          remove_item={remove_item}
+          change_item={change_item}
+          select_item={select_item}
+          sheet_view={sheet_view}
           focusList={focusList}
           set_focusList={set_focusList}
           listId={BASE_LIST_ID}
@@ -145,10 +172,15 @@ const RecursiveList = (props) => {
     selected_id,
     focusList,
     set_focusList,
+
+    select_item,
+    remove_item,
+    change_item,
+    sheet_view,
   } = props;
 
-  // NOTE Instead of having a state that we update from a prop, we can "just" have a variable that is
-  // .... derived from the prop.
+  // NOTE Instead of having a state that we update from a prop,
+  // .... we can "just" have a variable that is derived from the prop - DRAL
   // .... So this:
   // const [isDropDisabled, set_isDropDisabled] = useState(false);
   //
@@ -166,6 +198,8 @@ const RecursiveList = (props) => {
   // }, [focusList, listId]);
   // NOTE becomes this:
   let isDropDisabled = focusList !== listId;
+
+  console.log(`sheet_view:`, sheet_view);
 
   return (
     <Droppable
@@ -194,11 +228,17 @@ const RecursiveList = (props) => {
                   item={item}
                   index={index}
                   key={item.id}
-                  selected={selected_id === item.id}
-                  isGroup={isGroup}
+                  select_item={select_item}
+                  remove_item={remove_item}
+                  change_item={change_item}
+                  sheet_view={sheet_view}
                 >
                   {isGroup && (
                     <RecursiveList
+                      select_item={select_item}
+                      remove_item={remove_item}
+                      change_item={change_item}
+                      sheet_view={sheet_view}
                       listId={item.id}
                       items={item.groupItems}
                       selected_id={selected_id}

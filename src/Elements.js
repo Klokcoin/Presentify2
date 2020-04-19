@@ -203,6 +203,14 @@ export const Layer = ({ style, children }) => {
   );
 };
 
+export let Flex = styled.div`
+  display: flex;
+  flex-direction: ${(p) => (p.row ? "row" : "column")};
+  flex: ${(p) => p.flex};
+  align-items: ${(p) => p.alignItems || "stretch"};
+  justify-content: ${(p) => p.justifyContent || "flex-start"};
+`;
+
 export const Center = styled.div`
   margin: auto;
   width: 100%;
