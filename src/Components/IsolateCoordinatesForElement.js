@@ -68,7 +68,7 @@ export const IsolateCoordinatesForElement = ({ element, mapCoords }) => {
   let currently_mousedown_in_my_hood = React.useRef(false);
 
   let path = (event) => {
-    return event.path || event.composedPath?.();
+    return event.path || event.composedPath?.() || [];
   };
 
   return (

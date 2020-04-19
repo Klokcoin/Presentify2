@@ -13,6 +13,7 @@ import {
 } from "../utils/linear_algebra";
 import styled from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
+import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute } from "../Elements";
 
 const CELL_SIZE = 100;
@@ -23,6 +24,7 @@ const WORLD = {
 };
 
 const Background = styled.div`
+  position: relative;
   background: #ccc;
   overflow: hidden;
   height: 100%;
@@ -32,11 +34,9 @@ const Background = styled.div`
 const GRID_COLOR = "hsl(213, 20%, 75%)";
 // Our "coordinate system"; the grid background is just for reference (and can totally be removed)
 const Grid = styled.div`
-  overflow: visible;
-  transform-origin: 0% 0%;
-  transform-style: flat;
   height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
   width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
+  transform: translateX(-50%) translateY(-50%);
 
   background: repeating-linear-gradient(
       90deg,
@@ -134,7 +134,6 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     set_sheet_view,
   } = useContext(PresentifyContext);
   const measureRef = useRef(null);
-  const gridRef = useRef(null);
 
   // Translate our "absolute" origin by the width of the SideBar (for mouse events only, canvas already sits next to it)
   let page_to_canvas = translation_matrix([left, top]);
@@ -260,8 +259,14 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   };
 
   return (
-    <Background ref={measureRef} onMouseDown={on_canvas_click}>
+    <Background
+      ref={measureRef}
+      onMouseDown={on_canvas_click}
+      onScroll={(e) => e.preventDefault()}
+      onWheel={(e) => e.preventDefault()}
+    >
       {/* Michiel dit is echt geniaal */}
+      {/* Thanks :D - DRAL */}
       <IsolateCoordinatesForElement
         element={measureRef.current}
         mapCoords={({ x, y }) => {
@@ -273,24 +278,29 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         }}
       />
       {/* Grid is our "coordinate system" (with gridlines as a background for reference) */}
-      <Grid
-        ref={gridRef}
+      <div
         onMouseDown={on_canvas_click}
         style={{
           transform: `${toString(
             multiply(origin_to_center, grid_to_origin, transform)
           )}`,
+          transformOrigin: "0 0",
         }} // the right transformation happens first!
       >
         {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
-        <Inner style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
-          {RecursiveMap(items)}
-          {/* Put a little orange rectangle at the origin for reference */}
-          <Absolute left={0} top={0} style={{ zIndex: -1 }}>
+        <div style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
+          <Grid />
+
+          <Absolute left={0} top={0}>
             <Origin />
           </Absolute>
-        </Inner>
-      </Grid>
+
+          {RecursiveMap(items)}
+          {/* Put a little orange rectangle at the origin for reference */}
+        </div>
+      </div>
+
+      <BasictransformationLayer />
     </Background>
   );
 };
