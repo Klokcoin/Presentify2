@@ -11,7 +11,7 @@ import {
   inverse,
   apply,
 } from "../utils/linear_algebra";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { Absolute } from "../Elements";
 

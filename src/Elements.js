@@ -1,6 +1,6 @@
 import React from "react";
 import ComponentComponent from "@reach/component-component";
-import styled, { css } from "styled-components";
+import styled from "styled-components/macro";
 
 /*
 Simple component that will not render anything.
