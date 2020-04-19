@@ -34,6 +34,9 @@ const Background = styled.div`
 const GRID_COLOR = "hsl(213, 20%, 75%)";
 // Our "coordinate system"; the grid background is just for reference (and can totally be removed)
 const Grid = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
   height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
   width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
   transform: translateX(-50%) translateY(-50%);
@@ -258,6 +261,13 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     }
   };
 
+  let full_transform = multiply(
+    origin_to_center,
+    grid_to_origin,
+    transform,
+    inverse(grid_to_origin)
+  ); // the right transformation happens first!
+
   return (
     <Background
       ref={measureRef}
@@ -281,26 +291,21 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       <div
         onMouseDown={on_canvas_click}
         style={{
-          transform: `${toString(
-            multiply(origin_to_center, grid_to_origin, transform)
-          )}`,
+          transform: `${toString(multiply(full_transform))}`,
           transformOrigin: "0 0",
-        }} // the right transformation happens first!
+        }}
       >
-        {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
-        <div style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
-          <Grid />
+        <Grid />
 
-          <Absolute left={0} top={0}>
-            <Origin />
-          </Absolute>
+        {/* Put a little orange rectangle at the origin for reference */}
+        <Absolute left={0} top={0}>
+          <Origin />
+        </Absolute>
 
-          {RecursiveMap(items)}
-          {/* Put a little orange rectangle at the origin for reference */}
-        </div>
+        {RecursiveMap(items)}
       </div>
 
-      <BasictransformationLayer />
+      <BasictransformationLayer transform={full_transform} />
     </Background>
   );
 };
