@@ -1,218 +1,263 @@
-import React from "react";
-import styled from "styled-components/macro";
-import { SidebarButton, EllipsisOverflow } from "../../Workspace";
-import { ListItem } from "./ListItem";
+import React, { useState, useEffect } from "react";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import * as R from "ramda";
+import styled, { css } from "styled-components/macro";
 
-let List = styled.div`
-  display: flex;
-  flex-direction: column-reverse;
-  justify-content: flex-end;
-  width: 100%;
-  overflow: hidden;
+import { PresentifyContext } from "../../PresentifyContext";
+import { LayerItem } from "./LayerItem";
+
+const BASE_LIST_ID = "baseList";
+const GROUP_ITEMS_KEY = "groupItems"; // currently this is determined in Workspace, when a group is created
+
+const ListContainer = styled.div`
+  pointer-events: auto; /* to re-enable mouseEvents */
+  background: ${(props) => (props.draggingOver ? "SeaGreen" : null)};
+  /* padding: 5px; */
+  min-height: 25px; /* make it possible to drag an item into an empty group */
 `;
 
-let Container = styled.div`
-  position: relative;
+const Container = styled.div`
+  padding: 5px;
 `;
 
-let DragOverlay = styled.div`
-  // border: solid green 1px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: grabbing;
-`;
+export let MemoLayerList = () => {
+  let {
+    sheet,
+    set_sheet,
+    select_item,
+    remove_item,
+    change_item,
+    sheet_view,
+  } = React.useContext(PresentifyContext);
 
-let DragContainer = styled.div.attrs((props) => ({
-  style: {
-    top: props.y - 5,
-    left: props.x - 5,
-  },
-}))`
-  width: 12rem;
-  // border: 1px solid blue;
-  // height: 50px;
-  position: fixed;
-  // top: ${(props) => props.y - 5}px;
-  // left: ${(props) => props.x - 5}px;
-  // left: 0;
-  opacity: 80%;
-  cursor: grabbing;
-  pointer-events: none; // this messes with dragging
-`;
-
-const HITBOX_HEIGHT = 25;
-const HITBOX_PADDING = 10;
-
-let DetectAbove = styled.div`
-  z-index: 99;
-  position: absolute;
-  height: ${2 * HITBOX_PADDING}px;
-  top: ${-HITBOX_PADDING}px;
-  width: 100%;
-  // background: rgba(255, 0, 0, 0.1);
-
-  :hover {
-    height: ${2 * HITBOX_PADDING + HITBOX_HEIGHT}px;
-  }
-`;
-
-let HitboxContainer = styled.div`
-  width: 100%;
-  height: ${(props) => (props.expand ? HITBOX_HEIGHT + "px" : "0px")};
-  position: relative;
-  background: rgb(24, 24, 24);
-  box-shadow: inset 0 0 4px #000000;
-
-  transition: height 0.15s;
-  transition-timing-function: ease;
-`;
-
-const InsertArea = ({
-  set_insert_index,
-  draggedItemIndex,
-  listItemIndex,
-  set_mouse,
-}) => {
-  let [expand, set_expand] = React.useState(false);
-
-  let is_hovering =
-    draggedItemIndex === listItemIndex ||
-    draggedItemIndex === listItemIndex + 1;
-
-  let handleMouseOver = () => {
-    if (is_hovering) {
-      set_insert_index(null);
-      set_expand(false);
-    } else {
-      set_expand(true);
-      if (draggedItemIndex > listItemIndex) {
-        set_insert_index(listItemIndex + 1);
-      } else {
-        set_insert_index(listItemIndex);
-      }
-    }
-  };
-
-  // hitbox checks if a item needs to inserted ABOVE
-  //
-  //  ############# <- hitbox
-  //  | list item |
-  //  =============
-
-  return (
-    <HitboxContainer expand={expand}>
-      <DetectAbove
-        onMouseEnter={handleMouseOver}
-        onMouseLeave={() => set_expand(false)}
-        onMouseMove={(e) => set_mouse({ y: e.clientY, x: e.clientX })} // fix this later....
-      ></DetectAbove>
-    </HitboxContainer>
-  );
+  return React.useMemo(() => {
+    console.log("He hey hey");
+    return (
+      <LayerList
+        sheet={sheet}
+        set_sheet={set_sheet}
+        select_item={select_item}
+        remove_item={remove_item}
+        change_item={change_item}
+        sheet_view={sheet_view}
+      />
+    );
+  }, [sheet, sheet_view.selected_id]);
 };
 
-export const LayerList = ({
-  items,
-  selected_id,
+const LayerList = ({
+  sheet: { items },
+  set_sheet,
   select_item,
-  change_itemOrder,
-  change_item,
   remove_item,
+  change_item,
+  sheet_view,
 }) => {
-  let [insert_index, set_insert_index] = React.useState(null);
-  let [is_dragging, set_is_dragging] = React.useState(false);
-  let [mouse, set_mouse] = React.useState(0);
+  // let reversed_items = [...items].reverse();
 
-  const handleDragEnd = (id, current_index) => {
-    console.log("DRAG_END", is_dragging.id, "newIndex", insert_index);
-    if (insert_index !== null) {
-      change_itemOrder(id, insert_index);
+  let [destinationId, set_destinationId] = useState(null);
+
+  let [focusList, set_focusList] = useState(BASE_LIST_ID);
+
+  const onDragStart = (start, provided) => {
+    // NOTE: we can do this bc right now we have draggable/droppable id's === item.id, but they don't _have_ to be equal!
+    let { draggableId: item_id } = start;
+    select_item(item_id);
+    console.log("item_id", item_id);
+  };
+
+  const onDragEnd = (result) => {
+    const { source, destination } = result;
+
+    // don't update items if nothing changed
+    if (!destination) {
+      return; // dropped outside the layer list
+    }
+    if (
+      source.index === destination.index &&
+      source.droppableId === destination.droppableId
+    ) {
+      return;
     }
 
-    set_is_dragging(false);
-    set_insert_index(null);
-  };
+    console.log(result);
 
-  let change_itemName = (id, newName) => {
-    change_item(id, { name: newName });
-  };
+    // find the breadcrumb trail of INDICES where an id is stored in a list
+    // e.g.
+    //--------------------
+    // ITEMLIST:
+    // 0 - groupItems:
+    //     0 ─ *item we want to select*
+    //     1 - ...etc
+    // 1 - ...etc
+    //---------------------
+    // -> our breadcrumbs:  0 > groupItems > 0
 
-  // Listitem handles dragStart, drag_end
-  // Insert area sets newIndex
+    function findCrumbsOfId(id, list, initialPath) {
+      if (id === BASE_LIST_ID) {
+        return [];
+      }
+
+      // NOTE For loop? We can do better - DRAL
+      for (let i = 0; i < list.length; i += 1) {
+        let item = list[i];
+        if (item.id === id) {
+          return [...initialPath, i, GROUP_ITEMS_KEY];
+        } else if (item.groupItems) {
+          let result = findCrumbsOfId(id, item.groupItems, [
+            ...initialPath,
+            i,
+            GROUP_ITEMS_KEY,
+          ]);
+          if (result) return result;
+        }
+      }
+
+      console.log("couldnt find id:", id);
+    }
+
+    let sourcePath = [
+      ...findCrumbsOfId(source.droppableId, items, []),
+      source.index,
+    ];
+
+    let item = R.view(R.lensPath(sourcePath), items);
+
+    // for the new item order we first remove the item from its old position
+    let newOrder = R.dissocPath(sourcePath, items);
+    // newOrder = Object.values(newOrder);
+
+    // determine the destination path inside of the itemList from which we removed the item
+    let destPath = [
+      ...findCrumbsOfId(destination.droppableId, newOrder, []),
+      // we don't the destination.index here...
+    ];
+
+    // create a (potentially nested) itemlist in which we are going to insert the item
+    let newItems = Object.values(R.view(R.lensPath(destPath), newOrder)); // ??
+    newItems.splice(destination.index, 0, item);
+
+    // finally put the new items at the destination path
+    newOrder = R.set(R.lensPath(destPath), newItems, newOrder);
+    console.log("newOrder", newOrder);
+    set_sheet((sheet) => ({ ...sheet, items: newOrder }));
+  };
 
   return (
-    <Container>
-      <List>
-        {is_dragging && (
-          <InsertArea
-            listItemIndex={-1}
-            draggedItemIndex={is_dragging.index}
-            set_insert_index={set_insert_index}
-            id="bottomLayerInsert"
-            set_mouse={set_mouse}
-          />
-        )}
-
-        {/* THE ITEMS */}
-        {items.map((item, i) => (
-          <>
-            {/* {insert_index === i && <InsertArea />} */}
-
-            <ListItem
-              id={item.id}
-              index={i}
-              set_is_dragging={set_is_dragging}
-              handleDragEnd={handleDragEnd}
-              active={item.id === selected_id}
-              select_item={() => select_item(item.id)}
-              name={item.name}
-              change_itemName={change_itemName}
-              remove_item={remove_item}
-            >
-              {/* <SidebarButton
-                active={item.id === selected_id}
-                onClick={() => select_item(item.id)}
-              >
-                <EllipsisOverflow>{item.name}</EllipsisOverflow>
-              </SidebarButton> */}
-            </ListItem>
-            {is_dragging && (
-              <InsertArea
-                listItemIndex={i}
-                draggedItemIndex={is_dragging.index}
-                set_insert_index={set_insert_index}
-                set_mouse={set_mouse}
-              />
-            )}
-          </>
-        ))}
-      </List>
-
-      {is_dragging && (
-        <DragOverlay
-          // ref={overlayRef}
-          onMouseUp={() => set_is_dragging(false)}
-          onMouseMove={(e) => set_mouse({ y: e.clientY, x: e.clientX })}
-        >
-          <DragContainer y={mouse.y} x={mouse.x}>
-            {items.map((item) => {
-              if (item.id === is_dragging.id) {
-                return (
-                  <SidebarButton
-                    style={{ cursor: "grabbing" }}
-                    disabled
-                    active={true}
-                  >
-                    <EllipsisOverflow>{item.name}</EllipsisOverflow>
-                  </SidebarButton>
-                );
-              }
-            })}
-          </DragContainer>
-        </DragOverlay>
-      )}
-    </Container>
+    <DragDropContext
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      // onDragUpdate={onDragUpdate}
+    >
+      <Container>
+        <RecursiveList
+          remove_item={remove_item}
+          change_item={change_item}
+          select_item={select_item}
+          sheet_view={sheet_view}
+          focusList={focusList}
+          set_focusList={set_focusList}
+          listId={BASE_LIST_ID}
+          destinationId={destinationId}
+          items={items}
+        />
+      </Container>
+    </DragDropContext>
   );
 };
+
+const RecursiveList = (props) => {
+  let {
+    items,
+    listId,
+    destinationId,
+    selected_id,
+    focusList,
+    set_focusList,
+
+    select_item,
+    remove_item,
+    change_item,
+    sheet_view,
+  } = props;
+
+  // NOTE Instead of having a state that we update from a prop,
+  // .... we can "just" have a variable that is derived from the prop - DRAL
+  // .... So this:
+  // const [isDropDisabled, set_isDropDisabled] = useState(false);
+  //
+  // // a list will be disabled for dropping items when another list is in focus as a drop target
+  // useEffect(() => {
+  //   if (!focusList) {
+  //     set_isDropDisabled(false);
+  //   } else {
+  //     if (focusList === listId) {
+  //       set_isDropDisabled(false);
+  //     } else {
+  //       set_isDropDisabled(true);
+  //     }
+  //   }
+  // }, [focusList, listId]);
+  // NOTE becomes this:
+  let isDropDisabled = focusList !== listId;
+
+  // console.log(`sheet_view:`, sheet_view);
+
+  return (
+    <Droppable
+      droppableId={listId}
+      isDropDisabled={isDropDisabled}
+      // isCombineEnabled
+    >
+      {(provided, snapshot) => {
+        return (
+          <ListContainer
+            ref={provided.innerRef}
+            onMouseOver={(e) => {
+              e.stopPropagation();
+              set_focusList(listId);
+            }}
+            onMouseLeave={(e) => set_focusList(null)}
+            {...provided.droppableProps}
+            draggingOver={snapshot.isDraggingOver}
+          >
+            {items.map((item, index) => {
+              // let isGroup = item.groupItems && item.groupItems.length > 0;
+              let isGroup = item.groupItems;
+
+              return (
+                <LayerItem
+                  item={item}
+                  index={index}
+                  key={item.id}
+                  select_item={select_item}
+                  remove_item={remove_item}
+                  change_item={change_item}
+                  sheet_view={sheet_view}
+                >
+                  {isGroup && (
+                    <RecursiveList
+                      select_item={select_item}
+                      remove_item={remove_item}
+                      change_item={change_item}
+                      sheet_view={sheet_view}
+                      listId={item.id}
+                      items={item.groupItems}
+                      selected_id={selected_id}
+                      destinationId={destinationId}
+                      focusList={focusList}
+                      set_focusList={set_focusList}
+                    />
+                  )}
+                </LayerItem>
+              );
+            })}
+            {provided.placeholder}
+          </ListContainer>
+        );
+      }}
+    </Droppable>
+  );
+};
+
+export default LayerList;

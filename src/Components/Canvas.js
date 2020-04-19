@@ -1,6 +1,6 @@
 import React, { useContext, useRef, useEffect } from "react";
 import { PresentifyContext } from "../PresentifyContext";
-import ItemOverlay from "../AppComponents/ItemOverlay";
+import { MemoItemOverlay as ItemOverlay } from "../AppComponents/ItemOverlay";
 import { component_map } from "../PresentifyComponents";
 import {
   translation_matrix,
@@ -11,8 +11,9 @@ import {
   inverse,
   apply,
 } from "../utils/linear_algebra";
-import styled from "styled-components";
+import styled from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
+import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute } from "../Elements";
 
 const CELL_SIZE = 100;
@@ -23,38 +24,12 @@ const WORLD = {
 };
 
 const Background = styled.div`
+  position: relative;
   background: #ccc;
   overflow: hidden;
   height: 100%;
   width: 100%;
 `;
-
-const GRID_COLOR = "hsl(213, 20%, 75%)";
-// Our "coordinate system"; the grid background is just for reference (and can totally be removed)
-const Grid = styled.div`
-  overflow: visible;
-  transform-origin: 0% 0%;
-  transform-style: flat;
-  height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
-  width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
-
-  background: repeating-linear-gradient(
-      90deg,
-      ${GRID_COLOR},
-      ${GRID_COLOR} ${LINE_THICKNESS}px,
-      transparent ${LINE_THICKNESS}px,
-      transparent ${CELL_SIZE}px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      ${GRID_COLOR},
-      ${GRID_COLOR} ${LINE_THICKNESS}px,
-      transparent ${LINE_THICKNESS}px,
-      transparent ${CELL_SIZE}px
-    );
-`;
-
-const Inner = styled.div``;
 
 const Origin = styled.div`
   transform: translate(-50%, -50%);
@@ -62,6 +37,84 @@ const Origin = styled.div`
   height: ${LINE_THICKNESS}px;
   background: hsl(30, 91%, 67%);
 `;
+
+const ReferenceGrid = ({ color = "hsl(213, 20%, 75%)", onClick }) => {
+  return (
+    <div
+      onMouseDown={onClick}
+      style={{
+        height: WORLD.height + LINE_THICKNESS - 0.5,
+        width: WORLD.width + LINE_THICKNESS - 0.5,
+        transform: "translate(-50%, -50%)",
+        background: `repeating-linear-gradient(
+          90deg,
+          ${color},
+          ${color} ${LINE_THICKNESS}px,
+          transparent ${LINE_THICKNESS}px,
+          transparent ${CELL_SIZE}px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          ${color},
+          ${color} ${LINE_THICKNESS}px,
+          transparent ${LINE_THICKNESS}px,
+          transparent ${CELL_SIZE}px
+        )`,
+      }}
+    />
+  );
+};
+
+let RecursiveMap = (items) => {
+  return items.map((item) => {
+    let component_info = component_map[item.type];
+    let Item = component_info.Component;
+
+    if (item.type === "group") {
+      let group = item;
+
+      //recursive case
+      return (
+        <ItemOverlay item={group} key={item.id}>
+          <PresentifyContext.Consumer>
+            {(presentify_context) => (
+              <PresentifyContext.Provider
+                value={{
+                  ...presentify_context,
+                  change_item: (child_id, change) => {
+                    let index = group.groupItems.findIndex(
+                      (x) => x.id === child_id
+                    );
+                    if (index !== -1) {
+                      let newGroupItems = [...group.groupItems];
+                      newGroupItems[index] = {
+                        ...newGroupItems[index],
+                        ...change,
+                      };
+
+                      presentify_context.change_item(group.id, {
+                        groupItems: newGroupItems,
+                      });
+                    }
+                  },
+                }}
+              >
+                {RecursiveMap(group.groupItems)}
+              </PresentifyContext.Provider>
+            )}
+          </PresentifyContext.Consumer>
+        </ItemOverlay>
+      );
+    }
+    //base case
+    else
+      return (
+        <ItemOverlay item={item} key={item.id}>
+          <Item options={item.options || {}} />
+        </ItemOverlay>
+      );
+  });
+};
 
 export const options = {
   minZoom: 0.15,
@@ -80,18 +133,12 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   const {
     sheet_view: { transform },
     select_item,
-    change_transform,
+    set_sheet_view,
   } = useContext(PresentifyContext);
   const measureRef = useRef(null);
-  const gridRef = useRef(null);
 
   // Translate our "absolute" origin by the width of the SideBar (for mouse events only, canvas already sits next to it)
   let page_to_canvas = translation_matrix([left, top]);
-  // Translate the grid such that its origin is now at its center, no longer its top-left!
-  let grid_to_origin = translation_matrix([
-    -WORLD.width / 2 - 1.3, // these small factors make the grid align with the center
-    -WORLD.height / 2 - 1, // don't really know why they have to be here TODO: find this out
-  ]);
   // Translate the grid such that its origin (its top-left) is at the center of the screen
   let origin_to_center = translation_matrix([width / 2, height / 2]);
 
@@ -111,14 +158,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       We inverse this complete transformation to get the click_inside_grid
     */
     let click_inside_grid = apply(
-      inverse(
-        multiply(
-          origin_to_center,
-          grid_to_origin,
-          transform,
-          inverse(grid_to_origin)
-        )
-      ),
+      inverse(multiply(origin_to_center, transform)),
       click_inside_canvas
     );
 
@@ -131,6 +171,19 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       return;
     }
 
+    // NOTE: we are fixing this react event up using IsolateCoordinatesForElement, so the coords are already relative to the grid!
+    const onWheel = (event) => {
+      event.preventDefault();
+
+      if (event.ctrlKey) {
+        let { clientX, clientY, deltaY } = event;
+        zoom({ clientX, clientY, deltaY });
+      } else {
+        let { deltaX, deltaY } = event;
+        translate({ deltaX, deltaY });
+      }
+    };
+
     let listener = ["wheel", onWheel, { capture: true, passive: false }];
 
     measureRef.current.addEventListener(...listener);
@@ -139,7 +192,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     return function cleanup() {
       oldRef.removeEventListener(...listener);
     };
-  });
+  }, [measureRef.current]);
 
   const translate = ({ deltaX, deltaY }) => {
     let scale = getScale(transform);
@@ -149,12 +202,13 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       [deltaX, deltaY]
     );
 
-    let new_transform = multiply(
-      transform,
-      translation_matrix([-relativeDeltaX, -relativeDeltaY])
-    );
-
-    change_transform(new_transform);
+    set_sheet_view(({ transform, ...sheet_view }) => {
+      let new_transform = multiply(
+        transform,
+        translation_matrix([-relativeDeltaX, -relativeDeltaY])
+      );
+      return { ...sheet_view, transform: new_transform };
+    });
   };
 
   const zoom = ({ clientX, clientY, deltaY }) => {
@@ -175,15 +229,14 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     // translate the grid back to its original origin (top-left), scale, and inverse the previous two operations again
     let zoom_matrix = multiply(
       inverse(translation_matrix([-clientX, -clientY])),
-      inverse(grid_to_origin),
       scale_matrix([zoom, zoom]),
-      grid_to_origin,
       translation_matrix([-clientX, -clientY])
     );
 
-    let new_transform = multiply(transform, zoom_matrix);
-
-    change_transform(new_transform);
+    set_sheet_view(({ transform, ...sheet_view }) => {
+      let new_transform = multiply(transform, zoom_matrix);
+      return { ...sheet_view, transform: new_transform };
+    });
   };
 
   const on_canvas_click = ({ target, currentTarget }) => {
@@ -193,22 +246,17 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     }
   };
 
-  // NOTE: we are fixing this react event up using IsolateCoordinatesForElement, so the coords are already relative to the grid!
-  const onWheel = (event) => {
-    event.preventDefault();
-
-    if (event.ctrlKey) {
-      let { clientX, clientY, deltaY } = event;
-      zoom({ clientX, clientY, deltaY });
-    } else {
-      let { deltaX, deltaY } = event;
-      translate({ deltaX, deltaY });
-    }
-  };
+  let full_transform = multiply(origin_to_center, transform); // the right transformation happens first!
 
   return (
-    <Background ref={measureRef} onMouseDown={on_canvas_click}>
+    <Background
+      ref={measureRef}
+      onMouseDown={on_canvas_click}
+      onScroll={(e) => e.preventDefault()}
+      onWheel={(e) => e.preventDefault()}
+    >
       {/* Michiel dit is echt geniaal */}
+      {/* Thanks :D - DRAL */}
       <IsolateCoordinatesForElement
         element={measureRef.current}
         mapCoords={({ x, y }) => {
@@ -219,38 +267,24 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
           };
         }}
       />
-      {/* Grid is our "coordinate system" (with gridlines as a background for reference) */}
-      <Grid
-        ref={gridRef}
+      <div
         onMouseDown={on_canvas_click}
         style={{
-          transform: `${toString(
-            multiply(origin_to_center, grid_to_origin, transform)
-          )}`,
-        }} // the right transformation happens first!
+          transform: `${toString(full_transform)}`,
+          transformOrigin: "0 0",
+        }}
       >
-        {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
-        <Inner style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
-          {items.map((item) => {
-            let component_info = component_map[item.type];
-            let Item = component_info.Component;
+        <ReferenceGrid onClick={on_canvas_click} />
 
-            if (!Item) {
-              return null;
-            }
+        {/* Put a little orange rectangle at the origin for reference. NOTE: not actually sure why this Absolute is needed, but otherwise it doesn't show up... */}
+        <Absolute left={0} top={0}>
+          <Origin />
+        </Absolute>
 
-            return (
-              <ItemOverlay item={item} key={item.id}>
-                <Item options={item.options || {}} />
-              </ItemOverlay>
-            );
-          })}
-          {/* Put a little orange rectangle at the origin for reference */}
-          <Absolute left={0} top={0} style={{ zIndex: -1 }}>
-            <Origin />
-          </Absolute>
-        </Inner>
-      </Grid>
+        {RecursiveMap(items)}
+      </div>
+
+      <BasictransformationLayer transform={full_transform} />
     </Background>
   );
 };

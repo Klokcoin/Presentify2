@@ -146,6 +146,14 @@ export let component_map = {
       );
     },
   },
+  group: {
+    icon: <i className="fas fa-object-group"></i>,
+    name: "Group",
+    groupItems: [],
+    default_options: {
+      backgroundColor: "#B50004",
+    },
+  },
   "jwestendorp/webcam": {
     icon: <i className="fas fa-video"></i>,
     name: "Webcam",
@@ -165,14 +173,7 @@ export let component_map = {
     },
     Component: ({ size, options }) => {
       return (
-        <div
-          style={{
-            height: "100%",
-            width: "100%",
-            background: "rgba(112,128,144,0.5)",
-            position: "relative",
-          }}
-        >
+        <div style={{ height: "100%", width: "100%" }}>
           <Webcam size={size} deviceId={options.deviceId} />
         </div>
       );

@@ -1,6 +1,6 @@
 import React from "react";
 import ComponentComponent from "@reach/component-component";
-import styled, { css } from "styled-components";
+import styled from "styled-components/macro";
 
 /*
 Simple component that will not render anything.
@@ -202,6 +202,14 @@ export const Layer = ({ style, children }) => {
     />
   );
 };
+
+export let Flex = styled.div`
+  display: flex;
+  flex-direction: ${(p) => (p.row ? "row" : "column")};
+  flex: ${(p) => p.flex};
+  align-items: ${(p) => p.alignItems || "stretch"};
+  justify-content: ${(p) => p.justifyContent || "flex-start"};
+`;
 
 export const Center = styled.div`
   margin: auto;

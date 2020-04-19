@@ -1,8 +1,8 @@
 //   s/o:
 //   https://loading.io/css/
 //
-import React, { useRef, useEffect, useState } from "react";
-import styled, { css } from "styled-components";
+import React from "react";
+import styled from "styled-components/macro";
 
 const Spinner = styled.div`
   display: inline-block;

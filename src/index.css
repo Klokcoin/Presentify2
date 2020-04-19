@@ -1,11 +1,17 @@
+html {
+  overscroll-behavior-x: none;
+}
+
 body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
+  user-select: none;
 }
 
 * {
   box-sizing: border-box;
+  overscroll-behavior-x: none;
 }
 
 :root {
