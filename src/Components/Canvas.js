@@ -63,7 +63,7 @@ const Origin = styled.div`
   background: hsl(30, 91%, 67%);
 `;
 
-let RecursiveMap = (items, handle_change) => {
+let RecursiveMap = (items) => {
   return items.map((item) => {
     let component_info = component_map[item.type];
     let Item = component_info.Component;
@@ -71,41 +71,37 @@ let RecursiveMap = (items, handle_change) => {
     if (item.type === "group") {
       let group = item;
 
-      let nested_change = (nestedId, change) => {
-        // console.log("nested change", nestedId, change);
-      };
-
       //recursive case
       return (
-        <PresentifyContext.Consumer>
-          {(presentify_context) => (
-            <PresentifyContext.Provider
-              value={{
-                ...presentify_context,
-                change_item: (child_id, change) => {
-                  let index = group.groupItems.findIndex(
-                    (x) => x.id === child_id
-                  );
-                  if (index !== -1) {
-                    let newGroupItems = [...group.groupItems];
-                    newGroupItems[index] = {
-                      ...newGroupItems[index],
-                      ...change,
-                    };
+        <ItemOverlay item={group} key={item.id}>
+          <PresentifyContext.Consumer>
+            {(presentify_context) => (
+              <PresentifyContext.Provider
+                value={{
+                  ...presentify_context,
+                  change_item: (child_id, change) => {
+                    let index = group.groupItems.findIndex(
+                      (x) => x.id === child_id
+                    );
+                    if (index !== -1) {
+                      let newGroupItems = [...group.groupItems];
+                      newGroupItems[index] = {
+                        ...newGroupItems[index],
+                        ...change,
+                      };
 
-                    presentify_context.change_item(group.id, {
-                      groupItems: newGroupItems,
-                    });
-                  }
-                },
-              }}
-            >
-              <ItemOverlay item={group} key={item.id}>
-                {RecursiveMap(group.groupItems, nested_change)}
-              </ItemOverlay>
-            </PresentifyContext.Provider>
-          )}
-        </PresentifyContext.Consumer>
+                      presentify_context.change_item(group.id, {
+                        groupItems: newGroupItems,
+                      });
+                    }
+                  },
+                }}
+              >
+                {RecursiveMap(group.groupItems)}
+              </PresentifyContext.Provider>
+            )}
+          </PresentifyContext.Consumer>
+        </ItemOverlay>
       );
     }
     //base case
@@ -135,7 +131,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   const {
     sheet_view: { transform },
     select_item,
-    change_transform,
+    set_sheet_view,
   } = useContext(PresentifyContext);
   const measureRef = useRef(null);
   const gridRef = useRef(null);
@@ -186,6 +182,19 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       return;
     }
 
+    // NOTE: we are fixing this react event up using IsolateCoordinatesForElement, so the coords are already relative to the grid!
+    const onWheel = (event) => {
+      event.preventDefault();
+
+      if (event.ctrlKey) {
+        let { clientX, clientY, deltaY } = event;
+        zoom({ clientX, clientY, deltaY });
+      } else {
+        let { deltaX, deltaY } = event;
+        translate({ deltaX, deltaY });
+      }
+    };
+
     let listener = ["wheel", onWheel, { capture: true, passive: false }];
 
     measureRef.current.addEventListener(...listener);
@@ -194,7 +203,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     return function cleanup() {
       oldRef.removeEventListener(...listener);
     };
-  });
+  }, [measureRef.current]);
 
   const translate = ({ deltaX, deltaY }) => {
     let scale = getScale(transform);
@@ -204,12 +213,13 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       [deltaX, deltaY]
     );
 
-    let new_transform = multiply(
-      transform,
-      translation_matrix([-relativeDeltaX, -relativeDeltaY])
-    );
-
-    change_transform(new_transform);
+    set_sheet_view(({ transform, ...sheet_view }) => {
+      let new_transform = multiply(
+        transform,
+        translation_matrix([-relativeDeltaX, -relativeDeltaY])
+      );
+      return { ...sheet_view, transform: new_transform };
+    });
   };
 
   const zoom = ({ clientX, clientY, deltaY }) => {
@@ -236,28 +246,16 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       translation_matrix([-clientX, -clientY])
     );
 
-    let new_transform = multiply(transform, zoom_matrix);
-
-    change_transform(new_transform);
+    set_sheet_view(({ transform, ...sheet_view }) => {
+      let new_transform = multiply(transform, zoom_matrix);
+      return { ...sheet_view, transform: new_transform };
+    });
   };
 
   const on_canvas_click = ({ target, currentTarget }) => {
     // Only deselect item if the click is **only** on the canvas, and not actually on one of the divs inside
     if (target === currentTarget) {
       select_item(null);
-    }
-  };
-
-  // NOTE: we are fixing this react event up using IsolateCoordinatesForElement, so the coords are already relative to the grid!
-  const onWheel = (event) => {
-    event.preventDefault();
-
-    if (event.ctrlKey) {
-      let { clientX, clientY, deltaY } = event;
-      zoom({ clientX, clientY, deltaY });
-    } else {
-      let { deltaX, deltaY } = event;
-      translate({ deltaX, deltaY });
     }
   };
 
@@ -286,20 +284,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       >
         {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
         <Inner style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
-          {items.map((item) => {
-            let component_info = component_map[item.type];
-            let Item = component_info.Component;
-
-            if (!Item) {
-              return null;
-            }
-
-            return (
-              <ItemOverlay item={item} key={item.id}>
-                <Item options={item.options || {}} />
-              </ItemOverlay>
-            );
-          })}
+          {RecursiveMap(items)}
           {/* Put a little orange rectangle at the origin for reference */}
           <Absolute left={0} top={0} style={{ zIndex: -1 }}>
             <Origin />

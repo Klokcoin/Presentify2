@@ -9,7 +9,7 @@ import Canvas from "./Components/Canvas.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
-import LayerList from "./Components/LayerList.js";
+import LayerList from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
 
 let Sidebar = styled.div`
@@ -105,17 +105,6 @@ let Workspace = () => {
     select_item,
     remove_item,
   } = React.useContext(PresentifyContext);
-
-  // let reorder_item = (oldIndex, newIndex) => {
-  //   let new_items = [...sheet.items];
-  //   let [removed] = new_items.splice(oldIndex, 1);
-  //   new_items.splice(newIndex, 0, removed);
-
-  //   set_sheet({
-  //     ...sheet,
-  //     items: new_items,
-  //   });
-  // };
 
   return (
     <Droptarget

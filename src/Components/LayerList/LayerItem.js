@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Draggable } from "react-beautiful-dnd";
-import { EllipsisOverflow } from "../../Workspace";
 import styled, { css } from "styled-components/macro";
+
+import { PresentifyContext } from "../../PresentifyContext";
+import { EllipsisOverflow } from "../../Workspace";
 import { Whitespace } from "../../Elements";
 
 let colors = {
@@ -21,11 +23,9 @@ const TrashBin = styled.div`
   right: 0;
   top: 0;
   padding: 0 0.5rem;
-
   i {
     box-shadow: -8px 0px 6px 4px ${colors.hover};
   }
-
   :hover {
     color: FireBrick;
   }
@@ -35,14 +35,11 @@ const TrashBin = styled.div`
 const Container = styled.div`
   transition: background-color 0.2s ease-in-out;
   cursor: pointer !important;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-
   padding: 0.5rem 0 0.5rem 0.5rem;
   transform: none;
-
   background-color: ${({ dragging, hovering, selected }) => {
     if (hovering || selected) {
       return colors.hover;
@@ -50,7 +47,6 @@ const Container = styled.div`
       return "hsl(0, 0%, 20%)";
     }
   }};
-
   ${({ dragging }) =>
     dragging &&
     css`
@@ -75,15 +71,11 @@ const Icon = styled.div`
   // margin: 0 5px;
 `;
 
-export const LayerItem = ({
-  item,
-  index,
-  select_item,
-  remove_item,
-  change_item,
-  selected,
-  children,
-}) => {
+export const LayerItem = ({ item, index, children }) => {
+  let { select_item, remove_item, change_item, sheet_view } = React.useContext(
+    PresentifyContext
+  );
+
   const [input_enabled, set_input_enabled] = useState(false);
   const [hovering, set_hovering] = useState(false);
   const [input, set_input] = useState(item.name);
@@ -118,7 +110,7 @@ export const LayerItem = ({
             onMouseLeave={() => set_hovering(false)}
             dragging={snapshot.isDragging}
             hovering={hovering}
-            selected={selected}
+            selected={item.id === sheet_view.selected_id}
           >
             {input_enabled ? (
               <EditableName

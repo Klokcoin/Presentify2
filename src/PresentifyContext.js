@@ -183,35 +183,18 @@ export const PresentifyProvider = ({ children }) => {
     }
   };
 
-  const reorder_item = (oldIndex, newIndex) => {
-    set_sheet(
-      immer((sheet) => {
-        let [removed] = sheet.items.splice(oldIndex, 1);
-        sheet.items.splice(newIndex, 0, removed);
-      })
-    );
-  };
-
-  const change_transform = (new_transform) => {
-    set_sheet_view(
-      immer((sheet_view) => {
-        sheet_view.transform = new_transform;
-      })
-    );
-  };
-
   return (
     <PresentifyContext.Provider
       value={{
         sheet,
         sheet_view,
+        set_sheet,
+        set_sheet_view,
         add_file,
         add_item,
         change_item,
         select_item,
         remove_item,
-        reorder_item,
-        change_transform,
       }}
     >
       {children}
