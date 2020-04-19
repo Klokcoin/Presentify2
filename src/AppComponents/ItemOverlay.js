@@ -91,7 +91,10 @@ const ItemOverlay = ({ children, item }) => {
 
   return (
     <Absolute
-      onMouseDown={() => select_item(item.id)}
+      onMouseDown={(event) => {
+        event.stopPropagation();
+        select_item(item.id);
+      }}
       left={current_item.x}
       top={current_item.y}
       style={{

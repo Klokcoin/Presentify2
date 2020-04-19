@@ -127,6 +127,7 @@ export const PresentifyProvider = ({ children }) => {
           options: component_info.default_options || {},
           ...info,
 
+          groupItems: component_info.groupItems || null,
           z: next_id * 10, // * 10 ???
           id: next_id,
         });

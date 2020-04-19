@@ -63,6 +63,61 @@ const Origin = styled.div`
   background: hsl(30, 91%, 67%);
 `;
 
+let RecursiveMap = (items, handle_change) => {
+  return items.map((item) => {
+    let component_info = component_map[item.type];
+    let Item = component_info.Component;
+
+    if (item.type === "group") {
+      let group = item;
+
+      let nested_change = (nestedId, change) => {
+        // console.log("nested change", nestedId, change);
+      };
+
+      //recursive case
+      return (
+        <PresentifyContext.Consumer>
+          {(presentify_context) => (
+            <PresentifyContext.Provider
+              value={{
+                ...presentify_context,
+                change_item: (child_id, change) => {
+                  let index = group.groupItems.findIndex(
+                    (x) => x.id === child_id
+                  );
+                  if (index !== -1) {
+                    let newGroupItems = [...group.groupItems];
+                    newGroupItems[index] = {
+                      ...newGroupItems[index],
+                      ...change,
+                    };
+
+                    presentify_context.change_item(group.id, {
+                      groupItems: newGroupItems,
+                    });
+                  }
+                },
+              }}
+            >
+              <ItemOverlay item={group} key={item.id}>
+                {RecursiveMap(group.groupItems, nested_change)}
+              </ItemOverlay>
+            </PresentifyContext.Provider>
+          )}
+        </PresentifyContext.Consumer>
+      );
+    }
+    //base case
+    else
+      return (
+        <ItemOverlay item={item} key={item.id}>
+          <Item options={item.options || {}} />
+        </ItemOverlay>
+      );
+  });
+};
+
 export const options = {
   minZoom: 0.15,
   maxZoom: 9900, // I feel like beyond this pixel calculations start being imprecise :/
