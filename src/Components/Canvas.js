@@ -246,6 +246,8 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     }
   };
 
+  let full_transform = multiply(origin_to_center, transform); // the right transformation happens first!
+
   return (
     <Background
       ref={measureRef}
@@ -270,7 +272,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         style={{
           transform: `${toString(multiply(origin_to_center, transform))}`,
           transformOrigin: "0 0",
-        }} // the right transformation happens first!
+        }}
       >
         <ReferenceGrid onClick={on_canvas_click} />
 
@@ -282,7 +284,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         {RecursiveMap(items)}
       </div>
 
-      <BasictransformationLayer />
+      <BasictransformationLayer transform={full_transform} />
     </Background>
   );
 };
