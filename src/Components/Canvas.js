@@ -31,37 +31,39 @@ const Background = styled.div`
   width: 100%;
 `;
 
-const GRID_COLOR = "hsl(213, 20%, 75%)";
-// Our "coordinate system"; the grid background is just for reference (and can totally be removed)
-const Grid = styled.div`
-  height: ${WORLD.height + LINE_THICKNESS - 0.5}px;
-  width: ${WORLD.width + LINE_THICKNESS - 0.5}px;
-  transform: translateX(-50%) translateY(-50%);
-
-  background: repeating-linear-gradient(
-      90deg,
-      ${GRID_COLOR},
-      ${GRID_COLOR} ${LINE_THICKNESS}px,
-      transparent ${LINE_THICKNESS}px,
-      transparent ${CELL_SIZE}px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      ${GRID_COLOR},
-      ${GRID_COLOR} ${LINE_THICKNESS}px,
-      transparent ${LINE_THICKNESS}px,
-      transparent ${CELL_SIZE}px
-    );
-`;
-
-const Inner = styled.div``;
-
 const Origin = styled.div`
   transform: translate(-50%, -50%);
   width: ${LINE_THICKNESS}px;
   height: ${LINE_THICKNESS}px;
   background: hsl(30, 91%, 67%);
 `;
+
+const ReferenceGrid = ({ color = "hsl(213, 20%, 75%)", onClick }) => {
+  return (
+    <div
+      onMouseDown={onClick}
+      style={{
+        height: WORLD.height + LINE_THICKNESS - 0.5,
+        width: WORLD.width + LINE_THICKNESS - 0.5,
+        transform: "translate(-50%, -50%)",
+        background: `repeating-linear-gradient(
+          90deg,
+          ${color},
+          ${color} ${LINE_THICKNESS}px,
+          transparent ${LINE_THICKNESS}px,
+          transparent ${CELL_SIZE}px
+        ),
+        repeating-linear-gradient(
+          0deg,
+          ${color},
+          ${color} ${LINE_THICKNESS}px,
+          transparent ${LINE_THICKNESS}px,
+          transparent ${CELL_SIZE}px
+        )`,
+      }}
+    />
+  );
+};
 
 let RecursiveMap = (items) => {
   return items.map((item) => {
@@ -137,11 +139,6 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
 
   // Translate our "absolute" origin by the width of the SideBar (for mouse events only, canvas already sits next to it)
   let page_to_canvas = translation_matrix([left, top]);
-  // Translate the grid such that its origin is now at its center, no longer its top-left!
-  let grid_to_origin = translation_matrix([
-    -WORLD.width / 2 - 1.3, // these small factors make the grid align with the center
-    -WORLD.height / 2 - 1, // don't really know why they have to be here TODO: find this out
-  ]);
   // Translate the grid such that its origin (its top-left) is at the center of the screen
   let origin_to_center = translation_matrix([width / 2, height / 2]);
 
@@ -161,14 +158,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       We inverse this complete transformation to get the click_inside_grid
     */
     let click_inside_grid = apply(
-      inverse(
-        multiply(
-          origin_to_center,
-          grid_to_origin,
-          transform,
-          inverse(grid_to_origin)
-        )
-      ),
+      inverse(multiply(origin_to_center, transform)),
       click_inside_canvas
     );
 
@@ -239,9 +229,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     // translate the grid back to its original origin (top-left), scale, and inverse the previous two operations again
     let zoom_matrix = multiply(
       inverse(translation_matrix([-clientX, -clientY])),
-      inverse(grid_to_origin),
       scale_matrix([zoom, zoom]),
-      grid_to_origin,
       translation_matrix([-clientX, -clientY])
     );
 
@@ -277,27 +265,21 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
           };
         }}
       />
-      {/* Grid is our "coordinate system" (with gridlines as a background for reference) */}
       <div
         onMouseDown={on_canvas_click}
         style={{
-          transform: `${toString(
-            multiply(origin_to_center, grid_to_origin, transform)
-          )}`,
+          transform: `${toString(multiply(origin_to_center, transform))}`,
           transformOrigin: "0 0",
         }} // the right transformation happens first!
       >
-        {/* Undo the grid translation of half its width & height, so the items sit at the origin of the grid */}
-        <div style={{ transform: `${toString(inverse(grid_to_origin))}` }}>
-          <Grid />
+        <ReferenceGrid onClick={on_canvas_click} />
 
-          <Absolute left={0} top={0}>
-            <Origin />
-          </Absolute>
+        {/* Put a little orange rectangle at the origin for reference. NOTE: not actually sure why this Absolute is needed, but otherwise it doesn't show up... */}
+        <Absolute left={0} top={0}>
+          <Origin />
+        </Absolute>
 
-          {RecursiveMap(items)}
-          {/* Put a little orange rectangle at the origin for reference */}
-        </div>
+        {RecursiveMap(items)}
       </div>
 
       <BasictransformationLayer />
