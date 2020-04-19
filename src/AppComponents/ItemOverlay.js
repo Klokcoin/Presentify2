@@ -33,7 +33,7 @@ export let MemoItemOverlay = ({ item, children }) => {
         change_item={change_item}
       />
     ),
-    [getScale(sheet_view.transform), item]
+    [getScale(sheet_view.transform), sheet_view.selected_id, item]
   );
 };
 
