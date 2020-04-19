@@ -1,6 +1,6 @@
 import React, { useContext, useRef, useEffect } from "react";
 import { PresentifyContext } from "../PresentifyContext";
-import ItemOverlay from "../AppComponents/ItemOverlay";
+import { MemoItemOverlay as ItemOverlay } from "../AppComponents/ItemOverlay";
 import { component_map } from "../PresentifyComponents";
 import {
   translation_matrix,

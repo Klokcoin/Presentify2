@@ -4,12 +4,51 @@ import { Absolute, Draggable, DraggingCircle } from "../Elements";
 import { getScale, vector } from "../utils/linear_algebra";
 import { render_cursor, get_cursor_direction } from "../utils/cursors";
 
-const ItemOverlay = ({ children, item }) => {
-  const {
-    sheet_view: { transform, selected_id },
-    select_item,
-    change_item,
-  } = useContext(PresentifyContext);
+export let ItemOverlay = ({ item, children }) => {
+  const { sheet_view, select_item, change_item } = useContext(
+    PresentifyContext
+  );
+  return (
+    <ItemOverlayWithoutContext
+      item={item}
+      children={children}
+      sheet_view={sheet_view}
+      select_item={select_item}
+      change_item={change_item}
+    />
+  );
+};
+
+export let MemoItemOverlay = ({ item, children }) => {
+  const { sheet_view, select_item, change_item } = useContext(
+    PresentifyContext
+  );
+  console.log(
+    `getScale(sheet_view.transform):`,
+    getScale(sheet_view.transform)
+  );
+  console.log(`item:`, item);
+  return React.useMemo(
+    () => (
+      <ItemOverlayWithoutContext
+        item={item}
+        children={children}
+        sheet_view={sheet_view}
+        select_item={select_item}
+        change_item={change_item}
+      />
+    ),
+    [getScale(sheet_view.transform), item]
+  );
+};
+
+const ItemOverlayWithoutContext = ({
+  children,
+  item,
+  sheet_view: { transform, selected_id },
+  select_item,
+  change_item,
+}) => {
   const [movement_state, set_movement_state] = useState(null);
 
   let selected = selected_id === item.id;
@@ -258,5 +297,3 @@ const ItemOverlay = ({ children, item }) => {
     </Absolute>
   );
 };
-
-export default ItemOverlay;
