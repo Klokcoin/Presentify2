@@ -155,16 +155,16 @@ let Workspace = () => {
 
               if (e.key === "Backspace" || e.key === "Delete") {
                 if (selected_id != null) {
-                  remove_item(selected_id);
+                  selected_id.forEach(e => remove_item(e));
                 }
               }
 
               if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
-                let item =
+                let items =
                   selected_id && items.find((x) => x.id === selected_id);
-                if (item) {
+                if (items) {
                   // TODO Maybe later, append?
-                  set_clipboard([{ ...item, id: null }]);
+                  items.forEach(item=> set_clipboard([{ ...item, id: null }]));
                 }
               }
 
@@ -247,7 +247,7 @@ let Workspace = () => {
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
             {items
-              .filter((item) => item.id === selected_id)
+              .filter((item) => selected_id.includes(item.id))
               .map((item) => {
                 let component_info = component_map[item.type];
 

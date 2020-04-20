@@ -25,7 +25,7 @@ const ItemOverlay = ({ item }) => {
     }
   };
 
-  let selected = selected_id === item.id;
+  let selected = selected_id.includes(item.id);
   let act_like_selected = selected || preview != null;
 
   let with_defaults = {
@@ -276,11 +276,15 @@ export let BasictransformationLayer = ({ transform }) => {
     PresentifyContext
   );
 
-  let item = find_in_group(sheet.items, sheet_view.selected_id);
+ 
+  let items = [] 
+  
+  sheet_view.selected_id.map( id => items.push(find_in_group(sheet.items, id)));
 
-  console.log(`item:`, item);
+  console.log(`item:`, items);
 
   return (
+    items.map(item =>
     <Layer style={{ pointerEvents: "none" }}>
       {item && (
         <div
@@ -293,6 +297,8 @@ export let BasictransformationLayer = ({ transform }) => {
           <ItemOverlay item={item} />
         </div>
       )}
-    </Layer>
+    </Layer>)
   );
+  
+  
 };

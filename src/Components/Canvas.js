@@ -14,7 +14,7 @@ import {
 import styled from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
-import { Absolute } from "../Elements";
+import { Absolute, Draggable } from "../Elements";
 
 const CELL_SIZE = 100;
 const LINE_THICKNESS = 3;
@@ -22,6 +22,19 @@ const WORLD = {
   width: 500 * 2,
   height: 500 * 2,
 };
+
+const isSmaller = (num1, num2) => {
+  let one = num1 < num2
+  return one ? num1 : num2
+  }
+  const isBigger = (num1, num2) => {
+    let one = num1 > num2
+    return one ? num1 : num2
+    }
+
+const SelectionArea = styled.div`
+  background: rgba(255, 255, 255, 0.1);
+`
 
 const Background = styled.div`
   position: relative;
@@ -130,9 +143,13 @@ export const options = {
 };
 
 const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
+  let [selection, setSelection] = React.useState({start: {x: 0, y: 0}, end: {x:0, y: 0}, active: false})
+
   const {
     sheet_view: { transform },
     select_item,
+    select_clear,
+    select_add_item,
     set_sheet_view,
   } = useContext(PresentifyContext);
   const measureRef = useRef(null);
@@ -239,22 +256,70 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     });
   };
 
-  const on_canvas_click = ({ target, currentTarget }) => {
+
+  
+  const on_canvas_click = ({ target, currentTarget, ...event }) => {
     // Only deselect item if the click is **only** on the canvas, and not actually on one of the divs inside
     if (target === currentTarget) {
-      select_item(null);
+      select_clear();
+      setSelection({...selection, start: {x: event.clientX, y: event.clientY}})
+      console.log('start selection' + event.clientY, event.clientX)
     }
+  };
+
+  const on_canvas_drag = ({ absolute_x, absolute_y,  target, currentTarget}) => {
+    if (target === currentTarget) {
+      setSelection({...selection, end: {x: absolute_x, y: absolute_y}, active: true})
+      console.log('drag')
+    }
+  };
+
+  const on_canvas_drag_end = () => {
+    console.log('end')
+    console.log(items)
+
+    if (selection.active) {
+    items.map(item => {
+
+      let itemLeft = item.x - item.width/2
+      let itemRight = item.x + item.width/2
+      let itemTop = item.y + item.height/2
+      let itemBottom = item.y - item.height/2
+
+      let xcheck = 
+      selection.start.x < selection.end.x 
+      ? 
+      (itemLeft > selection.start.x && itemLeft < selection.end.x || itemLeft < selection.start.x && itemRight > selection.end.x)
+      :
+      (itemRight < selection.start.x && itemRight > selection.end.x || itemLeft < selection.start.x && itemRight > selection.end.x)
+
+      let ycheck = 
+      selection.start.y > selection.end.y
+      ?
+      (itemTop < selection.start.y && itemTop > selection.end.y || itemTop > selection.start.y && itemBottom < selection.end.y)
+      :
+      (itemBottom > selection.start.y && itemBottom < selection.end.y || itemTop > selection.start.y && itemBottom < selection.end.y )
+
+      if (xcheck && ycheck) {
+        select_add_item(item.id)
+        console.log(`selecting item : ${item.type}`)
+      }  
+
+    })} 
+
+    setSelection({start: {x:0 , y:0,},end: {x:0 , y:0,}, active: false})
   };
 
   let full_transform = multiply(origin_to_center, transform); // the right transformation happens first!
 
   return (
-    <Background
-      ref={measureRef}
-      onMouseDown={on_canvas_click}
-      onScroll={(e) => e.preventDefault()}
-      onWheel={(e) => e.preventDefault()}
-    >
+    <Draggable  onMove={on_canvas_drag} onMoveEnd={on_canvas_drag_end}>
+      <Background
+        ref={measureRef}
+        onMouseDown={on_canvas_click}
+        onScroll={(e) => e.preventDefault()}
+        onWheel={(e) => e.preventDefault()}
+      >
       {/* Michiel dit is echt geniaal */}
       {/* Thanks :D - DRAL */}
       <IsolateCoordinatesForElement
@@ -280,12 +345,23 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         <Absolute left={0} top={0}>
           <Origin />
         </Absolute>
-
+        
+        {selection.active ? 
+        <Absolute left={isSmaller(selection.start.x, selection.end.x)} top={isSmaller(selection.start.y, selection.end.y)}>
+          <SelectionArea style={{
+            width: isBigger(selection.start.x, selection.end.x) - isSmaller(selection.start.x, selection.end.x), 
+            height: isBigger(selection.start.y, selection.end.y) - isSmaller(selection.start.y, selection.end.y)
+            }}/>
+        </Absolute>
+        : null }
+       
+        
         {RecursiveMap(items)}
       </div>
 
       <BasictransformationLayer transform={full_transform} />
     </Background>
+    </Draggable>
   );
 };
 

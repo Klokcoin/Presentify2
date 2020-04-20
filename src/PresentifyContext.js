@@ -40,9 +40,10 @@ export let find_in_group = (array, id) => {
 export const PresentifyProvider = ({ children }) => {
   const [sheet, set_sheet] = React.useState({ items: [], files: [] });
   const [sheet_view, set_sheet_view] = React.useState({
-    selected_id: null,
+    selected_id: [],
     transform: identity_matrix(),
   });
+
   let loading = React.useRef(true);
 
   // TODO: we get a nasty flicker when our old sheet & sheet_view load :/ REACT SUSPENSE?!1
@@ -162,7 +163,7 @@ export const PresentifyProvider = ({ children }) => {
 
     set_sheet_view(
       immer((sheet_view) => {
-        sheet_view.selected_id = next_id;
+        sheet_view.selected_id = [next_id];
       })
     );
   };
@@ -189,10 +190,27 @@ export const PresentifyProvider = ({ children }) => {
   const select_item = (id) => {
     set_sheet_view(
       immer((sheet_view) => {
-        sheet_view.selected_id = id;
+        sheet_view.selected_id = [id];
       })
     );
   };
+
+  const select_clear = () => {
+    set_sheet_view(
+      immer((sheet_view) => {
+        sheet_view.selected_id = [];
+      })
+    );
+  };
+
+  const select_add_item = (id) => {
+    set_sheet_view(
+      immer((sheet_view) => {
+        sheet_view.selected_id = [...sheet_view.selected_id, id];
+      })
+    );
+  };
+
 
   const remove_item = (id) => {
     set_sheet((sheet) => {
@@ -202,11 +220,13 @@ export const PresentifyProvider = ({ children }) => {
       };
     });
 
-    if (sheet_view.selected_id === id) {
+    if (sheet_view.selected_id.includes(id)) {
       // Just for concistency, deselect the removed item (probably not necessary tho)
+      let index = sheet_view.selected_id.indexOf(id)
+
       set_sheet_view(
         immer((sheet_view) => {
-          sheet_view.selected_id = null;
+          sheet_view.selected_id = sheet_view.selected_id.splice(index, 1);
         })
       );
     }
@@ -223,6 +243,8 @@ export const PresentifyProvider = ({ children }) => {
         add_item,
         change_item,
         select_item,
+        select_clear,
+        select_add_item,
         remove_item,
       }}
     >
