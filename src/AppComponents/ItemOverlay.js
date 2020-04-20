@@ -64,7 +64,7 @@ const ItemOverlayWithoutContext = ({
   console.log(`preview_movement_state:`, preview_movement_state);
   let set_movement_state = () => {};
 
-  let selected = selected_id === item.id;
+  let selected = selected_id.includes(item.id);
   let act_like_selected = selected || movement_state != null;
 
   let with_defaults = {

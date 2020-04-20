@@ -276,15 +276,13 @@ export let BasictransformationLayer = ({ transform }) => {
     PresentifyContext
   );
 
- 
-  let items = [] 
-  
-  sheet_view.selected_id.map( id => items.push(find_in_group(sheet.items, id)));
+  let items = sheet_view.selected_id.map((id) =>
+    find_in_group(sheet.items, id)
+  );
 
   console.log(`item:`, items);
 
-  return (
-    items.map(item =>
+  return items.map((item) => (
     <Layer style={{ pointerEvents: "none" }}>
       {item && (
         <div
@@ -297,8 +295,6 @@ export let BasictransformationLayer = ({ transform }) => {
           <ItemOverlay item={item} />
         </div>
       )}
-    </Layer>)
-  );
-  
-  
+    </Layer>
+  ));
 };

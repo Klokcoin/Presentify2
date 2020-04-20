@@ -43,7 +43,6 @@ export const PresentifyProvider = ({ children }) => {
     selected_id: [],
     transform: identity_matrix(),
   });
-
   let loading = React.useRef(true);
 
   // TODO: we get a nasty flicker when our old sheet & sheet_view load :/ REACT SUSPENSE?!1
@@ -212,7 +211,6 @@ export const PresentifyProvider = ({ children }) => {
     );
   };
 
-
   const remove_item = (id) => {
     set_sheet((sheet) => {
       return {
@@ -223,7 +221,7 @@ export const PresentifyProvider = ({ children }) => {
 
     if (sheet_view.selected_id.includes(id)) {
       // Just for concistency, deselect the removed item (probably not necessary tho)
-      let index = sheet_view.selected_id.indexOf(id)
+      let index = sheet_view.selected_id.indexOf(id);
 
       set_sheet_view(
         immer((sheet_view) => {

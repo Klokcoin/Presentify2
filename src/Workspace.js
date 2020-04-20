@@ -150,21 +150,24 @@ let Workspace = () => {
               }
 
               if (e.key === "Escape") {
-                select_item(null);
+                select_item([]);
               }
 
               if (e.key === "Backspace" || e.key === "Delete") {
-                if (selected_id != null) {
-                  selected_id.forEach(e => remove_item(e));
+                if (selected_id.length > 0) {
+                  selected_id.forEach((e) => remove_item(e));
                 }
               }
 
               if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
-                let items =
-                  selected_id && items.find((x) => x.id === selected_id);
+                let items = selected_id.map((id) =>
+                  items.find((x) => x.id === id)
+                );
                 if (items) {
                   // TODO Maybe later, append?
-                  items.forEach(item=> set_clipboard([{ ...item, id: null }]));
+                  items.forEach((item) =>
+                    set_clipboard([{ ...item, id: null }])
+                  );
                 }
               }
 

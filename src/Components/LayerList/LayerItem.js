@@ -124,7 +124,7 @@ export const LayerItem = ({
               select_item(item.id);
             }}
             dragging={snapshot.isDragging}
-            selected={item.id === sheet_view.selected_id}
+            selected={sheet_view.selected_id.includes(item.id)}
           >
             {input_enabled ? (
               <NameContainer>
