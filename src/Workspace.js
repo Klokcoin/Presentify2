@@ -11,6 +11,7 @@ import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
+import {global_styles} from './themes/index'
 
 let Sidebar = styled.div`
   width: 232px;
@@ -19,12 +20,10 @@ let Sidebar = styled.div`
   flex-direction: column;
   z-index: 1;
 
-  ${({ theme }) => css`
-    background-color: ${theme.ui.backgroundColor};
-    font-family: '${theme.ui.text.fontFamily}', sans-serif;
-    color: ${theme.ui.text.color};
-    --color: ${theme.ui.text.color};
-  `};
+  ${global_styles.text};
+  ${global_styles.backgroundColorLight};
+
+
 
   &:nth-child(2) {
     box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
@@ -45,13 +44,8 @@ export let EllipsisOverflow = styled.div`
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
-  text-transform: uppercase;
-  font-weight: bold;
-
-  ${({ theme }) => css`
-    color: ${theme.ui.heading.color};
-    font-family: '${theme.ui.heading.fontFamily}', sans-serif;
-  `}
+  
+  ${global_styles.heading}
 `;
 
 let SidebarLine = styled.div`
@@ -72,7 +66,7 @@ export let SidebarButton = styled.div`
   padding: 8px 16px;
 
   &:hover {
-    background-color: ${({ theme }) => theme.ui.layerList.layer.hoverColor};
+    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
   }
 `;
 

@@ -35,15 +35,15 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
 
-  background-color: ${({ theme }) => theme.ui.layerList.layer.backgroundColor};
-  color: ${({ theme }) => theme.ui.layerList.layer.textColor};
+  background-color: ${({ theme }) => theme.layerList.layer.backgroundColor};
+  color: ${({ theme }) => theme.layerList.layer.textColor};
 
   ${styled_if((p) => !p.selected)}:hover {
-    background-color: ${({ theme }) => theme.ui.layerList.layer.hoverColor};
+    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
   }
 
   ${styled_if((p) => p.selected)} {
-    background-color: ${({ theme }) => theme.ui.layerList.layer.selectedColor};
+    background-color: ${({ theme }) => theme.layerList.layer.selectedColor};
     color: black;
     position: sticky;
     top: 0;

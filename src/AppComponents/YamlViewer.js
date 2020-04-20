@@ -2,8 +2,13 @@ import React from "react";
 import prettier from "prettier/standalone.js";
 import json5Parser from "prettier/parser-babel.js";
 import JSON5 from "json5";
-import { useTheme } from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { PresentifyContext } from "../PresentifyContext";
+import {global_styles} from "../themes/index"
+
+let YamlTextArea = styled.textarea`
+  ${global_styles.mono}
+`
 
 export let JSON_parse_safe = (json) => {
   try {
@@ -51,17 +56,14 @@ export let YamlViewer = ({ value, id }) => {
   }, [parsed_value]);
 
   return (
-    <textarea
+    <YamlTextArea
       style={{
         width: `100%`,
         boxSizing: "border-box",
         border: "none",
         padding: 16,
         backgroundColor: "transparent",
-        color: "white",
-        fontSize: theme.ui.mono.fontSize,
         height: 400,
-        fontFamily: `'${theme.ui.mono.fontFamily}', monospace`,
       }}
       value={text}
       onChange={(e) => {
