@@ -16,7 +16,7 @@ export const dark_theme = {
     color: "hsl(180, 1%, 48%)",
   },
   text: {
-    color: "black",
+    color: "white",
   },
   layerList: {
     hoverColor: "SeaGreen",
@@ -61,12 +61,14 @@ export const global_styles = {
   heading: css`
     font-family: "Roboto Condensed";
     font-size: 22px;
-
+    color: ${theme.text.color}
     `,
 
   text: css`
     font-family: "Roboto";
     font-size: 15px;
+    color: ${theme.text.color}
+
   `,
 
   mono: css`

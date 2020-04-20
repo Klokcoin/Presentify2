@@ -21,7 +21,7 @@ let Sidebar = styled.div`
   z-index: 1;
 
   ${global_styles.text};
-  ${global_styles.backgroundColorLight};
+  ${global_styles.backgroundColorMedium};
 
 
 
