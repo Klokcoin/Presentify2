@@ -137,6 +137,7 @@ export const PresentifyProvider = ({ children }) => {
     { viewportWidth = 100, viewportHeight = 100 } = {}
   ) => {
     let component_info = component_map[type];
+    let { default_options } = component_info || {};
     let scale = getScale(inverse(sheet_view.transform));
     let next_id = uuid();
 
@@ -148,9 +149,9 @@ export const PresentifyProvider = ({ children }) => {
           x: 0,
           y: 0,
           rotation: 0,
-          height: viewportHeight * scale,
-          width: viewportWidth * scale,
-          options: component_info.default_options || {},
+          height: (default_options?.width || viewportHeight) * scale,
+          width: (default_options?.height || viewportWidth) * scale,
+          options: default_options,
           ...info,
 
           groupItems: component_info.groupItems || null,
