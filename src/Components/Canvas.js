@@ -265,20 +265,16 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     if (target === currentTarget) {
       select_clear();
       setSelection({...selection, start: {x: event.clientX, y: event.clientY}})
-      console.log('start selection' + event.clientY, event.clientX)
     }
   };
 
   const on_canvas_drag = ({ absolute_x, absolute_y,  target, currentTarget}) => {
     if (target === currentTarget) {
       setSelection({...selection, end: {x: absolute_x, y: absolute_y}, active: true})
-      console.log('drag')
     }
   };
 
   const on_canvas_drag_end = () => {
-    console.log('end')
-    console.log(items)
 
     if (selection.active) {
     items.map(item => {
