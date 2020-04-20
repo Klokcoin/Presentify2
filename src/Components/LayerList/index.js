@@ -12,7 +12,7 @@ const GROUP_ITEMS_KEY = "groupItems"; // currently this is determined in Workspa
 const ListContainer = styled.div`
   pointer-events: auto; /* to re-enable mouseEvents */
   background: ${(props) =>
-    props.draggingOver ? props.theme.ui.layerList.hoverColor : null};
+    props.draggingOver ? props.theme.layerList.hoverColor : null};
   /* padding: 5px; */
   min-height: 25px; /* make it possible to drag an item into an empty group */
 `;

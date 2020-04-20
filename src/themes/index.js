@@ -12,12 +12,9 @@ export const dark_theme = {
   backgroundColorMedium: GRAY,
   backgroundColorDark: "darkgrey",
 
-  heading: {
-    color: "hsl(180, 1%, 48%)",
-  },
-  text: {
-    color: "white",
-  },
+  textColorPrimary: "hsl(0, 0%, 93%)", 
+  textColorAccent: "hsl(45, 100%, 50%)",
+
   layerList: {
     hoverColor: "SeaGreen",
     layer: {
@@ -33,6 +30,7 @@ export const dark_theme = {
     gridColor: LIGHT_GRAY,
     selectionColor: "hsl(0, 0%, 90%)",
   },
+
   colors: [
     "hsl(0, 100%, 69%)",
     "hsl(31, 100%, 65%)",
@@ -61,20 +59,19 @@ export const global_styles = {
   heading: css`
     font-family: "Roboto Condensed";
     font-size: 22px;
-    color: ${theme.text.color}
+    color: ${theme.textColorPrimary};
+    text-transform: uppercase;
+    padding: 5px;
     `,
 
   text: css`
     font-family: "Roboto";
     font-size: 15px;
-    color: ${theme.text.color}
-
+    color: ${theme.textColorPrimary};
   `,
 
   mono: css`
-    font-size: 13;
     font-family: "Roboto Mono";
-    color: ${theme.text.color};
   `,
 
 

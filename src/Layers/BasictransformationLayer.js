@@ -126,6 +126,10 @@ const ItemOverlay = ({ item }) => {
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
+        outline: act_like_selected
+        ? `${1 + 2 * (1 / scale)/3}px dashed ${theme.canvas.selectionColor}`
+        : "none",
+        outlineOffset: `-${scale}*3`
       }}
     >
       {/* Selection overlay with drag and resize areas: 🧠 is for grabbing, ↖↑↗ ←→↙↓↘ for resizing */}
@@ -148,10 +152,10 @@ const ItemOverlay = ({ item }) => {
               / 1fr
             `,
           // Made this and outline such that it can be offset to be inside the element (so that we can already drag while hovering over the outline)
-          outline: act_like_selected
-            ? `${1 + 2 * (1 / scale)}px dashed ${theme.canvas.selectionColor}`
-            : "none",
-          outlineOffset: `-${1 + 2 * (1 / scale)}px`,
+          // outline: act_like_selected
+          //   ? `${1 + 2 * (1 / scale)/3}px dashed ${theme.canvas.selectionColor}`
+          //   : "none",
+          // outlineOffset: `-${3 + 2 * (1 / scale)}px`,
         }}
       >
         {/* Grab area, here we can drag the element & move it */}

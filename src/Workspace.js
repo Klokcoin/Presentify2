@@ -34,6 +34,10 @@ let Sidebar = styled.div`
   }
 `;
 
+let ComponentIcon = styled.div`
+  margin: 5px 10px 5px 0;
+`
+
 export let EllipsisOverflow = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
@@ -44,7 +48,7 @@ export let EllipsisOverflow = styled.div`
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
-  
+  text-transform: uppercase;
   ${global_styles.heading}
 `;
 
@@ -201,7 +205,7 @@ let Workspace = () => {
             <div style={{ flexShrink: 0 }}>
               {Object.entries(component_map).map(([key, comp]) => (
                 <SidebarButton onClick={() => add_item({ type: key })}>
-                  <span>{comp.icon}</span>
+                  <ComponentIcon>{comp.icon}</ComponentIcon>
                   <Whitespace width={16} />
                   <EllipsisOverflow>{comp.name}</EllipsisOverflow>
                 </SidebarButton>

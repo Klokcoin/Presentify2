@@ -7,7 +7,11 @@ import { PresentifyContext } from "../PresentifyContext";
 import {global_styles} from "../themes/index"
 
 let YamlTextArea = styled.textarea`
+  ${global_styles.text}
+
+  // overwrites
   ${global_styles.mono}
+
 `
 
 export let JSON_parse_safe = (json) => {
