@@ -13,7 +13,6 @@ import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
 
 let Sidebar = styled.div`
-  width: 232px;
   flex-shrink: 0;
   background-color: rgb(39, 39, 39);
   display: flex;
@@ -133,8 +132,9 @@ let Workspace = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            display: "flex",
-            flexDirection: "row",
+            display: "grid",
+            gridTemplateColumns: "232px 1fr 232px",
+            gridTemplateRows: "100%",
           }}
         >
           <DropOverlay is_dragging={is_dragging} />
@@ -227,6 +227,7 @@ let Workspace = () => {
               {({ measureRef, contentRect }) => (
                 <div
                   style={{
+                    position: "relative",
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
