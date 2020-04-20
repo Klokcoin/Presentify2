@@ -10,7 +10,7 @@ const WHITE = "hsl(0, 0%, 100%)";
 export const dark_theme = {
   backgroundColorLight: LIGHT_GRAY,
   backgroundColorMedium: GRAY,
-  backgroundColorDark: "darkgrey",
+  backgroundColorDark: "hsl(200, 5%, 12%)",
 
   textColorPrimary: "hsl(0, 0%, 93%)", 
   textColorAccent: "hsl(45, 100%, 50%)",
@@ -42,7 +42,7 @@ export const dark_theme = {
 };
 
 // current theme provider
-let theme = dark_theme
+export let theme = dark_theme
 
 //alles wat vaker word gebruikt. 
 export const global_styles = {

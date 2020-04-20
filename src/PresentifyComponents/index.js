@@ -2,17 +2,19 @@ import React from "react";
 import { SketchPicker } from "react-color";
 import styled from "styled-components/macro";
 import { Webcam, SelectVideoDevice } from "./Webcam";
+import {theme} from '../themes/index'
+
 
 import { LoadFile } from "../Workspace.js";
 
 let WebviewIconFrame = styled.div`
-  border: solid 2px var(--color, black);
+  // border: solid 2px var(--color, black);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
+  padding: 0;
   border-radius: 3px;
-  font-size: calc(1em - 4px);
+  // font-size: calc(1em - 4px);
 `;
 
 export let component_map = {
@@ -89,8 +91,8 @@ export let component_map = {
         style={{
           height: "1em",
           width: "1em",
-          backgroundColor: "var(--color, black)",
-          borderRadius: 3,
+          backgroundColor: theme.textColorPrimary,
+          borderRadius: 1,
         }}
       />
     ),
