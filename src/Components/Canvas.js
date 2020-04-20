@@ -24,7 +24,9 @@ const WORLD = {
 };
 
 const Background = styled.div`
-  position: relative;
+  position: absolute;
+  left: 0;
+  top: 0;
   background: #ccc;
   overflow: hidden;
   height: 100%;
