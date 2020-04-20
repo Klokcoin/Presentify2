@@ -8,9 +8,9 @@ const WHITE = "hsl(0, 0%, 100%)";
 //alles wat alleen afhankelijk is van theme\
 
 export const dark_theme = {
-  backgroundColorLight: LIGHT_GRAY,
-  backgroundColorMedium: GRAY,
-  backgroundColorDark: "hsl(200, 5%, 12%)",
+  backgroundColorLight: "hsl(200, 6%, 30%)",
+  backgroundColorMedium: "hsl(200, 6%, 19%)",
+  backgroundColorDark: "hsl(200, 6%, 12%)",
 
   textColorPrimary: "hsl(0, 0%, 93%)", 
   textColorAccent: "hsl(45, 100%, 50%)",
@@ -19,7 +19,7 @@ export const dark_theme = {
     hoverColor: "SeaGreen",
     layer: {
       hoverColor: "hsl(196, 90%, 35%)",
-      selectedColor: "hsl(196, 100%, 60%)",
+      selectedColor: "hsl(195, 84%, 72%)",
       backgroundColor: "hsl(0, 0%, 24%)",
       textColor: WHITE,
     },

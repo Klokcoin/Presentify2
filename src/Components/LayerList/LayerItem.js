@@ -4,6 +4,7 @@ import styled from "styled-components/macro";
 
 import { EllipsisOverflow } from "../../Workspace";
 import { Whitespace, Center } from "../../Elements";
+import {global_styles} from '../../themes/index';
 
 let colors = {
   hover: "hsl(210, 20%, 27%)",
@@ -35,8 +36,9 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
 
-  background-color: ${({ theme }) => theme.layerList.layer.backgroundColor};
-  color: ${({ theme }) => theme.layerList.layer.textColor};
+
+  ${global_styles.textColorPrimary}
+  ${global_styles.backgroundColorLight}
 
   ${styled_if((p) => !p.selected)}:hover {
     background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
@@ -54,6 +56,8 @@ const Container = styled.div`
   ${styled_if((p) => p.dragging)} {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
   }
+
+
 `;
 
 const NestedListContainer = styled.div`
@@ -69,6 +73,7 @@ let NameContainer = styled.div`
   align-items: center;
   flex: 1;
   padding-right: 0.5rem;
+
 `;
 
 // I renamed this from 'TrashContainer' to 'TrashBin' b/c I was confused abt container meaning an _actual_ container (with children etc)

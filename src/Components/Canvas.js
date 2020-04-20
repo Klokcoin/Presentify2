@@ -14,7 +14,8 @@ import {
 import styled, { useTheme } from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
-import { Absolute } from "../Elements";
+import { Absolute, Draggable } from "../Elements";
+
 
 const CELL_SIZE = 100;
 const LINE_THICKNESS = 3;

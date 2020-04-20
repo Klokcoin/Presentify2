@@ -12,6 +12,15 @@ let YamlTextArea = styled.textarea`
   // overwrites
   ${global_styles.mono}
 
+  ${global_styles.backgroundColorLight}
+
+  width: 100%;
+  box-sizing: border-box;
+  border: "none";
+  padding: 16px;
+  height: 400px;
+
+
 `
 
 export let JSON_parse_safe = (json) => {
@@ -40,7 +49,6 @@ export let YamlViewer = ({ value, id }) => {
   const { change_item } = React.useContext(PresentifyContext);
   let [text, set_text] = React.useState(JSON_stringify(value));
   let [error, set_error] = React.useState(null);
-  const theme = useTheme();
 
   let [parse_error, parsed_value] = React.useMemo(() => {
     return JSON_parse_safe(text);
@@ -61,14 +69,6 @@ export let YamlViewer = ({ value, id }) => {
 
   return (
     <YamlTextArea
-      style={{
-        width: `100%`,
-        boxSizing: "border-box",
-        border: "none",
-        padding: 16,
-        backgroundColor: "transparent",
-        height: 400,
-      }}
       value={text}
       onChange={(e) => {
         set_text(e.target.value);

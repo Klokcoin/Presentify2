@@ -48,7 +48,6 @@ export let EllipsisOverflow = styled.div`
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
-  text-transform: uppercase;
   ${global_styles.heading}
 `;
 
