@@ -283,21 +283,13 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
       let itemRight = item.x + item.width/2
       let itemTop = item.y + item.height/2
       let itemBottom = item.y - item.height/2
+      let selectionLeft = isSmaller(selection.start.x, selection.end.x )
+      let selectionRight = isBigger(selection.start.x, selection.end.x )
+      let selectionTop = isBigger(selection.start.y, selection.end.y )
+      let selectionBottom = isSmaller(selection.start.y, selection.end.y )
 
-      let xcheck = 
-      selection.start.x < selection.end.x 
-      ? 
-      (itemLeft > selection.start.x && itemLeft < selection.end.x || itemLeft < selection.start.x && itemRight > selection.end.x)
-      :
-      (itemRight < selection.start.x && itemRight > selection.end.x || itemLeft < selection.start.x && itemRight > selection.end.x)
-
-      let ycheck = 
-      selection.start.y > selection.end.y
-      ?
-      (itemTop < selection.start.y && itemTop > selection.end.y || itemTop > selection.start.y && itemBottom < selection.end.y)
-      :
-      (itemBottom > selection.start.y && itemBottom < selection.end.y || itemTop > selection.start.y && itemBottom < selection.end.y )
-
+      let xcheck = itemLeft <= selectionRight && selectionLeft <= itemRight
+      let ycheck = itemBottom <= selectionTop && selectionBottom <= itemTop
       if (xcheck && ycheck) {
         select_add_item(item.id)
         console.log(`selecting item : ${item.type}`)
