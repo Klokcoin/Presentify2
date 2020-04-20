@@ -129,7 +129,7 @@ const ItemOverlay = ({ item }) => {
         outline: act_like_selected
         ? `${1 + 2 * (1 / scale)/3}px dashed ${theme.canvas.selectionColor}`
         : "none",
-        outlineOffset: `-${scale}*3`
+        outlineOffset: 6 + 2 * (1 / scale)
       }}
     >
       {/* Selection overlay with drag and resize areas: 🧠 is for grabbing, ↖↑↗ ←→↙↓↘ for resizing */}
