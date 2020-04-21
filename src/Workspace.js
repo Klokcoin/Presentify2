@@ -4,7 +4,7 @@ import styled, { useTheme, css } from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
-import { DocumentEvent, Whitespace } from "./Elements.js";
+import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { DropOverlay } from "./AppComponents/DropOverlay.js";
@@ -12,6 +12,15 @@ import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
 import { global_styles } from "./themes/index";
+import { Toolbox } from "./Components/Toolbox";
+
+const InterfaceLayout = styled.div`
+  display: grid;
+  grid-template-rows: 3rem 1fr;
+  grid-template-columns: 1fr 15rem;
+  width: 100%;
+  height: 100%;
+`;
 
 let Sidebar = styled.div`
   width: 232px;
@@ -19,6 +28,9 @@ let Sidebar = styled.div`
   display: flex;
   flex-direction: column;
   z-index: 1;
+
+  grid-column: 2;
+  grid-row: 1 / span 2;
 
   ${global_styles.text};
   background: ${(props) => props.theme.interface[1]};
@@ -30,10 +42,6 @@ let Sidebar = styled.div`
   &:last-child {
     box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
   }
-`;
-
-let ComponentIcon = styled.div`
-  margin: 5px 10px 5px 0;
 `;
 
 export let EllipsisOverflow = styled.div`
@@ -197,92 +205,82 @@ let Workspace = () => {
             passive
           />
 
-          {/* Left sidebar */}
-          <Sidebar theme={theme}>
-            <SidebarTitle>Add layer</SidebarTitle>
-            <Whitespace height={16} />
-            <div style={{ flexShrink: 0 }}>
-              {Object.entries(component_map).map(([key, comp]) => (
-                <SidebarButton onClick={() => add_item({ type: key })}>
-                  <ComponentIcon>{comp.icon}</ComponentIcon>
-                  <Whitespace width={16} />
-                  <EllipsisOverflow>{comp.name}</EllipsisOverflow>
-                </SidebarButton>
-              ))}
-            </div>
-            <Whitespace height={16} />
-
-            {/* Layer list */}
-            <SidebarLine />
-
-            <SidebarTitle> Layer list </SidebarTitle>
-
-            <div style={{ overflowY: "auto", height: "100%" }}>
-              <MemoLayerList />
-            </div>
-          </Sidebar>
-
-          {/* Canvas */}
-          <FilesContext.Provider
-            value={{
-              getFile: (file_id) => {
-                // TODO Need way to load in the file into blob when loading
-                let file = files.find((x) => x.id === file_id);
-                if (file == null) {
-                  throw new Error(`No file found for id '${file_id}'`);
-                }
-                return file;
-              },
-            }}
-          >
-            <Measure bounds>
-              {({ measureRef, contentRect }) => (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    userSelect: "none",
-                  }}
-                  ref={measureRef}
-                >
-                  {contentRect.bounds.height && (
-                    <Canvas bounds={contentRect.bounds} items={items} />
-                  )}
-                </div>
-              )}
-            </Measure>
-          </FilesContext.Provider>
-
-          {/* Right sidebar */}
-          <Sidebar theme={theme}>
-            <SidebarTitle>Edit layer</SidebarTitle>
-            <Whitespace height={50} />
-            {items
-              .filter((item) => item.id === selected_id)
-              .map((item) => {
-                let component_info = component_map[item.type];
-
-                return (
-                  <div style={{ overflowY: "auto" }}>
-                    {component_info.ConfigScreen && (
-                      <component_info.ConfigScreen
-                        value={item.options}
-                        onChange={(options) => {
-                          change_item(item.id, {
-                            options: {
-                              ...item.options,
-                              ...options,
-                            },
-                          });
-                        }}
-                      />
+          <Layer>
+            {/* Canvas */}
+            <FilesContext.Provider
+              value={{
+                getFile: (file_id) => {
+                  // TODO Need way to load in the file into blob when loading
+                  let file = files.find((x) => x.id === file_id);
+                  if (file == null) {
+                    throw new Error(`No file found for id '${file_id}'`);
+                  }
+                  return file;
+                },
+              }}
+            >
+              <Measure bounds>
+                {({ measureRef, contentRect }) => (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      userSelect: "none",
+                    }}
+                    ref={measureRef}
+                  >
+                    {contentRect.bounds.height && (
+                      <Canvas bounds={contentRect.bounds} items={items} />
                     )}
-                    <YamlViewer value={item.options} id={item.id} />
                   </div>
-                );
-              })}
-            <Whitespace height={50} />
-          </Sidebar>
+                )}
+              </Measure>
+            </FilesContext.Provider>
+          </Layer>
+
+          <Layer>
+            <InterfaceLayout>
+              <Toolbox component_map={component_map} add_item={add_item} />
+
+              {/* Right sidebar */}
+              <Sidebar theme={theme}>
+                <SidebarTitle>Edit layer</SidebarTitle>
+                <Whitespace height={50} />
+                {items
+                  .filter((item) => item.id === selected_id)
+                  .map((item) => {
+                    let component_info = component_map[item.type];
+
+                    return (
+                      <div style={{ overflowY: "auto" }}>
+                        {component_info.ConfigScreen && (
+                          <component_info.ConfigScreen
+                            value={item.options}
+                            onChange={(options) => {
+                              change_item(item.id, {
+                                options: {
+                                  ...item.options,
+                                  ...options,
+                                },
+                              });
+                            }}
+                          />
+                        )}
+                        <YamlViewer value={item.options} id={item.id} />
+                      </div>
+                    );
+                  })}
+                <Whitespace height={50} />
+                <SidebarLine />
+
+                <SidebarTitle> Layer list </SidebarTitle>
+
+                <div style={{ overflowY: "auto", height: "100%" }}>
+                  <MemoLayerList />
+                </div>
+              </Sidebar>
+            </InterfaceLayout>
+          </Layer>
         </div>
       )}
     </Droptarget>
