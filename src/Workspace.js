@@ -16,21 +16,28 @@ import { Toolbox } from "./Components/Toolbox";
 
 const InterfaceLayout = styled.div`
   display: grid;
-  grid-template-rows: 3rem 1fr;
-  grid-template-columns: 1fr 15rem;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) 15rem;
   width: 100%;
   height: 100%;
+
+  position: relative;
 `;
 
 let Sidebar = styled.div`
-  width: 232px;
+  pointer-events: auto;
+  width: 100%;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   z-index: 1;
-
+  position: relative;
   grid-column: 2;
   grid-row: 1 / span 2;
+
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  grid-gap: 0.7rem;
 
   ${global_styles.text};
   background: ${(props) => props.theme.interface[1]};
@@ -52,16 +59,18 @@ export let EllipsisOverflow = styled.div`
 `;
 
 let SidebarTitle = styled.div`
-  margin-top: 16px;
+  margin-top: 10px;
   margin-left: 16px;
   ${global_styles.heading}
 `;
 
 let SidebarLine = styled.div`
+  // position: relative;
   width: calc(100% - 16px - 16px);
   margin-left: 16px;
   margin-right: 16px;
-  border: solid 1px var(--color, black);
+  border: solid 1px;
+  border-color: ${({ theme }) => theme.interface[2]};
 `;
 
 export let SidebarButton = styled.div`
@@ -238,45 +247,64 @@ let Workspace = () => {
             </FilesContext.Provider>
           </Layer>
 
-          <Layer>
+          <Layer style={{ pointerEvents: "none" }}>
             <InterfaceLayout>
               <Toolbox component_map={component_map} add_item={add_item} />
 
               {/* Right sidebar */}
               <Sidebar theme={theme}>
-                <SidebarTitle>Edit layer</SidebarTitle>
-                <Whitespace height={50} />
-                {items
-                  .filter((item) => item.id === selected_id)
-                  .map((item) => {
-                    let component_info = component_map[item.type];
+                <div
+                  style={{
+                    minWidth: 0,
+                    minHeight: 0,
+                    width: "100%",
+                    height: "100%",
+                    overflow: "auto",
+                  }}
+                >
+                  <SidebarTitle>Edit layer</SidebarTitle>
+                  <Whitespace height={10} />
+                  {items
+                    .filter((item) => item.id === selected_id)
+                    .map((item) => {
+                      let component_info = component_map[item.type];
 
-                    return (
-                      <div style={{ overflowY: "auto" }}>
-                        {component_info.ConfigScreen && (
-                          <component_info.ConfigScreen
-                            value={item.options}
-                            onChange={(options) => {
-                              change_item(item.id, {
-                                options: {
-                                  ...item.options,
-                                  ...options,
-                                },
-                              });
-                            }}
-                          />
-                        )}
-                        <YamlViewer value={item.options} id={item.id} />
-                      </div>
-                    );
-                  })}
-                <Whitespace height={50} />
-                <SidebarLine />
+                      return (
+                        <div style={{ overflowY: "auto" }}>
+                          {component_info.ConfigScreen && (
+                            <component_info.ConfigScreen
+                              value={item.options}
+                              onChange={(options) => {
+                                change_item(item.id, {
+                                  options: {
+                                    ...item.options,
+                                    ...options,
+                                  },
+                                });
+                              }}
+                            />
+                          )}
+                          <YamlViewer value={item.options} id={item.id} />
+                        </div>
+                      );
+                    })}
+                  <Whitespace height={50} />
+                </div>
+                <SidebarLine theme={theme} />
 
-                <SidebarTitle> Layer list </SidebarTitle>
+                <div
+                  style={{
+                    minWidth: 0,
+                    minHeight: 0,
+                    width: "100%",
+                    height: "100%",
+                  }}
+                >
+                  <SidebarTitle> Layer list </SidebarTitle>
 
-                <div style={{ overflowY: "auto", height: "100%" }}>
-                  <MemoLayerList />
+                  <div style={{ overflowY: "auto", height: "100%" }}>
+                    <MemoLayerList />
+                  </div>
                 </div>
               </Sidebar>
             </InterfaceLayout>

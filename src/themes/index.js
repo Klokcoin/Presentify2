@@ -12,7 +12,7 @@ const THEME_HUE = 218; //old 195
 const darkShades = [
   `hsl(${THEME_HUE}, 8%, 8%)`,
   `hsl(${THEME_HUE}, 15%, 13%)`,
-  `hsl(${THEME_HUE}, 30%, 10%)`,
+  `hsl(${THEME_HUE}, 16%, 20%)`,
   `hsl(${THEME_HUE}, 30%, 20%)`,
   `hsl(${THEME_HUE}, 55%, 25%)`,
   `hsl(${THEME_HUE}, 59%, 48%)`,
