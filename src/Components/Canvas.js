@@ -33,7 +33,8 @@ const isBigger = (num1, num2) => {
 };
 
 const SelectionArea = styled.div`
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(24, 160, 251, 0.1);
+  border: 0.7px solid rgba(24, 160, 251, 0.5)
 `;
 
 const Background = styled.div`
