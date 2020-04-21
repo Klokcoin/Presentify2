@@ -187,19 +187,7 @@ export const PresentifyProvider = ({ children }) => {
   };
 
   // Select ONLY THESE ids
-  const select_items = (arg) => {
-    if (typeof arg === "function") {
-      // I tried using Immer here but it revoked the Proxy?!
-      set_sheet_view((sheet_view) => {
-        return {
-          ...sheet_view,
-          selected_ids: arg(sheet_view.selected_ids),
-        };
-      });
-      return;
-    }
-
-    let ids = arg;
+  const select_items = (ids = []) => {
     set_sheet_view(
       immer((sheet_view) => {
         sheet_view.selected_ids = ids;

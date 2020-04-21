@@ -1,4 +1,5 @@
 import React, { useContext, useRef, useEffect } from "react";
+import { isEqual } from "lodash";
 import { PresentifyContext } from "../PresentifyContext";
 import { MemoItemOverlay as ItemOverlay } from "../AppComponents/ItemOverlay";
 import { component_map } from "../PresentifyComponents";
@@ -15,7 +16,6 @@ import styled from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute, Draggable } from "../Elements";
-import immer from "immer";
 
 const CELL_SIZE = 100;
 const LINE_THICKNESS = 3;
@@ -42,14 +42,14 @@ const item_is_in_selection = (item, selection) => {
   return (
     item_bounds.left >= selection_bounds.left &&
     item_bounds.right <= selection_bounds.right &&
-    item_bounds.top >= selection_bounds.bottom &&
-    item_bounds.bottom <= selection_bounds.top
+    item_bounds.top <= selection_bounds.top &&
+    item_bounds.bottom >= selection_bounds.bottom
   );
 };
 
 const SelectionArea = styled.div`
   background: rgba(24, 160, 251, 0.1);
-  border: 0.7px solid rgba(24, 160, 251, 0.5)
+  border: 0.7px solid rgba(24, 160, 251, 0.5);
 `;
 
 const Background = styled.div`
@@ -164,7 +164,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   let [selection, setSelection] = React.useState(null);
 
   const {
-    sheet_view: { transform },
+    sheet_view: { transform, selected_ids },
     select_items,
     set_sheet_view,
   } = useContext(PresentifyContext);
@@ -290,21 +290,17 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   const on_canvas_drag = ({ absolute_x, absolute_y }) => {
     let new_selection = { ...selection, end: { x: absolute_x, y: absolute_y } };
     setSelection(new_selection);
+
+    let new_selected_ids = items
+      .filter((item) => item_is_in_selection(item, new_selection))
+      .map((item) => item.id);
+
+    if (!isEqual(new_selected_ids, selected_ids)) {
+      select_items(new_selected_ids);
+    }
   };
 
   const on_canvas_drag_end = () => {
-    items.forEach((item) => {
-      if (item_is_in_selection(item, selection)) {
-        select_items((selected_ids) => {
-          // If it's already selected, don't add it again
-          if (selected_ids.indexOf(item.id) !== -1) {
-            return selected_ids;
-          }
-
-          return [...selected_ids, item.id];
-        });
-      }
-    });
     setSelection(null);
   };
 
