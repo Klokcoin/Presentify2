@@ -98,7 +98,7 @@ export const LayerItem = ({
   item,
   index,
   children,
-  select_item,
+  select_items,
   remove_item,
   change_item,
   sheet_view,
@@ -121,10 +121,10 @@ export const LayerItem = ({
             }}
             onClick={(e) => {
               e.stopPropagation();
-              select_item(item.id);
+              select_items([item.id]);
             }}
             dragging={snapshot.isDragging}
-            selected={sheet_view.selected_id.includes(item.id)}
+            selected={sheet_view.selected_ids.includes(item.id)}
           >
             {input_enabled ? (
               <NameContainer>

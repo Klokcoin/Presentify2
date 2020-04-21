@@ -97,11 +97,11 @@ let Workspace = () => {
   let [clipboard, set_clipboard] = React.useState([]);
   const {
     sheet: { items, files },
-    sheet_view: { selected_id },
+    sheet_view: { selected_ids },
     add_file,
     add_item,
     change_item,
-    select_item,
+    deselect_all_items,
     remove_item,
   } = React.useContext(PresentifyContext);
 
@@ -150,17 +150,17 @@ let Workspace = () => {
               }
 
               if (e.key === "Escape") {
-                select_item([]);
+                deselect_all_items();
               }
 
               if (e.key === "Backspace" || e.key === "Delete") {
-                if (selected_id.length > 0) {
-                  selected_id.forEach((e) => remove_item(e));
+                if (selected_ids.length > 0) {
+                  selected_ids.forEach((e) => remove_item(e));
                 }
               }
 
               if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
-                let items = selected_id.map((id) =>
+                let items = selected_ids.map((id) =>
                   items.find((x) => x.id === id)
                 );
                 if (items) {
@@ -251,7 +251,7 @@ let Workspace = () => {
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
             {items
-              .filter((item) => selected_id.includes(item.id))
+              .filter((item) => selected_ids.includes(item.id))
               .map((item) => {
                 let component_info = component_map[item.type];
 
