@@ -24,6 +24,18 @@ const InterfaceLayout = styled.div`
   position: relative;
 `;
 
+const AddGroupIcon = styled.div`
+  margin: 1rem 1.2rem 0.4rem 1rem;
+  color: ${({ theme }) => theme.interface.text};
+  align-self: flex-end;
+
+  cursor: pointer;
+
+  :hover {
+    color: white;
+  }
+`;
+
 let Sidebar = styled.div`
   pointer-events: auto;
   width: 100%;
@@ -42,13 +54,15 @@ let Sidebar = styled.div`
   ${global_styles.text};
   background: ${(props) => props.theme.interface[1]};
 
-  &:nth-child(2) {
-    box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
-  }
+  box-shadow: 0px 0px 16px -5px rgba(0, 0, 0, 0.75);
 
-  &:last-child {
-    box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
-  }
+  // &:nth-child(2) {
+  //   box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
+  // }
+
+  // &:last-child {
+  //   box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
+  // }
 `;
 
 export let EllipsisOverflow = styled.div`
@@ -300,7 +314,21 @@ let Workspace = () => {
                     height: "100%",
                   }}
                 >
-                  <SidebarTitle> Layer list </SidebarTitle>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <SidebarTitle> Layer list </SidebarTitle>
+                    <AddGroupIcon
+                      title="Add group"
+                      onClick={() => add_item({ type: "group" })}
+                      theme={theme}
+                    >
+                      {component_map.group.icon}
+                    </AddGroupIcon>
+                  </div>
 
                   <div style={{ overflowY: "auto", height: "100%" }}>
                     <MemoLayerList />

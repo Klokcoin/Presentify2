@@ -26,7 +26,9 @@ export const dark_theme = {
     3: darkShades[3],
     4: darkShades[4],
     5: darkShades[5],
+
     hover: darkShades[4],
+    text: `hsl(${THEME_HUE}, 90%, 93%)`,
   },
 
   // backgroundColorLight: "hsl(200, 6%, 30%)",

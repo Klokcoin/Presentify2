@@ -8,7 +8,7 @@ const Container = styled.div`
   flex-direction: row;
   flex-shrink: 0;
 
-  color: white;
+  color: ${({ theme }) => theme.interface.text};
   background: ${({ theme }) => theme.interface[2]};
   padding: 0.3rem 1rem;
 
@@ -21,7 +21,14 @@ let ComponentIcon = styled.div`
   margin: 5px 10px 5px 0;
 `;
 
-const ToolButton = styled.div``;
+const ToolButton = styled.div`
+  cursor: pointer;
+  margin: 0 0.5rem;
+
+  :hover {
+    color: white;
+  }
+`;
 
 export const Toolbox = (props) => {
   const { component_map, add_item } = props;
@@ -29,11 +36,17 @@ export const Toolbox = (props) => {
 
   return (
     <Container theme={theme}>
-      {Object.entries(component_map).map(([key, comp]) => (
-        <ToolButton title={comp.name} onClick={() => add_item({ type: key })}>
-          <ComponentIcon>{comp.icon}</ComponentIcon>
-        </ToolButton>
-      ))}
+      {Object.entries(component_map).map(([key, comp]) => {
+        if (!comp.hide_in_toolbox)
+          return (
+            <ToolButton
+              title={comp.name}
+              onClick={() => add_item({ type: key })}
+            >
+              <ComponentIcon>{comp.icon}</ComponentIcon>
+            </ToolButton>
+          );
+      })}
     </Container>
   );
 };

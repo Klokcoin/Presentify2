@@ -2,8 +2,7 @@ import React from "react";
 import { SketchPicker } from "react-color";
 import styled from "styled-components/macro";
 import { Webcam, SelectVideoDevice } from "./Webcam";
-import {theme} from '../themes/index'
-
+import { theme } from "../themes/index";
 
 import { LoadFile } from "../Workspace.js";
 
@@ -151,6 +150,7 @@ export let component_map = {
   group: {
     icon: <i className="fas fa-object-group"></i>,
     name: "Group",
+    hide_in_toolbox: true,
     groupItems: [],
     default_options: {
       backgroundColor: "#B50004",
