@@ -16,7 +16,6 @@ import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute, Draggable } from "../Elements";
 
-
 const CELL_SIZE = 100;
 const LINE_THICKNESS = 3;
 const WORLD = {
@@ -26,7 +25,7 @@ const WORLD = {
 
 const Background = styled.div`
   position: relative;
-  background: ${({ theme }) => theme.canvas.backgroundColor};
+  background: ${({ theme }) => theme.interface[0]};
   overflow: hidden;
   height: 100%;
   width: 100%;

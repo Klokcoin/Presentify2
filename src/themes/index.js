@@ -7,13 +7,37 @@ const WHITE = "hsl(0, 0%, 100%)";
 
 //alles wat alleen afhankelijk is van theme\
 
-export const dark_theme = {
-  backgroundColorLight: "hsl(200, 6%, 30%)",
-  backgroundColorMedium: "hsl(200, 6%, 19%)",
-  backgroundColorDark: "hsl(200, 6%, 12%)",
+const THEME_HUE = 218; //old 195
 
-  textColorPrimary: "hsl(0, 0%, 93%)", 
+const darkShades = [
+  `hsl(${THEME_HUE}, 8%, 8%)`,
+  `hsl(${THEME_HUE}, 15%, 13%)`,
+  `hsl(${THEME_HUE}, 30%, 10%)`,
+  `hsl(${THEME_HUE}, 30%, 20%)`,
+  `hsl(${THEME_HUE}, 55%, 25%)`,
+  `hsl(${THEME_HUE}, 59%, 48%)`,
+];
+
+export const dark_theme = {
+  interface: {
+    0: darkShades[0],
+    1: darkShades[1],
+    2: darkShades[2],
+    3: darkShades[3],
+    4: darkShades[4],
+    5: darkShades[5],
+    hover: darkShades[4],
+  },
+
+  // backgroundColorLight: "hsl(200, 6%, 30%)",
+  // backgroundColorMedium: "hsl(200, 6%, 19%)",
+  // backgroundColorDark: "hsl(200, 6%, 12%)",
+
+  textColorPrimary: "hsl(0, 0%, 93%)",
   textColorAccent: "hsl(45, 100%, 50%)",
+
+  // hsl(195,84%,72%);
+  // hsl(196,90%,35%)
 
   layerList: {
     hoverColor: "SeaGreen",
@@ -42,9 +66,9 @@ export const dark_theme = {
 };
 
 // current theme provider
-export let theme = dark_theme
+export let theme = dark_theme;
 
-//alles wat vaker word gebruikt. 
+//alles wat vaker word gebruikt.
 export const global_styles = {
   backgroundColorLight: css`
     background-color: ${theme.backgroundColorLight};
@@ -62,7 +86,7 @@ export const global_styles = {
     color: ${theme.textColorPrimary};
     text-transform: uppercase;
     padding: 5px;
-    `,
+  `,
 
   text: css`
     font-family: "Roboto";
@@ -73,9 +97,4 @@ export const global_styles = {
   mono: css`
     font-family: "Roboto Mono";
   `,
-
-
 };
-
-
-

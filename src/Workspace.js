@@ -1,6 +1,6 @@
 import React from "react";
 import Measure from "react-measure";
-import styled, { css } from "styled-components/macro";
+import styled, { useTheme, css } from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
@@ -11,7 +11,7 @@ import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
-import {global_styles} from './themes/index'
+import { global_styles } from "./themes/index";
 
 let Sidebar = styled.div`
   width: 232px;
@@ -21,9 +21,7 @@ let Sidebar = styled.div`
   z-index: 1;
 
   ${global_styles.text};
-  ${global_styles.backgroundColorMedium};
-
-
+  background: ${(props) => props.theme.interface[1]};
 
   &:nth-child(2) {
     box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
@@ -36,7 +34,7 @@ let Sidebar = styled.div`
 
 let ComponentIcon = styled.div`
   margin: 5px 10px 5px 0;
-`
+`;
 
 export let EllipsisOverflow = styled.div`
   overflow: hidden;
@@ -69,7 +67,7 @@ export let SidebarButton = styled.div`
   padding: 8px 16px;
 
   &:hover {
-    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
+    background-color: ${({ theme }) => theme.interface.hover};
   }
 `;
 
@@ -117,6 +115,8 @@ let Workspace = () => {
     select_item,
     remove_item,
   } = React.useContext(PresentifyContext);
+
+  let theme = useTheme();
 
   return (
     <Droptarget
@@ -198,7 +198,7 @@ let Workspace = () => {
           />
 
           {/* Left sidebar */}
-          <Sidebar>
+          <Sidebar theme={theme}>
             <SidebarTitle>Add layer</SidebarTitle>
             <Whitespace height={16} />
             <div style={{ flexShrink: 0 }}>
@@ -254,7 +254,7 @@ let Workspace = () => {
           </FilesContext.Provider>
 
           {/* Right sidebar */}
-          <Sidebar>
+          <Sidebar theme={theme}>
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
             {items
