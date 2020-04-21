@@ -101,7 +101,7 @@ let Workspace = () => {
     add_file,
     add_item,
     change_item,
-    deselect_all_items,
+    select_items,
     remove_item,
   } = React.useContext(PresentifyContext);
 
@@ -150,7 +150,7 @@ let Workspace = () => {
               }
 
               if (e.key === "Escape") {
-                deselect_all_items();
+                select_items([]);
               }
 
               if (e.key === "Backspace" || e.key === "Delete") {
