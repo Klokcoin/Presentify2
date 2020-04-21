@@ -174,8 +174,7 @@ const RecursiveList = (props) => {
     selected_ids,
     focusList,
     set_focusList,
-
-    select_item,
+    select_items,
     remove_item,
     change_item,
     sheet_view,
@@ -230,14 +229,14 @@ const RecursiveList = (props) => {
                   item={item}
                   index={index}
                   key={item.id}
-                  select_item={select_item}
+                  select_items={select_items}
                   remove_item={remove_item}
                   change_item={change_item}
                   sheet_view={sheet_view}
                 >
                   {isGroup && (
                     <RecursiveList
-                      select_item={select_item}
+                      select_items={select_items}
                       remove_item={remove_item}
                       change_item={change_item}
                       sheet_view={sheet_view}
