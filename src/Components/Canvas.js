@@ -1,4 +1,5 @@
 import React, { useContext, useRef, useEffect } from "react";
+import { isEqual } from "lodash";
 import { PresentifyContext } from "../PresentifyContext";
 import { MemoItemOverlay as ItemOverlay } from "../AppComponents/ItemOverlay";
 import { component_map } from "../PresentifyComponents";
@@ -16,7 +17,6 @@ import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute, Draggable } from "../Elements";
 
-
 const CELL_SIZE = 100;
 const LINE_THICKNESS = 3;
 const WORLD = {
@@ -24,9 +24,39 @@ const WORLD = {
   height: 500 * 2,
 };
 
+const item_is_in_selection = (item, selection) => {
+  let item_bounds = {
+    left: item.x - item.width / 2,
+    right: item.x + item.width / 2,
+    top: item.y + item.height / 2,
+    bottom: item.y - item.height / 2,
+  };
+
+  let selection_bounds = {
+    left: Math.min(selection.start.x, selection.end.x),
+    right: Math.max(selection.start.x, selection.end.x),
+    top: Math.max(selection.start.y, selection.end.y),
+    bottom: Math.min(selection.start.y, selection.end.y),
+  };
+
+  return (
+    item_bounds.left >= selection_bounds.left &&
+    item_bounds.right <= selection_bounds.right &&
+    item_bounds.top <= selection_bounds.top &&
+    item_bounds.bottom >= selection_bounds.bottom
+  );
+};
+
+const SelectionArea = styled.div`
+  background: rgba(24, 160, 251, 0.1);
+  border: 0.7px solid rgba(24, 160, 251, 0.5);
+`;
+
 const Background = styled.div`
-  position: relative;
   background: ${({ theme }) => theme.canvas.backgroundColor};
+  position: absolute;
+  left: 0;
+  top: 0;
   overflow: hidden;
   height: 100%;
   width: 100%;
@@ -133,9 +163,11 @@ export const options = {
 };
 
 const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
+  let [selection, setSelection] = React.useState(null);
+
   const {
-    sheet_view: { transform },
-    select_item,
+    sheet_view: { transform, selected_ids },
+    select_items,
     set_sheet_view,
   } = useContext(PresentifyContext);
   const measureRef = useRef(null);
@@ -242,53 +274,98 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
     });
   };
 
-  const on_canvas_click = ({ target, currentTarget }) => {
+  // NOTE that this also triggers when starting the drag on canvas!
+  const on_canvas_click = ({ target, currentTarget, ...event }) => {
     // Only deselect item if the click is **only** on the canvas, and not actually on one of the divs inside
     if (target === currentTarget) {
-      select_item(null);
+      select_items([]);
     }
+  };
+
+  const on_canvas_drag_start = ({ absolute_x, absolute_y }) => {
+    setSelection({
+      start: { x: absolute_x, y: absolute_y },
+      end: { x: absolute_x, y: absolute_y },
+    });
+  };
+
+  const on_canvas_drag = ({ absolute_x, absolute_y }) => {
+    let new_selection = { ...selection, end: { x: absolute_x, y: absolute_y } };
+    setSelection(new_selection);
+
+    let new_selected_ids = items
+      .filter((item) => item_is_in_selection(item, new_selection))
+      .map((item) => item.id);
+
+    if (!isEqual(new_selected_ids, selected_ids)) {
+      select_items(new_selected_ids);
+    }
+  };
+
+  const on_canvas_drag_end = () => {
+    setSelection(null);
   };
 
   let full_transform = multiply(origin_to_center, transform); // the right transformation happens first!
 
   return (
-    <Background
-      ref={measureRef}
-      onMouseDown={on_canvas_click}
-      onScroll={(e) => e.preventDefault()}
-      onWheel={(e) => e.preventDefault()}
+    <Draggable
+      onMoveStart={on_canvas_drag_start}
+      onMove={on_canvas_drag}
+      onMoveEnd={on_canvas_drag_end}
     >
-      {/* Michiel dit is echt geniaal */}
-      {/* Thanks :D - DRAL */}
-      <IsolateCoordinatesForElement
-        element={measureRef.current}
-        mapCoords={({ x, y }) => {
-          let coords_in_grid = mouse_to_grid([x, y]);
-          return {
-            x: coords_in_grid[0],
-            y: coords_in_grid[1],
-          };
-        }}
-      />
-      <div
+      <Background
+        ref={measureRef}
         onMouseDown={on_canvas_click}
-        style={{
-          transform: `${toString(full_transform)}`,
-          transformOrigin: "0 0",
-        }}
+        onScroll={(e) => e.preventDefault()}
+        onWheel={(e) => e.preventDefault()}
       >
-        <ReferenceGrid onClick={on_canvas_click} />
+        {/* Michiel dit is echt geniaal */}
+        {/* Thanks :D - DRAL */}
+        <IsolateCoordinatesForElement
+          element={measureRef.current}
+          mapCoords={({ x, y }) => {
+            let coords_in_grid = mouse_to_grid([x, y]);
+            return {
+              x: coords_in_grid[0],
+              y: coords_in_grid[1],
+            };
+          }}
+        />
+        <div
+          onMouseDown={on_canvas_click}
+          style={{
+            transform: `${toString(full_transform)}`,
+            transformOrigin: "0 0",
+          }}
+        >
+          <ReferenceGrid onClick={on_canvas_click} />
 
-        {/* Put a little orange rectangle at the origin for reference. NOTE: not actually sure why this Absolute is needed, but otherwise it doesn't show up... */}
-        <Absolute left={0} top={0}>
-          <Origin />
-        </Absolute>
+          {/* Put a little orange rectangle at the origin for reference */}
+          <Absolute left={0} top={0}>
+            <Origin />
+          </Absolute>
 
-        {RecursiveMap(items)}
-      </div>
+          {selection && (
+            <Absolute
+              left={Math.min(selection.start.x, selection.end.x)}
+              top={Math.min(selection.start.y, selection.end.y)}
+            >
+              <SelectionArea
+                style={{
+                  width: Math.abs(selection.start.x - selection.end.x),
+                  height: Math.abs(selection.start.y - selection.end.y),
+                }}
+              />
+            </Absolute>
+          )}
 
-      <BasictransformationLayer transform={full_transform} />
-    </Background>
+          {RecursiveMap(items)}
+        </div>
+
+        <BasictransformationLayer transform={full_transform} />
+      </Background>
+    </Draggable>
   );
 };
 

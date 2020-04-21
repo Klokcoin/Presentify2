@@ -25,31 +25,30 @@ export let MemoLayerList = () => {
   let {
     sheet,
     set_sheet,
-    select_item,
+    select_items,
     remove_item,
     change_item,
     sheet_view,
   } = React.useContext(PresentifyContext);
 
   return React.useMemo(() => {
-    console.log("He hey hey");
     return (
       <LayerList
         sheet={sheet}
         set_sheet={set_sheet}
-        select_item={select_item}
+        select_items={select_items}
         remove_item={remove_item}
         change_item={change_item}
         sheet_view={sheet_view}
       />
     );
-  }, [sheet, sheet_view.selected_id]);
+  }, [sheet, sheet_view.selected_ids]);
 };
 
 const LayerList = ({
   sheet: { items },
   set_sheet,
-  select_item,
+  select_items,
   remove_item,
   change_item,
   sheet_view,
@@ -63,7 +62,7 @@ const LayerList = ({
   const onDragStart = (start, provided) => {
     // NOTE: we can do this bc right now we have draggable/droppable id's === item.id, but they don't _have_ to be equal!
     let { draggableId: item_id } = start;
-    select_item(item_id);
+    select_items([item_id]);
     console.log("item_id", item_id);
   };
 
@@ -154,7 +153,7 @@ const LayerList = ({
         <RecursiveList
           remove_item={remove_item}
           change_item={change_item}
-          select_item={select_item}
+          select_items={select_items}
           sheet_view={sheet_view}
           focusList={focusList}
           set_focusList={set_focusList}
@@ -172,7 +171,7 @@ const RecursiveList = (props) => {
     items,
     listId,
     destinationId,
-    selected_id,
+    selected_ids,
     focusList,
     set_focusList,
 
@@ -244,7 +243,7 @@ const RecursiveList = (props) => {
                       sheet_view={sheet_view}
                       listId={item.id}
                       items={item.groupItems}
-                      selected_id={selected_id}
+                      selected_ids={selected_ids}
                       destinationId={destinationId}
                       focusList={focusList}
                       set_focusList={set_focusList}
