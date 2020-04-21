@@ -4,6 +4,7 @@ import styled from "styled-components/macro";
 
 import { EllipsisOverflow } from "../../Workspace";
 import { Whitespace, Center } from "../../Elements";
+import {global_styles} from '../../themes/index';
 
 let colors = {
   hover: "hsl(210, 20%, 27%)",
@@ -28,21 +29,23 @@ let EditableName = styled.input`
 
 // Replaced SidebarButton with a separate component for layers, b/c of dragging stuff
 const Container = styled.div`
+  transition: background 200ms;
   cursor: pointer;
 
   display: flex;
   flex-direction: column;
   align-items: stretch;
 
-  background-color: hsl(0, 0%, 20%);
-  color: white;
+
+  ${global_styles.textColorPrimary}
+  ${global_styles.backgroundColorLight}
 
   ${styled_if((p) => !p.selected)}:hover {
-    background-color: ${colors.hover};
+    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
   }
 
   ${styled_if((p) => p.selected)} {
-    background-color: rgb(163, 163, 163);
+    background-color: ${({ theme }) => theme.layerList.layer.selectedColor};
     color: black;
     position: sticky;
     top: 0;
@@ -53,6 +56,8 @@ const Container = styled.div`
   ${styled_if((p) => p.dragging)} {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
   }
+
+
 `;
 
 const NestedListContainer = styled.div`
@@ -68,6 +73,7 @@ let NameContainer = styled.div`
   align-items: center;
   flex: 1;
   padding-right: 0.5rem;
+
 `;
 
 // I renamed this from 'TrashContainer' to 'TrashBin' b/c I was confused abt container meaning an _actual_ container (with children etc)

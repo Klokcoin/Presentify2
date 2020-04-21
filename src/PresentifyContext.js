@@ -6,6 +6,7 @@ import immer from "immer";
 import { Dataurl, Dimensions, get_image_info } from "./Data/Files.js";
 import { component_map } from "./PresentifyComponents";
 import { identity_matrix, getScale, inverse } from "./utils/linear_algebra";
+import { useTheme } from "styled-components";
 
 export const PresentifyContext = React.createContext();
 
@@ -44,6 +45,7 @@ export const PresentifyProvider = ({ children }) => {
     transform: identity_matrix(),
   });
   let loading = React.useRef(true);
+  let theme = useTheme();
 
   // TODO: we get a nasty flicker when our old sheet & sheet_view load :/ REACT SUSPENSE?!1
   React.useEffect(() => {
@@ -140,6 +142,18 @@ export const PresentifyProvider = ({ children }) => {
     let { default_options } = component_info || {};
     let scale = getScale(inverse(sheet_view.transform));
     let next_id = uuid();
+
+    let options = component_info.default_options
+      ? component_info.default_options.backgroundColor
+        ? {
+            ...component_info.default_options,
+            backgroundColor:
+              theme.colors[
+                Math.round(Math.random() * (theme.colors.length - 1))
+              ],
+          }
+        : component_info.default_options
+      : {};
 
     set_sheet(
       immer((sheet) => {

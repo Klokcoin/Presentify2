@@ -1,6 +1,6 @@
 import React from "react";
 import Measure from "react-measure";
-import styled from "styled-components/macro";
+import styled, { css } from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
@@ -11,16 +11,31 @@ import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
+import {global_styles} from './themes/index'
 
 let Sidebar = styled.div`
   flex-shrink: 0;
-  background-color: rgb(39, 39, 39);
   display: flex;
   flex-direction: column;
+  z-index: 1;
 
-  color: white;
-  --color: white;
+  ${global_styles.text};
+  ${global_styles.backgroundColorMedium};
+
+
+
+  &:nth-child(2) {
+    box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
+  }
+
+  &:last-child {
+    box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
+  }
 `;
+
+let ComponentIcon = styled.div`
+  margin: 5px 10px 5px 0;
+`
 
 export let EllipsisOverflow = styled.div`
   overflow: hidden;
@@ -32,9 +47,7 @@ export let EllipsisOverflow = styled.div`
 let SidebarTitle = styled.div`
   margin-top: 16px;
   margin-left: 16px;
-  text-transform: capitalize;
-  font-family: fantasy;
-  font-weight: bold;
+  ${global_styles.heading}
 `;
 
 let SidebarLine = styled.div`
@@ -46,7 +59,6 @@ let SidebarLine = styled.div`
 
 export let SidebarButton = styled.div`
   transition: background-color 0.2s;
-  background-color: ${(p) => (p.active ? "#8e8e8e" : "rgba(255, 255, 255, 0)")};
   cursor: pointer;
 
   display: flex;
@@ -56,7 +68,7 @@ export let SidebarButton = styled.div`
   padding: 8px 16px;
 
   &:hover {
-    background-color: #ccc;
+    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
   }
 `;
 
@@ -195,7 +207,7 @@ let Workspace = () => {
             <div style={{ flexShrink: 0 }}>
               {Object.entries(component_map).map(([key, comp]) => (
                 <SidebarButton onClick={() => add_item({ type: key })}>
-                  <span>{comp.icon}</span>
+                  <ComponentIcon>{comp.icon}</ComponentIcon>
                   <Whitespace width={16} />
                   <EllipsisOverflow>{comp.name}</EllipsisOverflow>
                 </SidebarButton>
@@ -234,7 +246,6 @@ let Workspace = () => {
                     width: "100%",
                     height: "100%",
                     userSelect: "none",
-                    backgroundColor: "white",
                   }}
                   ref={measureRef}
                 >

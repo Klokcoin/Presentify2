@@ -12,7 +12,7 @@ import {
   inverse,
   apply,
 } from "../utils/linear_algebra";
-import styled from "styled-components/macro";
+import styled, { useTheme } from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute, Draggable } from "../Elements";
@@ -53,10 +53,10 @@ const SelectionArea = styled.div`
 `;
 
 const Background = styled.div`
+  background: ${({ theme }) => theme.canvas.backgroundColor};
   position: absolute;
   left: 0;
   top: 0;
-  background: #ccc;
   overflow: hidden;
   height: 100%;
   width: 100%;
@@ -69,7 +69,9 @@ const Origin = styled.div`
   background: hsl(30, 91%, 67%);
 `;
 
-const ReferenceGrid = ({ color = "hsl(213, 20%, 75%)", onClick }) => {
+const ReferenceGrid = ({ onClick }) => {
+  const theme = useTheme();
+  const color = theme.canvas.gridColor;
   return (
     <div
       onMouseDown={onClick}
