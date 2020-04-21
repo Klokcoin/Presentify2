@@ -6,7 +6,7 @@ import { render_cursor, get_cursor_direction } from "../utils/cursors";
 import { ItemPreviewContext } from "../Data/ItemPreviewContext.js";
 
 export let ItemOverlay = ({ item, children }) => {
-  const { sheet_view, select_item, change_item } = useContext(
+  const { sheet_view, select_items, change_item } = useContext(
     PresentifyContext
   );
   let { preview } = React.useContext(ItemPreviewContext);
@@ -15,7 +15,7 @@ export let ItemOverlay = ({ item, children }) => {
       item={item}
       children={children}
       sheet_view={sheet_view}
-      select_item={select_item}
+      select_items={select_items}
       change_item={change_item}
       preview_movement_state={
         preview?.id === item.id ? preview.movement_state : null
@@ -25,7 +25,7 @@ export let ItemOverlay = ({ item, children }) => {
 };
 
 export let MemoItemOverlay = ({ item, children }) => {
-  const { sheet_view, select_item, change_item } = useContext(
+  const { sheet_view, select_items, change_item } = useContext(
     PresentifyContext
   );
   let { preview } = React.useContext(ItemPreviewContext);
@@ -36,7 +36,7 @@ export let MemoItemOverlay = ({ item, children }) => {
         item={item}
         children={children}
         sheet_view={sheet_view}
-        select_item={select_item}
+        select_items={select_items}
         change_item={change_item}
         preview_movement_state={
           preview?.id === item.id ? preview.movement_state : null
@@ -45,7 +45,7 @@ export let MemoItemOverlay = ({ item, children }) => {
     ),
     [
       getScale(sheet_view.transform),
-      sheet_view.selected_id,
+      sheet_view.selected_ids,
       item,
       preview && preview.id === item.id && preview.movement_state,
     ]
@@ -55,16 +55,15 @@ export let MemoItemOverlay = ({ item, children }) => {
 const ItemOverlayWithoutContext = ({
   children,
   item,
-  sheet_view: { transform, selected_id },
-  select_item,
+  sheet_view: { transform, selected_ids },
+  select_items,
   change_item,
   preview_movement_state,
 }) => {
   let movement_state = preview_movement_state;
-  console.log(`preview_movement_state:`, preview_movement_state);
   let set_movement_state = () => {};
 
-  let selected = selected_id === item.id;
+  let selected = selected_ids.includes(item.id);
   let act_like_selected = selected || movement_state != null;
 
   let with_defaults = {
@@ -145,7 +144,7 @@ const ItemOverlayWithoutContext = ({
     <Absolute
       onMouseDown={(event) => {
         event.stopPropagation();
-        select_item(item.id);
+        select_items([item.id]);
       }}
       left={current_item.x}
       top={current_item.y}

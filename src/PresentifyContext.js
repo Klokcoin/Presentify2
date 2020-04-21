@@ -41,7 +41,7 @@ export let find_in_group = (array, id) => {
 export const PresentifyProvider = ({ children }) => {
   const [sheet, set_sheet] = React.useState({ items: [], files: [] });
   const [sheet_view, set_sheet_view] = React.useState({
-    selected_id: null,
+    selected_ids: [],
     transform: identity_matrix(),
   });
   let loading = React.useRef(true);
@@ -139,6 +139,7 @@ export const PresentifyProvider = ({ children }) => {
     { viewportWidth = 100, viewportHeight = 100 } = {}
   ) => {
     let component_info = component_map[type];
+    let { default_options } = component_info || {};
     let scale = getScale(inverse(sheet_view.transform));
     let next_id = uuid();
 
@@ -162,9 +163,9 @@ export const PresentifyProvider = ({ children }) => {
           x: 0,
           y: 0,
           rotation: 0,
-          height: viewportHeight * scale,
-          width: viewportWidth * scale,
-          options: options,
+          height: (default_options?.width || viewportHeight) * scale,
+          width: (default_options?.height || viewportWidth) * scale,
+          options: default_options,
           ...info,
 
           groupItems: component_info.groupItems || null,
@@ -176,13 +177,12 @@ export const PresentifyProvider = ({ children }) => {
 
     set_sheet_view(
       immer((sheet_view) => {
-        sheet_view.selected_id = next_id;
+        sheet_view.selected_ids = [next_id];
       })
     );
   };
 
   const change_item = (id, change) => {
-    console.log("change", id, change);
     set_sheet(
       immer((sheet) => {
         let item = find_in_group(sheet.items, id);
@@ -200,27 +200,29 @@ export const PresentifyProvider = ({ children }) => {
     );
   };
 
-  const select_item = (id) => {
+  // Select ONLY THESE ids
+  const select_items = (ids = []) => {
     set_sheet_view(
       immer((sheet_view) => {
-        sheet_view.selected_id = id;
+        sheet_view.selected_ids = ids;
       })
     );
   };
 
   const remove_item = (id) => {
-    set_sheet((sheet) => {
-      return {
-        ...sheet,
-        items: remove_from_group(sheet.items, id),
-      };
-    });
+    set_sheet(
+      immer((sheet) => {
+        sheet.items = remove_from_group(sheet.items, id);
+      })
+    );
 
-    if (sheet_view.selected_id === id) {
+    if (sheet_view.selected_ids.includes(id)) {
       // Just for concistency, deselect the removed item (probably not necessary tho)
+      let index = sheet_view.selected_ids.indexOf(id);
+
       set_sheet_view(
         immer((sheet_view) => {
-          sheet_view.selected_id = null;
+          sheet_view.selected_ids = sheet_view.selected_ids.splice(index, 1);
         })
       );
     }
@@ -236,7 +238,7 @@ export const PresentifyProvider = ({ children }) => {
         add_file,
         add_item,
         change_item,
-        select_item,
+        select_items,
         remove_item,
       }}
     >

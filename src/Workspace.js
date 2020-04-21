@@ -139,11 +139,11 @@ let Workspace = () => {
   let [clipboard, set_clipboard] = React.useState([]);
   const {
     sheet: { items, files },
-    sheet_view: { selected_id },
+    sheet_view: { selected_ids },
     add_file,
     add_item,
     change_item,
-    select_item,
+    select_items,
     remove_item,
   } = React.useContext(PresentifyContext);
 
@@ -176,8 +176,9 @@ let Workspace = () => {
             left: 0,
             right: 0,
             bottom: 0,
-            display: "flex",
-            flexDirection: "row",
+            display: "grid",
+            gridTemplateColumns: "232px 1fr 232px",
+            gridTemplateRows: "100%",
           }}
         >
           <DropOverlay is_dragging={is_dragging} />
@@ -193,21 +194,24 @@ let Workspace = () => {
               }
 
               if (e.key === "Escape") {
-                select_item(null);
+                select_items([]);
               }
 
               if (e.key === "Backspace" || e.key === "Delete") {
-                if (selected_id != null) {
-                  remove_item(selected_id);
+                if (selected_ids.length > 0) {
+                  selected_ids.forEach((e) => remove_item(e));
                 }
               }
 
               if (e.key === "c" && (e.metaKey || e.ctrlKey)) {
-                let item =
-                  selected_id && items.find((x) => x.id === selected_id);
-                if (item) {
+                let items = selected_ids.map((id) =>
+                  items.find((x) => x.id === id)
+                );
+                if (items) {
                   // TODO Maybe later, append?
-                  set_clipboard([{ ...item, id: null }]);
+                  items.forEach((item) =>
+                    set_clipboard([{ ...item, id: null }])
+                  );
                 }
               }
 
@@ -279,7 +283,7 @@ let Workspace = () => {
                   <SidebarTitle>Edit layer</SidebarTitle>
                   <Whitespace height={10} />
                   {items
-                    .filter((item) => item.id === selected_id)
+                    .filter((item) => selected_ids.includes(item.id))
                     .map((item) => {
                       let component_info = component_map[item.type];
 
@@ -304,6 +308,7 @@ let Workspace = () => {
                     })}
                   <Whitespace height={50} />
                 </div>
+
                 <SidebarLine theme={theme} />
 
                 <div
