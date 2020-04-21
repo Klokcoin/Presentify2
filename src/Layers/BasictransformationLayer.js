@@ -11,8 +11,8 @@ import * as Algebra from "../utils/linear_algebra";
 
 const ItemOverlay = ({ item }) => {
   const {
-    sheet_view: { transform, selected_id },
-    select_item,
+    sheet_view: { transform, selected_ids },
+    select_items,
     change_item,
   } = React.useContext(PresentifyContext);
 
@@ -25,7 +25,7 @@ const ItemOverlay = ({ item }) => {
     }
   };
 
-  let selected = selected_id.includes(item.id);
+  let selected = selected_ids.includes(item.id);
   let act_like_selected = selected || preview != null;
 
   let with_defaults = {
@@ -106,7 +106,7 @@ const ItemOverlay = ({ item }) => {
     <Absolute
       onMouseDown={(event) => {
         event.stopPropagation();
-        select_item(item.id);
+        select_items([item.id]);
       }}
       left={current_item.x}
       top={current_item.y}
@@ -276,11 +276,9 @@ export let BasictransformationLayer = ({ transform }) => {
     PresentifyContext
   );
 
-  let items = sheet_view.selected_id.map((id) =>
+  let items = sheet_view.selected_ids.map((id) =>
     find_in_group(sheet.items, id)
   );
-
-  console.log(`item:`, items);
 
   return items.map((item) => (
     <Layer style={{ pointerEvents: "none" }}>

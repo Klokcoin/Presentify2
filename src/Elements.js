@@ -41,6 +41,7 @@ export const DocumentEvent = ({
 
 export const Draggable = ({
   onMove,
+  onMoveStart,
   onMoveEnd,
   cursor,
   style,
@@ -75,6 +76,14 @@ export const Draggable = ({
             start_mouse_x: e.pageX,
             start_mouse_y: e.pageY,
           });
+
+          onMoveStart &&
+            onMoveStart({
+              x: e.pageX,
+              y: e.pageY,
+              absolute_x: e.pageX,
+              absolute_y: e.pageY,
+            });
         }}
         {...props}
       >
