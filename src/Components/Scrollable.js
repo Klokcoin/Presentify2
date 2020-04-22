@@ -15,8 +15,7 @@ const ContentWrapper = styled.div`
 
 const Track_y = styled.div`
   position: relative !important;
-  opacity: 0.7;
-  background: ${({ theme }) => theme.interface[0]} !important;
+  background: rgba(0, 0, 0, 0.3) !important;
 `;
 
 export const Scrollable_y = (props) => {
@@ -39,6 +38,7 @@ export const Scrollable_y = (props) => {
       thumbYProps={{
         style: {
           background: theme.interface[2],
+          //   opacity: 0.9,
         },
       }}
     >

@@ -34,7 +34,7 @@ const AddGroupIcon = styled.div`
   cursor: pointer;
 
   :hover {
-    color: white;
+    color: ${({ theme }) => theme.interface.textHover};
   }
 `;
 
@@ -287,7 +287,7 @@ let Workspace = () => {
                       let component_info = component_map[item.type];
 
                       return (
-                        <Scrollable_y>
+                        <Scrollable_y key={item.id}>
                           {component_info.ConfigScreen && (
                             <component_info.ConfigScreen
                               value={item.options}

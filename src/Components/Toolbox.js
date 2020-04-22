@@ -26,7 +26,7 @@ const ToolButton = styled.div`
   margin: 0 0.5rem;
 
   :hover {
-    color: white;
+    color: ${({ theme }) => theme.interface.textHover};
   }
 `;
 
@@ -40,7 +40,9 @@ export const Toolbox = (props) => {
         if (!comp.hide_in_toolbox)
           return (
             <ToolButton
+              key={key}
               title={comp.name}
+              theme={theme}
               onClick={() => add_item({ type: key })}
             >
               <ComponentIcon>{comp.icon}</ComponentIcon>

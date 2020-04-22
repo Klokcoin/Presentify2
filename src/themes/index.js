@@ -13,9 +13,9 @@ const THEME_HUE = 218; //old 195
 const darkShades = [
   `hsl(${THEME_HUE}, 8%, 8%)`,
   `hsl(${THEME_HUE}, 15%, 13%)`,
-  `hsl(${THEME_HUE}, 16%, 20%)`,
-  `hsl(${THEME_HUE}, 30%, 20%)`,
-  `hsl(${THEME_HUE}, 55%, 25%)`,
+  `hsl(${THEME_HUE}, 20%, 16%)`,
+  `hsl(${THEME_HUE}, 34%, 22%)`,
+  `hsl(${THEME_HUE}, 49%, 30%)`,
   `hsl(${THEME_HUE}, 59%, 48%)`,
 ];
 
@@ -30,6 +30,7 @@ export const dark_theme = {
 
     hover: darkShades[4],
     text: `hsl(${THEME_HUE}, 73%, 93%)`,
+    textHover: "white",
   },
 
   canvas: {
