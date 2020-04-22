@@ -127,9 +127,9 @@ const ItemOverlay = ({ item }) => {
         WebkitUserSelect: "none",
         MozUserSelect: "none",
         outline: act_like_selected
-        ? `${1 + 2 * (1 / scale)/3}px dashed ${theme.canvas.selectionColor}`
-        : "none",
-        outlineOffset: 6 + 2 * (1 / scale)
+          ? `${1 + (2 * (1 / scale)) / 3}px dashed ${theme.canvas.selection}`
+          : "none",
+        outlineOffset: 6 + 2 * (1 / scale),
       }}
     >
       {/* Selection overlay with drag and resize areas: 🧠 is for grabbing, ↖↑↗ ←→↙↓↘ for resizing */}

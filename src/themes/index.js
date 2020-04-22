@@ -28,34 +28,24 @@ export const dark_theme = {
     5: darkShades[5],
 
     hover: darkShades[4],
-    text: `hsl(${THEME_HUE}, 90%, 93%)`,
-  },
-
-  // backgroundColorLight: "hsl(200, 6%, 30%)",
-  // backgroundColorMedium: "hsl(200, 6%, 19%)",
-  // backgroundColorDark: "hsl(200, 6%, 12%)",
-
-  textColorPrimary: "hsl(0, 0%, 93%)",
-  textColorAccent: "hsl(45, 100%, 50%)",
-
-  // hsl(195,84%,72%);
-  // hsl(196,90%,35%)
-
-  layerList: {
-    hoverColor: "SeaGreen",
-    layer: {
-      hoverColor: "hsl(196, 90%, 35%)",
-      selectedColor: "hsl(195, 84%, 72%)",
-      backgroundColor: "hsl(0, 0%, 24%)",
-      textColor: WHITE,
-    },
+    text: `hsl(${THEME_HUE}, 73%, 93%)`,
   },
 
   canvas: {
-    backgroundColor: "hsl(210, 4%, 12%)",
-    gridColor: LIGHT_GRAY,
-    selectionColor: "hsl(0, 0%, 90%)",
+    // background: "hsl(210, 4%, 12%)",
+    grid: LIGHT_GRAY,
+    selection: "hsl(0, 0%, 90%)",
   },
+
+  // layerList: {
+  //   hoverColor: "SeaGreen",
+  //   layer: {
+  //     hoverColor: "hsl(196, 90%, 35%)",
+  //     selectedColor: "hsl(195, 84%, 72%)",
+  //     backgroundColor: "hsl(0, 0%, 24%)",
+  //     textColor: WHITE,
+  //   },
+  // },
 
   colors: [
     "hsl(0, 100%, 69%)",
@@ -72,20 +62,10 @@ export let theme = dark_theme;
 
 //alles wat vaker word gebruikt.
 export const global_styles = {
-  backgroundColorLight: css`
-    background-color: ${theme.backgroundColorLight};
-  `,
-  backgroundColorMedium: css`
-    background-color: ${theme.backgroundColorMedium};
-  `,
-  backgroundColorDark: css`
-    background-color: ${theme.backgroundColorDark};
-  `,
-
   heading: css`
     font-family: "Roboto Condensed";
     font-size: 22px;
-    color: ${theme.textColorPrimary};
+    color: ${theme.interface.text};
     text-transform: uppercase;
     padding: 5px;
   `,
@@ -93,7 +73,7 @@ export const global_styles = {
   text: css`
     font-family: "Roboto";
     font-size: 15px;
-    color: ${theme.textColorPrimary};
+    color: ${theme.interface.text};
   `,
 
   mono: css`

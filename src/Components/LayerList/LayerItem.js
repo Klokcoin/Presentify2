@@ -32,10 +32,12 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
 
-  ${global_styles.textColorPrimary};
+  // ${global_styles.textColorPrimary};
+  color: ${({ theme }) => theme.interface.text};
 
   :hover {
     background-color: ${({ theme }) => theme.interface.hover};
+    color: white;
   }
 
   ${styled_if((p) => p.selected)} {

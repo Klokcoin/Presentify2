@@ -71,7 +71,7 @@ const Origin = styled.div`
 
 const ReferenceGrid = ({ onClick }) => {
   const theme = useTheme();
-  const color = theme.canvas.gridColor;
+  const color = theme.canvas.grid;
   return (
     <div
       onMouseDown={onClick}

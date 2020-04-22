@@ -91,7 +91,7 @@ export let component_map = {
         style={{
           height: "1em",
           width: "1em",
-          backgroundColor: theme.textColorPrimary,
+          backgroundColor: theme.interface.text,
           borderRadius: 1,
         }}
       />

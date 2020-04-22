@@ -39,7 +39,10 @@ const AddGroupIcon = styled.div`
 let Sidebar = styled.div`
   pointer-events: auto;
   width: 100%;
-  flex-shrink: 0;
+  height: 100%;
+  box-sizing: border-box;
+
+  // flex-shrink: 0;
   display: flex;
   flex-direction: column;
   z-index: 1;
@@ -55,14 +58,16 @@ let Sidebar = styled.div`
   background: ${(props) => props.theme.interface[1]};
 
   box-shadow: 0px 0px 16px -5px rgba(0, 0, 0, 0.75);
+`;
 
-  // &:nth-child(2) {
-  //   box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
-  // }
+const Panel = styled.div`
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
 
-  // &:last-child {
-  //   box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
-  // }
+  display: grid;
+  grid-template-rows: 3rem 1fr;
 `;
 
 export let EllipsisOverflow = styled.div`
@@ -271,15 +276,7 @@ let Workspace = () => {
 
               {/* Right sidebar */}
               <Sidebar theme={theme}>
-                <div
-                  style={{
-                    minWidth: 0,
-                    minHeight: 0,
-                    width: "100%",
-                    height: "100%",
-                    overflow: "auto",
-                  }}
-                >
+                <Panel>
                   <SidebarTitle>Edit layer</SidebarTitle>
                   <Whitespace height={10} />
                   {items
@@ -307,18 +304,11 @@ let Workspace = () => {
                       );
                     })}
                   <Whitespace height={50} />
-                </div>
+                </Panel>
 
                 <SidebarLine theme={theme} />
 
-                <div
-                  style={{
-                    minWidth: 0,
-                    minHeight: 0,
-                    width: "100%",
-                    height: "100%",
-                  }}
-                >
+                <Panel>
                   <div
                     style={{
                       display: "flex",
@@ -338,7 +328,7 @@ let Workspace = () => {
                   <div style={{ overflowY: "auto", height: "100%" }}>
                     <MemoLayerList />
                   </div>
-                </div>
+                </Panel>
               </Sidebar>
             </InterfaceLayout>
           </Layer>
