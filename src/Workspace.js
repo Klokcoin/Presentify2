@@ -1,41 +1,76 @@
 import React from "react";
 import Measure from "react-measure";
-import styled, { css } from "styled-components/macro";
+import styled, { useTheme, css } from "styled-components/macro";
 import ComponentComponent from "@reach/component-component";
 
 import { YamlViewer } from "./AppComponents/YamlViewer.js";
-import { DocumentEvent, Whitespace } from "./Elements.js";
+import { DocumentEvent, Whitespace, Layer } from "./Elements.js";
 import Canvas from "./Components/Canvas.js";
 import { Droptarget } from "./Components/Droptarget.js";
 import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
-import {global_styles} from './themes/index'
+import { global_styles } from "./themes/index";
+import { Toolbox } from "./Components/Toolbox";
 
-let Sidebar = styled.div`
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 1;
+import { Scrollable_y } from "./Components/Scrollable";
 
-  ${global_styles.text};
-  ${global_styles.backgroundColorMedium};
+const InterfaceLayout = styled.div`
+  display: grid;
+  grid-template-rows: auto 1fr;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  width: 100%;
+  height: 100%;
 
+  position: relative;
+`;
 
+const AddGroupIcon = styled.div`
+  margin: 1rem 1.2rem 0.4rem 1rem;
+  color: ${({ theme }) => theme.interface.text};
+  align-self: flex-end;
 
-  &:nth-child(2) {
-    box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
-  }
+  cursor: pointer;
 
-  &:last-child {
-    box-shadow: -6px 0px 8px rgba(0, 0, 0, 0.14);
+  :hover {
+    color: ${({ theme }) => theme.interface.textHover};
   }
 `;
 
-let ComponentIcon = styled.div`
-  margin: 5px 10px 5px 0;
-`
+let Sidebar = styled.div`
+  pointer-events: auto;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+
+  // flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  grid-gap: 0.7rem;
+
+  ${global_styles.text};
+  background: ${(props) => props.theme.interface[1]};
+
+  box-shadow: 0px 0px 16px -5px rgba(0, 0, 0, 0.75);
+`;
+
+const Panel = styled.div`
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  grid-template-rows: 3rem 1fr;
+`;
 
 export let EllipsisOverflow = styled.div`
   overflow: hidden;
@@ -45,16 +80,18 @@ export let EllipsisOverflow = styled.div`
 `;
 
 let SidebarTitle = styled.div`
-  margin-top: 16px;
+  margin-top: 10px;
   margin-left: 16px;
   ${global_styles.heading}
 `;
 
 let SidebarLine = styled.div`
+  // position: relative;
   width: calc(100% - 16px - 16px);
   margin-left: 16px;
   margin-right: 16px;
-  border: solid 1px var(--color, black);
+  border: solid 1px;
+  border-color: ${({ theme }) => theme.interface[2]};
 `;
 
 export let SidebarButton = styled.div`
@@ -68,7 +105,7 @@ export let SidebarButton = styled.div`
   padding: 8px 16px;
 
   &:hover {
-    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
+    background-color: ${({ theme }) => theme.interface.hover};
   }
 `;
 
@@ -116,6 +153,8 @@ let Workspace = () => {
     select_items,
     remove_item,
   } = React.useContext(PresentifyContext);
+
+  let theme = useTheme();
 
   return (
     <Droptarget
@@ -200,93 +239,101 @@ let Workspace = () => {
             passive
           />
 
-          {/* Left sidebar */}
-          <Sidebar>
-            <SidebarTitle>Add layer</SidebarTitle>
-            <Whitespace height={16} />
-            <div style={{ flexShrink: 0 }}>
-              {Object.entries(component_map).map(([key, comp]) => (
-                <SidebarButton onClick={() => add_item({ type: key })}>
-                  <ComponentIcon>{comp.icon}</ComponentIcon>
-                  <Whitespace width={16} />
-                  <EllipsisOverflow>{comp.name}</EllipsisOverflow>
-                </SidebarButton>
-              ))}
-            </div>
-            <Whitespace height={16} />
-
-            {/* Layer list */}
-            <SidebarLine />
-
-            <SidebarTitle> Layer list </SidebarTitle>
-
-            <div style={{ overflowY: "auto", height: "100%" }}>
-              <MemoLayerList />
-            </div>
-          </Sidebar>
-
-          {/* Canvas */}
-          <FilesContext.Provider
-            value={{
-              getFile: (file_id) => {
-                // TODO Need way to load in the file into blob when loading
-                let file = files.find((x) => x.id === file_id);
-                if (file == null) {
-                  throw new Error(`No file found for id '${file_id}'`);
-                }
-                return file;
-              },
-            }}
-          >
-            <Measure bounds>
-              {({ measureRef, contentRect }) => (
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "100%",
-                    userSelect: "none",
-                  }}
-                  ref={measureRef}
-                >
-                  {contentRect.bounds.height && (
-                    <Canvas bounds={contentRect.bounds} items={items} />
-                  )}
-                </div>
-              )}
-            </Measure>
-          </FilesContext.Provider>
-
-          {/* Right sidebar */}
-          <Sidebar>
-            <SidebarTitle>Edit layer</SidebarTitle>
-            <Whitespace height={50} />
-            {items
-              .filter((item) => selected_ids.includes(item.id))
-              .map((item) => {
-                let component_info = component_map[item.type];
-
-                return (
-                  <div style={{ overflowY: "auto" }}>
-                    {component_info.ConfigScreen && (
-                      <component_info.ConfigScreen
-                        value={item.options}
-                        onChange={(options) => {
-                          change_item(item.id, {
-                            options: {
-                              ...item.options,
-                              ...options,
-                            },
-                          });
-                        }}
-                      />
+          <Layer>
+            {/* Canvas */}
+            <FilesContext.Provider
+              value={{
+                getFile: (file_id) => {
+                  // TODO Need way to load in the file into blob when loading
+                  let file = files.find((x) => x.id === file_id);
+                  if (file == null) {
+                    throw new Error(`No file found for id '${file_id}'`);
+                  }
+                  return file;
+                },
+              }}
+            >
+              <Measure bounds>
+                {({ measureRef, contentRect }) => (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      userSelect: "none",
+                    }}
+                    ref={measureRef}
+                  >
+                    {contentRect.bounds.height && (
+                      <Canvas bounds={contentRect.bounds} items={items} />
                     )}
-                    <YamlViewer value={item.options} id={item.id} />
                   </div>
-                );
-              })}
-            <Whitespace height={50} />
-          </Sidebar>
+                )}
+              </Measure>
+            </FilesContext.Provider>
+          </Layer>
+
+          <Layer style={{ pointerEvents: "none" }}>
+            <InterfaceLayout>
+              <Toolbox component_map={component_map} add_item={add_item} />
+
+              {/* Right sidebar */}
+              <Sidebar theme={theme}>
+                <Panel>
+                  <SidebarTitle>Edit layer</SidebarTitle>
+                  {/* <Whitespace height={10} /> */}
+                  {items
+                    .filter((item) => selected_ids.includes(item.id))
+                    .map((item) => {
+                      let component_info = component_map[item.type];
+
+                      return (
+                        <Scrollable_y key={item.id}>
+                          {component_info.ConfigScreen && (
+                            <component_info.ConfigScreen
+                              value={item.options}
+                              onChange={(options) => {
+                                change_item(item.id, {
+                                  options: {
+                                    ...item.options,
+                                    ...options,
+                                  },
+                                });
+                              }}
+                            />
+                          )}
+                          <YamlViewer value={item.options} id={item.id} />
+                        </Scrollable_y>
+                      );
+                    })}
+                  {/* <Whitespace height={50} /> */}
+                </Panel>
+
+                <SidebarLine theme={theme} />
+
+                <Panel>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <SidebarTitle> Layer list </SidebarTitle>
+                    <AddGroupIcon
+                      title="Add group"
+                      onClick={() => add_item({ type: "group" })}
+                      theme={theme}
+                    >
+                      {component_map.group.icon}
+                    </AddGroupIcon>
+                  </div>
+
+                  <Scrollable_y>
+                    <MemoLayerList />
+                  </Scrollable_y>
+                </Panel>
+              </Sidebar>
+            </InterfaceLayout>
+          </Layer>
         </div>
       )}
     </Droptarget>

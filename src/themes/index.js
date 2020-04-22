@@ -7,29 +7,47 @@ const WHITE = "hsl(0, 0%, 100%)";
 
 //alles wat alleen afhankelijk is van theme\
 
+const THEME_HUE = 218; //old 195
+
+//* shade mechanism still in consideration *
+const darkShades = [
+  `hsl(${THEME_HUE}, 8%, 8%)`,
+  `hsl(${THEME_HUE}, 15%, 13%)`,
+  `hsl(${THEME_HUE}, 20%, 16%)`,
+  `hsl(${THEME_HUE}, 34%, 22%)`,
+  `hsl(${THEME_HUE}, 49%, 30%)`,
+  `hsl(${THEME_HUE}, 59%, 48%)`,
+];
+
 export const dark_theme = {
-  backgroundColorLight: "hsl(200, 6%, 30%)",
-  backgroundColorMedium: "hsl(200, 6%, 19%)",
-  backgroundColorDark: "hsl(200, 6%, 12%)",
+  interface: {
+    0: darkShades[0],
+    1: darkShades[1],
+    2: darkShades[2],
+    3: darkShades[3],
+    4: darkShades[4],
+    5: darkShades[5],
 
-  textColorPrimary: "hsl(0, 0%, 93%)", 
-  textColorAccent: "hsl(45, 100%, 50%)",
-
-  layerList: {
-    hoverColor: "SeaGreen",
-    layer: {
-      hoverColor: "hsl(196, 90%, 35%)",
-      selectedColor: "hsl(195, 84%, 72%)",
-      backgroundColor: "hsl(0, 0%, 24%)",
-      textColor: WHITE,
-    },
+    hover: darkShades[4],
+    text: `hsl(${THEME_HUE}, 73%, 93%)`,
+    textHover: "white",
   },
 
   canvas: {
-    backgroundColor: "hsl(210, 4%, 12%)",
-    gridColor: LIGHT_GRAY,
-    selectionColor: "hsl(0, 0%, 90%)",
+    // background: "hsl(210, 4%, 12%)",
+    grid: LIGHT_GRAY,
+    selection: "hsl(0, 0%, 90%)",
   },
+
+  // layerList: {
+  //   hoverColor: "SeaGreen",
+  //   layer: {
+  //     hoverColor: "hsl(196, 90%, 35%)",
+  //     selectedColor: "hsl(195, 84%, 72%)",
+  //     backgroundColor: "hsl(0, 0%, 24%)",
+  //     textColor: WHITE,
+  //   },
+  // },
 
   colors: [
     "hsl(0, 100%, 69%)",
@@ -42,40 +60,25 @@ export const dark_theme = {
 };
 
 // current theme provider
-export let theme = dark_theme
+export let theme = dark_theme;
 
-//alles wat vaker word gebruikt. 
+//alles wat vaker word gebruikt.
 export const global_styles = {
-  backgroundColorLight: css`
-    background-color: ${theme.backgroundColorLight};
-  `,
-  backgroundColorMedium: css`
-    background-color: ${theme.backgroundColorMedium};
-  `,
-  backgroundColorDark: css`
-    background-color: ${theme.backgroundColorDark};
-  `,
-
   heading: css`
     font-family: "Roboto Condensed";
     font-size: 22px;
-    color: ${theme.textColorPrimary};
+    color: ${theme.interface.text};
     text-transform: uppercase;
     padding: 5px;
-    `,
+  `,
 
   text: css`
     font-family: "Roboto";
     font-size: 15px;
-    color: ${theme.textColorPrimary};
+    color: ${theme.interface.text};
   `,
 
   mono: css`
     font-family: "Roboto Mono";
   `,
-
-
 };
-
-
-

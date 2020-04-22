@@ -53,7 +53,7 @@ const SelectionArea = styled.div`
 `;
 
 const Background = styled.div`
-  background: ${({ theme }) => theme.canvas.backgroundColor};
+  background: ${({ theme }) => theme.interface[0]};
   position: absolute;
   left: 0;
   top: 0;
@@ -71,7 +71,7 @@ const Origin = styled.div`
 
 const ReferenceGrid = ({ onClick }) => {
   const theme = useTheme();
-  const color = theme.canvas.gridColor;
+  const color = theme.canvas.grid;
   return (
     <div
       onMouseDown={onClick}

@@ -91,7 +91,7 @@ export let component_map = {
         style={{
           height: "1em",
           width: "1em",
-          backgroundColor: theme.textColorPrimary,
+          backgroundColor: theme.interface.text,
           borderRadius: 1,
         }}
       />
@@ -164,6 +164,7 @@ export let component_map = {
   group: {
     icon: <i className="fas fa-object-group"></i>,
     name: "Group",
+    hide_in_toolbox: true,
     groupItems: [],
     default_options: {
       backgroundColor: "#B50004",

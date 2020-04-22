@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Draggable } from "react-beautiful-dnd";
-import styled from "styled-components/macro";
+import styled, { useTheme } from "styled-components/macro";
 
 import { EllipsisOverflow } from "../../Workspace";
 import { Whitespace, Center } from "../../Elements";
-import {global_styles} from '../../themes/index';
-
-let colors = {
-  hover: "hsl(210, 20%, 27%)",
-};
+import { global_styles } from "../../themes/index";
 
 let styled_if = (predicate) => {
   return (p) => (predicate(p) ? "&" : "&:not(&)");
@@ -36,17 +32,24 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
 
+  color: ${({ theme }) => theme.interface.text};
 
-  ${global_styles.textColorPrimary}
-  ${global_styles.backgroundColorLight}
-
-  ${styled_if((p) => !p.selected)}:hover {
-    background-color: ${({ theme }) => theme.layerList.layer.hoverColor};
+  :hover {
+    background-color: ${({ theme }) => theme.interface.hover};
+    color: ${({ theme }) => theme.interface.textHover};
   }
 
   ${styled_if((p) => p.selected)} {
-    background-color: ${({ theme }) => theme.layerList.layer.selectedColor};
-    color: black;
+    :before {
+      content: "";
+      background-color: ${({ theme }) => theme.interface[5]};
+      width: 5px;
+      height: 100%;
+      position: absolute;
+    }
+
+    background-color: ${({ theme }) => theme.interface[3]};
+
     position: sticky;
     top: 0;
     bottom: 0;
@@ -56,13 +59,11 @@ const Container = styled.div`
   ${styled_if((p) => p.dragging)} {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
   }
-
-
 `;
 
 const NestedListContainer = styled.div`
   width: 100%;
-  background-color: #333333;
+  background: ${({ theme }) => theme.interface[2]};
   padding-left: 1rem;
   pointer-events: none;
 `;
@@ -73,7 +74,6 @@ let NameContainer = styled.div`
   align-items: center;
   flex: 1;
   padding-right: 0.5rem;
-
 `;
 
 // I renamed this from 'TrashContainer' to 'TrashBin' b/c I was confused abt container meaning an _actual_ container (with children etc)
@@ -89,8 +89,9 @@ const Trashbin = styled.div`
 `;
 
 const Icon = styled.div`
-  font-size: 10px;
+  font-size: 12px;
   flex: 0 0 1.5rem;
+  padding-left: 5px;
 
   /* To make the icon easier to click on, expand and then center yourself inside */
   align-self: stretch;
@@ -112,12 +113,14 @@ export const LayerItem = ({
   const [input_enabled, set_input_enabled] = useState(false);
   const [input, set_input] = useState(item.name);
   const [collapsed, set_collapsed] = useState(true);
+  const theme = useTheme();
 
   return (
     <Draggable draggableId={item.id} index={index} isDropDisabled>
       {(provided, snapshot) => {
         return (
           <Container
+            theme={theme}
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
@@ -134,8 +137,12 @@ export const LayerItem = ({
           >
             {input_enabled ? (
               <NameContainer>
-                <Icon
-                  style={{ color: children ? "inherit" : "transparent" }}
+                {/* <Icon
+                  size={12}
+                  style={{
+                    color: children ? "inherit" : "transparent",
+                    marginLeft: "5px",
+                  }}
                   onClick={() => children && set_collapsed(!collapsed)}
                 >
                   {collapsed ? (
@@ -143,7 +150,7 @@ export const LayerItem = ({
                   ) : (
                     <i className="fas fa-chevron-right"></i>
                   )}
-                </Icon>
+                </Icon> */}
 
                 <EditableName
                   value={input}
@@ -170,6 +177,7 @@ export const LayerItem = ({
             ) : (
               <NameContainer>
                 <Icon
+                  size={12}
                   style={{ color: children ? "inherit" : "transparent" }}
                   onClick={() => children && set_collapsed(!collapsed)}
                 >
@@ -209,7 +217,9 @@ export const LayerItem = ({
             {/* possible recursive list items, when this layer is a layerGroup */}
             {children && collapsed && (
               <>
-                <NestedListContainer>{children}</NestedListContainer>
+                <NestedListContainer theme={theme}>
+                  {children}
+                </NestedListContainer>
               </>
             )}
           </Container>
