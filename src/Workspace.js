@@ -14,6 +14,8 @@ import { PresentifyContext } from "./PresentifyContext.js";
 import { global_styles } from "./themes/index";
 import { Toolbox } from "./Components/Toolbox";
 
+import { Scrollable_y } from "./Components/Scrollable";
+
 const InterfaceLayout = styled.div`
   display: grid;
   grid-template-rows: auto 1fr;
@@ -278,14 +280,14 @@ let Workspace = () => {
               <Sidebar theme={theme}>
                 <Panel>
                   <SidebarTitle>Edit layer</SidebarTitle>
-                  <Whitespace height={10} />
+                  {/* <Whitespace height={10} /> */}
                   {items
                     .filter((item) => selected_ids.includes(item.id))
                     .map((item) => {
                       let component_info = component_map[item.type];
 
                       return (
-                        <div style={{ overflowY: "auto" }}>
+                        <Scrollable_y>
                           {component_info.ConfigScreen && (
                             <component_info.ConfigScreen
                               value={item.options}
@@ -300,10 +302,10 @@ let Workspace = () => {
                             />
                           )}
                           <YamlViewer value={item.options} id={item.id} />
-                        </div>
+                        </Scrollable_y>
                       );
                     })}
-                  <Whitespace height={50} />
+                  {/* <Whitespace height={50} /> */}
                 </Panel>
 
                 <SidebarLine theme={theme} />
@@ -325,9 +327,9 @@ let Workspace = () => {
                     </AddGroupIcon>
                   </div>
 
-                  <div style={{ overflowY: "auto", height: "100%" }}>
+                  <Scrollable_y>
                     <MemoLayerList />
-                  </div>
+                  </Scrollable_y>
                 </Panel>
               </Sidebar>
             </InterfaceLayout>
