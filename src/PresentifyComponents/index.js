@@ -2,6 +2,7 @@ import React from "react";
 import { SketchPicker } from "react-color";
 import styled from "styled-components/macro";
 import { Webcam, SelectVideoDevice } from "./Webcam";
+import { RegularPolygon } from "./RegularPolygon";
 import { theme } from "../themes/index";
 
 import { LoadFile } from "../Workspace.js";
@@ -145,6 +146,19 @@ export let component_map = {
           }}
         />
       );
+    },
+  },
+  "jwestendorp/regularPolygon": {
+    icon: (
+      <i className="fas fa-play" style={{ transform: "rotate(30deg)" }}></i>
+    ),
+    name: "Polygon",
+    default_options: {
+      backgroundColor: "#B50004",
+      points: 3,
+    },
+    Component: ({ size, options }) => {
+      return <RegularPolygon size={size} options={options} />;
     },
   },
   group: {
