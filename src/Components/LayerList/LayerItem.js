@@ -64,7 +64,7 @@ const Container = styled.div`
 
 const NestedListContainer = styled.div`
   width: 100%;
-  background-color: #333333;
+  background: ${({ theme }) => theme.interface[2]};
   padding-left: 1rem;
   pointer-events: none;
 `;
@@ -218,7 +218,9 @@ export const LayerItem = ({
             {/* possible recursive list items, when this layer is a layerGroup */}
             {children && collapsed && (
               <>
-                <NestedListContainer>{children}</NestedListContainer>
+                <NestedListContainer theme={theme}>
+                  {children}
+                </NestedListContainer>
               </>
             )}
           </Container>

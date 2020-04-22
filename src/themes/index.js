@@ -9,6 +9,7 @@ const WHITE = "hsl(0, 0%, 100%)";
 
 const THEME_HUE = 218; //old 195
 
+//* shade mechanism still in consideration *
 const darkShades = [
   `hsl(${THEME_HUE}, 8%, 8%)`,
   `hsl(${THEME_HUE}, 15%, 13%)`,
