@@ -10,6 +10,35 @@ import { render_cursor, get_cursor_direction } from "../utils/cursors";
 import * as Algebra from "../utils/linear_algebra";
 import { useTheme } from "styled-components";
 
+const SmallSelectionOverlay = ({ item }) => {
+  let current_item = item;
+  return (
+    <Absolute
+      // onMouseDown={(event) => {
+      //   event.stopPropagation();
+      //   select_items([item.id]);
+      // }}
+      left={current_item.x}
+      top={current_item.y}
+      style={{
+        // cursor: preview ? "grabbing" : undefined,
+        height: Math.abs(current_item.height), // We allow for negative height and width (so we can figure out if reflection has happened),
+        width: Math.abs(current_item.width), // but CSS can only render positive width, height, so we Math.abs them here
+        transform: `
+        translate(-50%, -50%)
+        rotate(${current_item.rotation}rad)
+        translateZ(${item.z || 0}px)
+      `,
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        outline: `${1}px dashed black`,
+        outlineOffset: 6 + 2 * 1,
+      }}
+    />
+  );
+};
+
 const ItemOverlay = ({ item }) => {
   const {
     sheet_view: { transform, selected_ids },
@@ -127,9 +156,11 @@ const ItemOverlay = ({ item }) => {
         WebkitUserSelect: "none",
         MozUserSelect: "none",
         outline: act_like_selected
-        ? `${1 + 2 * (1 / scale)/3}px dashed ${theme.canvas.selectionColor}`
-        : "none",
-        outlineOffset: 6 + 2 * (1 / scale)
+          ? `${1 + (2 * (1 / scale)) / 3}px dashed ${
+              theme.canvas.selectionColor
+            }`
+          : "none",
+        outlineOffset: 6 + 2 * (1 / scale),
       }}
     >
       {/* Selection overlay with drag and resize areas: 🧠 is for grabbing, ↖↑↗ ←→↙↓↘ for resizing */}
@@ -282,13 +313,18 @@ export let BasictransformationLayer = ({ transform }) => {
     PresentifyContext
   );
 
-  let items = sheet_view.selected_ids.map((id) =>
-    find_in_group(sheet.items, id)
-  );
+  let items = sheet_view.selected_ids
+    .map((id) => find_in_group(sheet.items, id))
+    .filter((x) => Boolean(x));
 
-  return items.map((item) => (
-    <Layer style={{ pointerEvents: "none" }}>
-      {item && (
+  if (items.length === 0) {
+    return <Layer style={{ pointerEvents: "none" }} />;
+  }
+
+  if (items.length === 1) {
+    let [item] = items;
+    return (
+      <Layer style={{ pointerEvents: "none" }}>
         <div
           style={{
             pointerEvents: "all",
@@ -298,7 +334,22 @@ export let BasictransformationLayer = ({ transform }) => {
         >
           <ItemOverlay item={item} />
         </div>
-      )}
+      </Layer>
+    );
+  }
+  return (
+    <Layer style={{ pointerEvents: "none" }}>
+      <div
+        style={{
+          pointerEvents: "all",
+          transform: Algebra.toString(transform),
+          transformOrigin: "0 0",
+        }}
+      >
+        {items.map((item) => (
+          <SmallSelectionOverlay item={item} />
+        ))}
+      </div>
     </Layer>
-  ));
+  );
 };

@@ -22,6 +22,7 @@ const Container = styled.div`
 `;
 
 export let MemoLayerList = () => {
+  let context = React.useContext(PresentifyContext);
   let {
     sheet,
     set_sheet,
@@ -29,7 +30,9 @@ export let MemoLayerList = () => {
     remove_item,
     change_item,
     sheet_view,
-  } = React.useContext(PresentifyContext);
+  } = React.useDeferredValue(context, {
+    timeoutMs: 5000,
+  });
 
   return React.useMemo(() => {
     return (

@@ -259,30 +259,31 @@ let Workspace = () => {
           <Sidebar>
             <SidebarTitle>Edit layer</SidebarTitle>
             <Whitespace height={50} />
-            {items
-              .filter((item) => selected_ids.includes(item.id))
-              .map((item) => {
-                let component_info = component_map[item.type];
+            {selected_ids.length === 1 &&
+              items
+                .filter((item) => selected_ids.includes(item.id))
+                .map((item) => {
+                  let component_info = component_map[item.type];
 
-                return (
-                  <div style={{ overflowY: "auto" }}>
-                    {component_info.ConfigScreen && (
-                      <component_info.ConfigScreen
-                        value={item.options}
-                        onChange={(options) => {
-                          change_item(item.id, {
-                            options: {
-                              ...item.options,
-                              ...options,
-                            },
-                          });
-                        }}
-                      />
-                    )}
-                    <YamlViewer value={item.options} id={item.id} />
-                  </div>
-                );
-              })}
+                  return (
+                    <div style={{ overflowY: "auto" }}>
+                      {component_info.ConfigScreen && (
+                        <component_info.ConfigScreen
+                          value={item.options}
+                          onChange={(options) => {
+                            change_item(item.id, {
+                              options: {
+                                ...item.options,
+                                ...options,
+                              },
+                            });
+                          }}
+                        />
+                      )}
+                      <YamlViewer value={item.options} id={item.id} />
+                    </div>
+                  );
+                })}
             <Whitespace height={50} />
           </Sidebar>
         </div>
