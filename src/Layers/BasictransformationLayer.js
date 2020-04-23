@@ -32,7 +32,7 @@ const SmallSelectionOverlay = ({ item }) => {
         userSelect: "none",
         WebkitUserSelect: "none",
         MozUserSelect: "none",
-        outline: `${1}px dashed black`,
+        outline: `${1}px dashed rgba(255, 255, 255, .8)`,
         outlineOffset: 6 + 2 * 1,
       }}
     />
