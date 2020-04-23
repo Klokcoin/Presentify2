@@ -11,7 +11,7 @@ import { DropOverlay } from "./AppComponents/DropOverlay.js";
 import { component_map } from "./PresentifyComponents/";
 import { MemoLayerList } from "./Components/LayerList/index.js";
 import { PresentifyContext } from "./PresentifyContext.js";
-import {global_styles} from './themes/index'
+import { global_styles } from "./themes/index";
 
 let Sidebar = styled.div`
   flex-shrink: 0;
@@ -21,8 +21,6 @@ let Sidebar = styled.div`
 
   ${global_styles.text};
   ${global_styles.backgroundColorMedium};
-
-
 
   &:nth-child(2) {
     box-shadow: 6px 0px 8px rgba(0, 0, 0, 0.14);
@@ -35,7 +33,7 @@ let Sidebar = styled.div`
 
 let ComponentIcon = styled.div`
   margin: 5px 10px 5px 0;
-`
+`;
 
 export let EllipsisOverflow = styled.div`
   overflow: hidden;

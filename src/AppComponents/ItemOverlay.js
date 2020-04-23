@@ -149,6 +149,7 @@ const ItemOverlayWithoutContext = ({
       left={current_item.x}
       top={current_item.y}
       style={{
+        pointerEvents: "all",
         cursor: movement_state ? "grabbing" : undefined,
         height: Math.abs(current_item.height), // We allow for negative height and width (so we can figure out if reflection has happened),
         width: Math.abs(current_item.width), // but CSS can only render positive width, height, so we Math.abs them here
