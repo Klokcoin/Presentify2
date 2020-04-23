@@ -39,40 +39,6 @@ export const DocumentEvent = ({
   return null;
 };
 
-export const Event = ({
-  element,
-  handler,
-  name,
-  passive = false,
-  capture = false,
-}) => {
-  let fn = React.useCallback(
-    (event) => {
-      if (!passive) {
-        event.preventDefault();
-      }
-
-      handler(event);
-    },
-    [passive, handler]
-  );
-
-  React.useEffect(() => {
-    if (!element) {
-      return;
-    }
-
-    element.addEventListener(name, fn, { capture });
-
-    return function cleanup() {
-      // the { capture } options obj is necessary for it to remove the correct listener!
-      element.removeEventListener(name, fn, { capture });
-    };
-  }, [fn, name, capture, element]);
-
-  return null;
-};
-
 export const Draggable = ({
   onMove,
   onMoveStart,
