@@ -87,160 +87,159 @@ export const shear_matrix = ([x = 0, y = 0]) => {
 };
 
 /*
-  A few common matrix operations
+  General Matrix object
 */
-// Multiply two matrices together - watch out! This is non-commutative, i.e. AB =/= BA
-// multiply_matrices :: (Matrix, Matrix) -> Matrix
-export const multiply = (...args) => {
-  return args.reduce((m1, m2) => {
-    let [[a1, b1, c1], [d1, e1, f1], [g1, h1, i1]] = m1;
-    let [[a2, b2, c2], [d2, e2, f2], [g2, h2, i2]] = m2;
+export const matrix = {
+  // multiply :: (Matrix, Matrix) -> Matrix
+  multiply: (...args) => {
+    // Multiply two matrices together - watch out! This is non-commutative, i.e. AB =/= BA
+    return args.reduce((m1, m2) => {
+      let [[a1, b1, c1], [d1, e1, f1], [g1, h1, i1]] = m1;
+      let [[a2, b2, c2], [d2, e2, f2], [g2, h2, i2]] = m2;
 
-    return [
-      [
-        a1 * a2 + b1 * d2 + c1 * g2,
-        a1 * b2 + b1 * e2 + c1 * h2,
-        a1 * c2 + b1 * f2 + c1 * i2,
-      ],
-      [
-        d1 * a2 + e1 * d2 + f1 * g2,
-        d1 * b2 + e1 * e2 + f1 * h2,
-        d1 * c2 + e1 * f2 + f1 * i2,
-      ],
-      [
-        g1 * a2 + h1 * d2 + i1 * g2,
-        g1 * b2 + h1 * e2 + i1 * h2,
-        g1 * c2 + h1 * f2 + i1 * i2,
-      ],
-    ];
-  }, identity_matrix());
-};
+      return [
+        [
+          a1 * a2 + b1 * d2 + c1 * g2,
+          a1 * b2 + b1 * e2 + c1 * h2,
+          a1 * c2 + b1 * f2 + c1 * i2,
+        ],
+        [
+          d1 * a2 + e1 * d2 + f1 * g2,
+          d1 * b2 + e1 * e2 + f1 * h2,
+          d1 * c2 + e1 * f2 + f1 * i2,
+        ],
+        [
+          g1 * a2 + h1 * d2 + i1 * g2,
+          g1 * b2 + h1 * e2 + i1 * h2,
+          g1 * c2 + h1 * f2 + i1 * i2,
+        ],
+      ];
+    }, identity_matrix());
+  },
+  // determinant :: Matrix -> Number
+  determinant: (m) => {
+    if (m.length !== m[0].length) {
+      throw new Error("Not a square matrix!");
+    }
 
-// Compute the determinant of a matrix
-// determinant :: Matrix -> Number
-export const determinant = (m) => {
-  if (m.length !== m[0].length) {
-    throw new Error("Not a square matrix!");
-  }
+    let dimension = m.length;
 
-  let dimension = m.length;
+    if (dimension === 2) {
+      let [[a, b], [c, d]] = m;
+      return a * d - b * c;
+    }
 
-  if (dimension === 2) {
-    let [[a, b], [c, d]] = m;
-    return a * d - b * c;
-  }
+    if (dimension === 3) {
+      let [[a, b, c], [d, e, f], [g, h, i]] = m;
+      return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+    }
+  },
+  // inverse :: Matrix -> Matrix
+  inverse: (m) => {
+    // Compute the inverse of a square matrix A such that AB = BA = I, where B = A^(-1)
+    let det = matrix.determinant(m);
+    console.log("det", det);
 
-  if (dimension === 3) {
+    if (det === 0) {
+      throw new Error("Matrix is not invertible!");
+    }
+
     let [[a, b, c], [d, e, f], [g, h, i]] = m;
-    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
-  }
-};
-
-// Compute the inverse of a square matrix A such that AB = BA = I, where B = A^(-1)
-// inverse :: Matrix -> Matrix
-export const inverse = (m) => {
-  let det = determinant(m);
-
-  if (det === 0) {
-    throw new Error("Matrix is not invertible!");
-  }
-
-  let [[a, b, c], [d, e, f], [g, h, i]] = m;
-
-  return [
-    [e * i - f * h, -(b * i - c * h), b * f - c * e],
-    [-(d * i - f * g), a * i - c * g, -(a * f - c * d)],
-    [d * h - e * g, -(a * h - b * g), a * e - b * d],
-  ].map((row) => row.map((val) => val / det));
-};
-
-// toString :: Matrix -> String
-export const toString = (...args) => {
-  let all_transforms = args
-    .map((arg) => {
-      if (typeof arg === "string") {
-        return arg;
-      }
-
-      let [[a, b, c], [d, e, f], [g, h, i]] = arg;
-      return `matrix(${a}, ${d}, ${b}, ${e}, ${c}, ${f})`;
-    })
-    .join(" ");
-
-  return all_transforms;
-};
-
-// apply :: (Matrix, Vector) -> Vector
-export const apply = (m, v) => {
-  let [[a, b, c], [d, e, f], [g, h, i]] = m;
-  let [x, y, z = 1] = v;
-
-  return [a * x + b * y + c * z, d * x + e * y + f * z, g * x + h * y + i * z];
-};
-
-// add_matrices :: (Matrix, Matrix) -> Matrix
-export const add = (m1, m2) => {
-  if (isValidMatrix(m1) && isValidMatrix(m2)) {
-    let [[a1, b1, c1], [d1, e1, f1], [g1, h1, i1]] = m1;
-    let [[a2, b2, c2], [d2, e2, f2], [g2, h2, i2]] = m2;
 
     return [
-      [a1 + a2, b1 + b2, c1 + c2],
-      [d1 + d2, e1 + e2, f1 + f2],
-      [g1 + g2, h1 + h2, i1 + i2],
+      [e * i - f * h, -(b * i - c * h), b * f - c * e],
+      [-(d * i - f * g), a * i - c * g, -(a * f - c * d)],
+      [d * h - e * g, -(a * h - b * g), a * e - b * d],
+    ].map((row) => row.map((val) => val / det));
+  },
+  // toString :: Matrix -> String
+  toString: (...args) => {
+    let all_transforms = args
+      .map((arg) => {
+        if (typeof arg === "string") {
+          return arg;
+        }
+
+        let [[a, b, c], [d, e, f], [g, h, i]] = arg;
+        return `matrix(${a}, ${d}, ${b}, ${e}, ${c}, ${f})`;
+      })
+      .join(" ");
+
+    return all_transforms;
+  },
+  // apply :: (Matrix, Vector) -> Vector
+  apply: (m, v) => {
+    let [[a, b, c], [d, e, f], [g, h, i]] = m;
+    let [x, y, z = 1] = v;
+
+    return [
+      a * x + b * y + c * z,
+      d * x + e * y + f * z,
+      g * x + h * y + i * z,
     ];
-  }
-};
+  },
+  // add :: (Matrix, Matrix) -> Matrix
+  add: (m1, m2) => {
+    if (isValidMatrix(m1) && isValidMatrix(m2)) {
+      let [[a1, b1, c1], [d1, e1, f1], [g1, h1, i1]] = m1;
+      let [[a2, b2, c2], [d2, e2, f2], [g2, h2, i2]] = m2;
 
-// getScale :: Matrix -> Number
-export const getScale = (m) => {
-  let [[a, b, c], [d, e, f], [g, h, i]] = m;
+      return [
+        [a1 + a2, b1 + b2, c1 + c2],
+        [d1 + d2, e1 + e2, f1 + f2],
+        [g1 + g2, h1 + h2, i1 + i2],
+      ];
+    }
+  },
+  // getScale :: Matrix -> Number
+  getScale: (m) => {
+    let [[a, b, c], [d, e, f], [g, h, i]] = m;
 
-  if (a !== e) {
-    console.warn(
-      `Watch out! Your x and y scales are different: ${a}, ${e}, but getScale only returns the first!`
+    if (a !== e) {
+      console.warn(
+        `Watch out! Your x and y scales are different: ${a}, ${e}, but getScale only returns the first!`
+      );
+    }
+
+    return a;
+  },
+  // bounds = { a: { min: -5, max: 5 } }
+  clampMatrix: (m, bounds = {}) => {
+    let [[a, b, c], [d, e, f], [g, h, i]] = m;
+
+    let {
+      a: new_a,
+      b: new_b,
+      c: new_c,
+      d: new_d,
+      e: new_e,
+      f: new_f,
+    } = "abcdef".split("").reduce(
+      (values, letter) => {
+        let { min, max } = bounds?.[letter] || {};
+        let value = values[letter];
+
+        if (min && value < min) {
+          console.log("clamping", value, "to", min);
+          values[letter] = min;
+        }
+
+        if (max && value > max) {
+          console.log("clamping", value, "to", max);
+          values[letter] = max;
+        }
+
+        return values;
+      },
+      { a, b, c, d, e, f }
     );
-  }
 
-  return a;
-};
-
-// bounds = { a: { min: -5, max: 5 } }
-export const clampMatrix = (m, bounds = {}) => {
-  let [[a, b, c], [d, e, f], [g, h, i]] = m;
-
-  let {
-    a: new_a,
-    b: new_b,
-    c: new_c,
-    d: new_d,
-    e: new_e,
-    f: new_f,
-  } = "abcdef".split("").reduce(
-    (values, letter) => {
-      let { min, max } = bounds?.[letter] || {};
-      let value = values[letter];
-
-      if (min && value < min) {
-        console.log("clamping", value, "to", min);
-        values[letter] = min;
-      }
-
-      if (max && value > max) {
-        console.log("clamping", value, "to", max);
-        values[letter] = max;
-      }
-
-      return values;
-    },
-    { a, b, c, d, e, f }
-  );
-
-  return [
-    [new_a, new_b, new_c],
-    [new_d, new_e, new_f],
-    [g, h, i],
-  ];
+    return [
+      [new_a, new_b, new_c],
+      [new_d, new_e, new_f],
+      [g, h, i],
+    ];
+  },
 };
 
 /*
@@ -254,7 +253,7 @@ export const vector = {
   // rotate :: (Vector, Number) -> Vector
   rotate: ([x, y], angle) => {
     // angle should be in radians!
-    return apply(rotation_matrix(angle), [x, y]);
+    return matrix.apply(rotation_matrix(angle), [x, y]);
   },
   // to_angle :: () -> Number
   to_angle: ([x, y]) => Math.atan2(y, x),

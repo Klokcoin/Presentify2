@@ -4,10 +4,8 @@ import { Layer } from "../Elements.js";
 import { PresentifyContext, find_in_group } from "../PresentifyContext.js";
 import { ItemPreviewContext } from "../Data/ItemPreviewContext.js";
 import { Absolute, Draggable, DraggingCircle } from "../Elements";
-import { getScale, vector } from "../utils/linear_algebra";
+import { matrix, vector } from "../utils/linear_algebra";
 import { render_cursor, get_cursor_direction } from "../utils/cursors";
-
-import * as Algebra from "../utils/linear_algebra";
 import { useTheme } from "styled-components";
 
 const SmallSelectionOverlay = ({ item }) => {
@@ -76,7 +74,7 @@ const ItemOverlay = ({ item }) => {
     rotation: with_defaults.rotation,
   };
 
-  let scale = getScale(transform);
+  let scale = matrix.getScale(transform);
   let OFFSET = 8 + (1 / scale) * 24;
   let ROTATION_BUTTON_OFFSET = 2 * OFFSET;
 
@@ -328,7 +326,7 @@ export let BasictransformationLayer = ({ transform }) => {
         <div
           style={{
             pointerEvents: "all",
-            transform: Algebra.toString(transform),
+            transform: matrix.toString(transform),
             transformOrigin: "0 0",
           }}
         >
@@ -342,7 +340,7 @@ export let BasictransformationLayer = ({ transform }) => {
       <div
         style={{
           pointerEvents: "all",
-          transform: Algebra.toString(transform),
+          transform: matrix.toString(transform),
           transformOrigin: "0 0",
         }}
       >

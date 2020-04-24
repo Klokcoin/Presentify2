@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import { PresentifyContext } from "../PresentifyContext";
 import { Absolute, Draggable, DraggingCircle } from "../Elements";
-import { getScale, vector } from "../utils/linear_algebra";
+import { matrix, vector } from "../utils/linear_algebra";
 import { render_cursor, get_cursor_direction } from "../utils/cursors";
 import { ItemPreviewContext } from "../Data/ItemPreviewContext.js";
 
@@ -44,7 +44,7 @@ export let MemoItemOverlay = ({ item, children }) => {
       />
     ),
     [
-      getScale(sheet_view.transform),
+      matrix.getScale(sheet_view.transform),
       sheet_view.selected_ids,
       item,
       preview && preview.id === item.id && preview.movement_state,
@@ -83,7 +83,7 @@ const ItemOverlayWithoutContext = ({
     rotation: with_defaults.rotation,
   };
 
-  let scale = getScale(transform);
+  let scale = matrix.getScale(transform);
   let OFFSET = 8 + (1 / scale) * 24;
   let ROTATION_BUTTON_OFFSET = 2 * OFFSET;
 

@@ -6,19 +6,15 @@ import React, {
   useState,
 } from "react";
 import { isEqual } from "lodash";
+import styled, { useTheme } from "styled-components/macro";
 import { PresentifyContext } from "../PresentifyContext";
 import { MemoItemOverlay as ItemOverlay } from "../AppComponents/ItemOverlay";
 import { component_map } from "../PresentifyComponents";
 import {
   translation_matrix,
   scale_matrix,
-  toString,
-  multiply,
-  getScale,
-  inverse,
-  apply,
+  matrix,
 } from "../utils/linear_algebra";
-import styled, { useTheme } from "styled-components/macro";
 import { IsolateCoordinatesForElement } from "./IsolateCoordinatesForElement";
 import { BasictransformationLayer } from "../Layers/BasictransformationLayer.js";
 import { Absolute, Draggable } from "../Elements";
@@ -182,32 +178,35 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   // Translate the grid such that its origin (its top-left) is at the center of the screen
   let origin_to_center = translation_matrix([width / 2, height / 2]);
   // Combined, remember: the right transformation happens first!
-  let full_transform = multiply(origin_to_center, transform);
+  let full_transform = matrix.multiply(origin_to_center, transform);
 
   const mouse_to_grid = ([clientX, clientY]) => {
     // First inverse the move from the "absolute" origin to the canvas: now our mouse will treat the top-left of the canvas as (0, 0)
-    let click_inside_canvas = apply(inverse(page_to_canvas), [
+    let click_inside_canvas = matrix.apply(matrix.inverse(page_to_canvas), [
       clientX,
       clientY,
     ]);
 
     // Now inverse the full_transform which is applied to our canvas
-    let click_inside_grid = apply(inverse(full_transform), click_inside_canvas);
+    let click_inside_grid = matrix.apply(
+      matrix.inverse(full_transform),
+      click_inside_canvas
+    );
 
     return click_inside_grid;
   };
 
   const translate = useCallback(
     ({ deltaX, deltaY }) => {
-      let scale = getScale(transform);
+      let scale = matrix.getScale(transform);
       // "Normalize" the distance by which we have translated
-      let [relativeDeltaX, relativeDeltaY] = apply(
-        inverse(scale_matrix([scale, scale])),
+      let [relativeDeltaX, relativeDeltaY] = matrix.apply(
+        matrix.inverse(scale_matrix([scale, scale])),
         [deltaX, deltaY]
       );
 
       set_sheet_view(({ transform, ...sheet_view }) => {
-        let new_transform = multiply(
+        let new_transform = matrix.multiply(
           transform,
           translation_matrix([-relativeDeltaX, -relativeDeltaY])
         );
@@ -226,7 +225,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         Math.abs((ZOOM_SPEED_MULTIPLIER * deltaY) / 128)
       );
       let zoom = 1 - Math.sign(deltaY) * speed;
-      let new_scale = getScale(transform) * zoom;
+      let new_scale = matrix.getScale(transform) * zoom;
 
       if (new_scale > options.maxZoom || new_scale < options.minZoom) {
         zoom = 1;
@@ -234,14 +233,14 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
 
       // First translate the center of our zoom to the origin (by [-clientX, -clientY] that is)
       // translate the grid back to its original origin (top-left), scale, and inverse the previous two operations again
-      let zoom_matrix = multiply(
-        inverse(translation_matrix([-clientX, -clientY])),
+      let zoom_matrix = matrix.multiply(
+        matrix.inverse(translation_matrix([-clientX, -clientY])),
         scale_matrix([zoom, zoom]),
         translation_matrix([-clientX, -clientY])
       );
 
       set_sheet_view(({ transform, ...sheet_view }) => {
-        let new_transform = multiply(transform, zoom_matrix);
+        let new_transform = matrix.multiply(transform, zoom_matrix);
         return { ...sheet_view, transform: new_transform };
       });
     },
@@ -289,7 +288,6 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
   const on_canvas_drag = ({ absolute_x, absolute_y }) => {
     let new_selection = { ...selection, end: { x: absolute_x, y: absolute_y } };
     setSelection(new_selection);
-    console.log("new_selection", new_selection);
 
     let new_selected_ids = items
       .filter((item) => item_is_in_selection(item, new_selection))
@@ -325,7 +323,7 @@ const Canvas = ({ children, items, bounds: { top, left, width, height } }) => {
         />
         <div
           style={{
-            transform: `${toString(full_transform)}`,
+            transform: `${matrix.toString(full_transform)}`,
             transformOrigin: "0 0",
             pointerEvents: "none",
           }}

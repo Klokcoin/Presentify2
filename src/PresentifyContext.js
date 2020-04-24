@@ -5,7 +5,7 @@ import md5 from "md5";
 import immer from "immer";
 import { Dataurl, Dimensions, get_image_info } from "./Data/Files.js";
 import { component_map } from "./PresentifyComponents";
-import { identity_matrix, getScale, inverse } from "./utils/linear_algebra";
+import { identity_matrix, matrix } from "./utils/linear_algebra";
 import { useTheme } from "styled-components";
 
 export const PresentifyContext = React.createContext();
@@ -140,7 +140,7 @@ export const PresentifyProvider = ({ children }) => {
   ) => {
     let component_info = component_map[type];
     let { default_options } = component_info || {};
-    let scale = getScale(inverse(sheet_view.transform));
+    let scale = matrix.getScale(matrix.inverse(sheet_view.transform));
     let next_id = uuid();
 
     let options = component_info.default_options
